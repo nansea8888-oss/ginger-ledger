@@ -62,6 +62,15 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 .ibar button{border:0;border-radius:9px;padding:9px 14px;font-size:13px;font-family:inherit;white-space:nowrap}
 .ibar .go{background:#2F5D50;color:#fff;font-weight:600}
 .ibar .x{background:none;color:#7E8C85;font-size:20px;padding:2px 6px}
+.guide{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(12,22,17,.88);z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px}
+.guide-box{background:#fff;border-radius:18px;padding:26px 22px;max-width:340px;width:100%;text-align:center}
+.guide-box h2{font-size:19px;color:#1F2A24;margin-bottom:16px;line-height:1.4}
+.guide-steps{text-align:left;margin:0 auto 20px;display:inline-block}
+.guide-steps div{font-size:14.5px;color:#1F2A24;padding:8px 0;display:flex;gap:10px;align-items:flex-start;line-height:1.5}
+.guide-steps i{display:inline-flex;width:22px;height:22px;border-radius:50%;background:#2F5D50;color:#fff;font-size:12px;font-style:normal;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.guide-box button{width:100%;padding:14px;border:0;border-radius:11px;background:#2F5D50;color:#fff;font-size:16px;font-weight:600;font-family:inherit}
+.guide-arrow{position:fixed;top:10px;right:16px;font-size:44px;color:#fff;line-height:1;animation:blink 1.1s infinite;text-shadow:0 2px 8px rgba(0,0,0,.5)}
+@keyframes blink{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-5px)}}
 .hide{display:none}
 </style>
 </head>
@@ -188,6 +197,15 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
   <span class="txt" id="ibarTxt"></span>
   <button class="go" id="ibarGo">安装</button>
   <button class="x" id="ibarX">×</button>
+</div>
+
+<div id="guide" class="guide hide">
+  <span class="guide-arrow" id="guideArrow">↗</span>
+  <div class="guide-box">
+    <h2 id="guideTitle"></h2>
+    <div class="guide-steps" id="guideSteps"></div>
+    <button id="guideClose">我知道了</button>
+  </div>
 </div>
 
 <script>
@@ -365,21 +383,36 @@ document.querySelectorAll('nav button').forEach(function(b){
   load(); render(); recalc();
 })();
 
-/* ---------- PWA：装到桌面 ---------- */
+/* ---------- PWA：安装引导 ---------- */
+var ua = navigator.userAgent;
+var isWeChat = /MicroMessenger/i.test(ua);
+var isIOS = /iPhone|iPad|iPod/i.test(ua);
 var deferredPrompt = null;
 var standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-var ibarClosed = localStorage.getItem('ibar_closed') === '1';
 
+function hideGuide(){ document.getElementById('guide').classList.add('hide'); }
+function showGuide(title, steps, arrow){
+  if(standalone) return;
+  document.getElementById('guideTitle').textContent = title;
+  document.getElementById('guideSteps').innerHTML = steps.map(function(s, i){
+    return '<div><i>' + (i + 1) + '</i><span>' + s + '</span></div>';
+  }).join('');
+  document.getElementById('guideArrow').style.display = arrow ? 'block' : 'none';
+  document.getElementById('guide').classList.remove('hide');
+}
 function showIbar(txt){
-  if(standalone || ibarClosed) return;
+  if(standalone) return;
   document.getElementById('ibarTxt').textContent = txt;
   document.getElementById('ibar').classList.remove('hide');
 }
 
+document.getElementById('guideClose').onclick = hideGuide;
+
 window.addEventListener('beforeinstallprompt', function(e){
   e.preventDefault();
   deferredPrompt = e;
-  showIbar('装到桌面，以后点图标直接进，不用再找链接');
+  hideGuide();
+  showIbar('点「安装」，把台账装到桌面');
 });
 
 document.getElementById('ibarGo').onclick = function(){
@@ -387,19 +420,41 @@ document.getElementById('ibarGo').onclick = function(){
     deferredPrompt.prompt();
     deferredPrompt = null;
     document.getElementById('ibar').classList.add('hide');
+  }else if(isIOS){
+    showGuide('这样装到桌面', [
+      '点底部的「分享」按钮 ⬆️',
+      '往下滑，找到「添加到主屏幕」',
+      '点右上角「添加」'
+    ], false);
   }else{
-    alert('苹果手机：点底部中间的「分享」按钮，选「添加到主屏幕」。\n安卓手机：点右上角菜单，选「添加到主屏幕」。');
+    showGuide('这样加到桌面', [
+      '点浏览器底部的菜单（≡ 或 ···）',
+      '选「添加到桌面」或「添加到主屏幕」',
+      '确认添加，桌面上就有绿色「姜」字图标'
+    ], false);
   }
 };
+
 document.getElementById('ibarX').onclick = function(){
-  localStorage.setItem('ibar_closed','1');
+  localStorage.setItem('ibar_closed', '1');
   document.getElementById('ibar').classList.add('hide');
 };
 
-if(!standalone && /iPhone|iPad|iPod/.test(navigator.userAgent)){
-  setTimeout(function(){
-    showIbar('点底部「分享」→「添加到主屏幕」，以后点图标直接进');
-  }, 1500);
+if(!standalone){
+  if(isWeChat){
+    // 微信内置浏览器装不了，必须先赶去系统浏览器
+    showGuide('微信里装不了，先换个地方打开', [
+      '点右上角「···」',
+      '选「在浏览器打开」',
+      '打开后按页面提示装到桌面'
+    ], true);
+  }else if(localStorage.getItem('ibar_closed') !== '1'){
+    setTimeout(function(){
+      if(!deferredPrompt){
+        showIbar(isIOS ? '点这里装到桌面（添加到主屏幕）' : '点这里装到桌面');
+      }
+    }, 1500);
+  }
 }
 
 if('serviceWorker' in navigator){
