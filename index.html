@@ -259,6 +259,7 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 
 <script>
 const KEY = 'ginger_ledger_v1';   // 旧键，仅用于一次性迁移
+const APP_VERSION = '1.0.0';
 let data = [];
 
 /* 设备标识 & 录入人（为将来上云和权限预留） */
@@ -615,7 +616,8 @@ function updateStoreInfo(){
     '<div class="si-row"><span>记录条数</span><b>' + data.length + ' 条</b></div>' +
     '<div class="si-row"><span>存储位置</span><b>本机数据库</b></div>' +
     '<div class="si-row"><span>设备编号</span><b>' + deviceId + '</b></div>' +
-    '<div class="si-row"><span>录入人</span><b>' + (operator || '未设置') + '</b></div>';
+    '<div class="si-row"><span>录入人</span><b>' + (operator || '未设置') + '</b></div>' +
+    '<div class="si-row"><span>版本</span><b>v' + APP_VERSION + '</b></div>';
 }
 
 function exportJSON(){
