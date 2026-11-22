@@ -812,6 +812,8 @@ function guideAndroid(){
 window.addEventListener('beforeinstallprompt', function(e){
   e.preventDefault();
   deferredPrompt = e;
+  // 微信/QQ 内置浏览器会伪触发这个事件，但点了装不上，一律不认
+  if(isWeChat || /QQ\//i.test(ua)) return;
   if(standalone || installedFlag || location.hash.indexOf('#demo') === 0) return;
   showGuide({
     title: '一步装到桌面',
