@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#2F5D50">
+<title>生姜收购台账</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{width:100%;overflow-x:hidden}
+body{width:100%;max-width:100vw;overflow-x:hidden;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;background:#F4F6F5;color:#1F2A24;font-size:16px;padding-bottom:20px}
+header,nav,main,section,.card,.row,.calc,.sum,.grp,#listBox,#cusBox{max-width:100%}
+input,select,button{max-width:100%}
+header{background:#2F5D50;color:#fff;padding:14px 16px;font-size:18px;font-weight:600;position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:center;overflow:hidden}
+header>span:first-child{white-space:nowrap}
+header .sub{font-size:11.5px;font-weight:400;opacity:.8;flex-shrink:0;margin-left:8px}
+nav{display:flex;background:#fff;border-bottom:1px solid #E3E8E5;position:sticky;top:50px;z-index:9}
+nav button{flex:1 1 0;min-width:0;padding:12px 0;border:0;background:none;font-size:15px;color:#6B7C74;font-family:inherit;border-bottom:3px solid transparent}
+nav button.on{color:#2F5D50;font-weight:600;border-bottom-color:#2F5D50}
+main{padding:12px;max-width:100%;overflow-x:hidden}
+.card{background:#fff;border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.card h3{font-size:14px;color:#5A6B63;font-weight:600;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.row{display:flex;gap:10px;margin-bottom:10px}
+.row>*{flex:1 1 0;min-width:0}
+label{display:block;font-size:12px;color:#7A8A82;margin-bottom:4px}
+input,select{width:100%;min-width:0;max-width:100%;padding:11px 10px;border:1px solid #D8E0DB;border-radius:8px;font-size:16px;font-family:inherit;background:#fff;color:#1F2A24}
+input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
+.calc{background:#F7FAF8;border:1px dashed #C9D8D0;border-radius:10px;padding:10px;margin-bottom:12px}
+.calc .line{display:flex;justify-content:space-between;padding:5px 0;font-size:14px;color:#5A6B63}
+.calc .line b{color:#1F2A24;font-weight:600}
+.calc .big{border-top:1px solid #DCE6E0;margin-top:6px;padding-top:8px;font-size:16px}
+.calc .big b{color:#C0392B;font-size:20px}
+.btn{width:100%;padding:15px;border:0;border-radius:10px;background:#2F5D50;color:#fff;font-size:17px;font-weight:600;font-family:inherit;margin-top:4px}
+.btn:active{background:#24483E}
+.btn.ghost{background:#EAF1ED;color:#2F5D50;font-size:15px;padding:12px;margin-top:8px}
+.grp{background:#fff;border-radius:12px;margin-bottom:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.grp .gh{padding:13px 14px;background:#EAF1ED;display:flex;justify-content:space-between;align-items:center;font-weight:600;color:#2F5D50;font-size:15px}
+.grp .gh span{font-size:13px;font-weight:400;color:#5A6B63}
+.item{padding:12px 14px;border-top:1px solid #F0F4F2;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.item .l{flex:1;min-width:0}
+.item .t{font-size:15px;font-weight:500;margin-bottom:3px}
+.item .m{font-size:12.5px;color:#7A8A82;line-height:1.5}
+.item .am{text-align:right;font-size:15px;font-weight:600;color:#C0392B;white-space:nowrap}
+.item .am small{display:block;font-size:11.5px;color:#9AA8A1;font-weight:400;margin-top:2px}
+.item .del{color:#C0C8C4;font-size:20px;padding:4px 8px;border:0;background:none;font-family:inherit}
+.sum{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.sum .box{background:#fff;border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.sum .box .k{font-size:12px;color:#7A8A82;margin-bottom:6px}
+.sum .box .v{font-size:19px;font-weight:700;color:#2F5D50}
+.sum .box .v small{font-size:12px;font-weight:400;color:#7A8A82}
+.empty{text-align:center;color:#9AA8A1;padding:50px 20px;font-size:14px;line-height:1.8}
+.tip{font-size:12px;color:#9AA8A1;text-align:center;padding:14px 10px;line-height:1.7}
+.hide{display:none}
+</style>
+</head>
+<body>
+
+<header>
+  <span>生姜收购台账</span>
+  <span class="sub" id="today"></span>
+</header>
+
+<nav>
+  <button class="on" data-tab="in">录入</button>
+  <button data-tab="list">明细</button>
+  <button data-tab="sum">汇总</button>
+</nav>
+
+<main>
+  <!-- 录入 -->
+  <section id="tab-in">
+    <div class="card">
+      <h3>客户与批次</h3>
+      <div class="row">
+        <div>
+          <label>客户（买家）</label>
+          <input id="customer" list="dl-cus" placeholder="选或直接打">
+          <datalist id="dl-cus"></datalist>
+        </div>
+        <div>
+          <label>批号</label>
+          <input id="lot" placeholder="20250217-01">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>车牌号</label>
+          <input id="plate" placeholder="鲁A12345">
+        </div>
+        <div>
+          <label>收购日期</label>
+          <input id="date" type="date">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>货主（卖家）</h3>
+      <div class="row">
+        <div>
+          <label>货主</label>
+          <input id="owner" list="dl-own" placeholder="选或直接打">
+          <datalist id="dl-own"></datalist>
+        </div>
+        <div>
+          <label>电话</label>
+          <input id="tel" type="tel" inputmode="tel" placeholder="手机号">
+        </div>
+      </div>
+      <div>
+        <label>基地</label>
+        <input id="base" placeholder="王家村基地">
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>计量与价格</h3>
+      <div class="row">
+        <div>
+          <label>件数</label>
+          <input id="jian" type="number" inputmode="decimal" placeholder="0">
+        </div>
+        <div>
+          <label>单件斤数</label>
+          <input id="per" type="number" inputmode="decimal" placeholder="0">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>扣土率（%）</label>
+          <input id="soil" type="number" inputmode="decimal" placeholder="10">
+        </div>
+        <div>
+          <label>单价（元/斤）</label>
+          <input id="price" type="number" inputmode="decimal" placeholder="0.00">
+        </div>
+      </div>
+      <div>
+        <label>代办费（元/斤）</label>
+        <input id="fee" type="number" inputmode="decimal" placeholder="0.05">
+      </div>
+
+      <div class="calc" style="margin-top:12px;margin-bottom:0">
+        <div class="line"><span>总斤数</span><b id="c1">0</b></div>
+        <div class="line"><span>扣土量</span><b id="c2">0</b></div>
+        <div class="line"><span>净总斤数</span><b id="c3">0</b></div>
+        <div class="line"><span>总价</span><b id="c4">0</b></div>
+        <div class="line"><span>代办总价</span><b id="c5">0</b></div>
+        <div class="line big"><span>实际总价</span><b id="c6">0</b></div>
+      </div>
+
+      <button class="btn" onclick="saveRec()">保 存</button>
+    </div>
+
+    <p class="tip">数据存在这台手机的浏览器里。换手机或清缓存会丢，建议定期用「导出」。 </p>
+  </section>
+
+  <!-- 明细 -->
+  <section id="tab-list" class="hide">
+    <div id="listBox"></div>
+  </section>
+
+  <!-- 汇总 -->
+  <section id="tab-sum" class="hide">
+    <div class="sum" id="sumBox"></div>
+    <div class="card">
+      <h3>按客户汇总</h3>
+      <div id="cusBox"></div>
+    </div>
+    <button class="btn ghost" onclick="exportCSV()">导出 Excel（CSV）</button>
+    <button class="btn ghost" onclick="clearAll()" style="color:#C0392B">清空全部数据</button>
+  </section>
+</main>
+
+<script>
+const KEY = 'ginger_ledger_v1';
+let data = [];
+
+function n(id){ const v = parseFloat(document.getElementById(id).value); return isNaN(v) ? 0 : v; }
+function s(id){ return (document.getElementById(id).value || '').trim(); }
+function fmt(x, d){ return (Math.round(x*100)/100).toFixed(d===undefined?2:d).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+
+function load(){ try{ data = JSON.parse(localStorage.getItem(KEY) || '[]'); }catch(e){ data = []; } }
+function persist(){ localStorage.setItem(KEY, JSON.stringify(data)); }
+
+function recalc(){
+  const jian=n('jian'), per=n('per'), soil=n('soil')/100, price=n('price'), fee=n('fee');
+  const total = jian*per;
+  const soilQty = total*soil;
+  const net = total-soilQty;
+  const amount = net*price;
+  const feeTotal = net*fee;
+  const actual = amount-feeTotal;
+  document.getElementById('c1').textContent = fmt(total);
+  document.getElementById('c2').textContent = fmt(soilQty);
+  document.getElementById('c3').textContent = fmt(net);
+  document.getElementById('c4').textContent = fmt(amount);
+  document.getElementById('c5').textContent = fmt(feeTotal);
+  document.getElementById('c6').textContent = '¥ ' + fmt(actual);
+}
+
+['jian','per','soil','price','fee'].forEach(function(id){
+  document.getElementById(id).addEventListener('input', recalc);
+});
+
+function saveRec(){
+  const customer = s('customer');
+  const owner = s('owner');
+  const jian = n('jian'), per = n('per');
+  if(!customer){ alert('请填写客户（买家）'); return; }
+  if(!owner){ alert('请填写货主（卖家）'); return; }
+  if(jian<=0 || per<=0){ alert('件数和单件斤数要大于 0'); return; }
+
+  const soil = n('soil')/100, price = n('price'), fee = n('fee');
+  const total = jian*per;
+  const soilQty = total*soil;
+  const net = total-soilQty;
+
+  data.unshift({
+    id: Date.now(),
+    date: s('date') || new Date().toISOString().slice(0,10),
+    customer: customer, lot: s('lot'), plate: s('plate'),
+    owner: owner, tel: s('tel'), base: s('base'),
+    jian: jian, per: per, soil: soil,
+    price: price, fee: fee,
+    total: total, soilQty: soilQty, net: net,
+    amount: net*price, feeTotal: net*fee, actual: net*price - net*fee
+  });
+  persist();
+
+  ['lot','plate','owner','tel','base','jian','per','price'].forEach(function(id){
+    document.getElementById(id).value = '';
+  });
+  recalc();
+  render();
+  alert('已保存 ✓');
+  showTab('list');
+}
+
+function render(){
+  // 客户 / 货主联想
+  const cusSet = {}, ownSet = {};
+  data.forEach(function(r){ cusSet[r.customer]=1; ownSet[r.owner]=1; });
+  document.getElementById('dl-cus').innerHTML =
+    Object.keys(cusSet).map(function(k){ return '<option value="'+k+'">'; }).join('');
+  document.getElementById('dl-own').innerHTML =
+    Object.keys(ownSet).map(function(k){ return '<option value="'+k+'">'; }).join('');
+
+  // 明细（按客户分组）
+  const box = document.getElementById('listBox');
+  if(!data.length){
+    box.innerHTML = '<div class="empty">还没有记录<br>去「录入」填第一笔吧</div>';
+  }else{
+    const groups = {};
+    data.forEach(function(r){ (groups[r.customer] = groups[r.customer] || []).push(r); });
+    let html = '';
+    Object.keys(groups).forEach(function(cus){
+      const arr = groups[cus];
+      const net = arr.reduce(function(a,b){ return a+b.net; }, 0);
+      const act = arr.reduce(function(a,b){ return a+b.actual; }, 0);
+      html += '<div class="grp"><div class="gh"><span>'+cus+'　'+arr.length+' 笔</span>'+
+              '<span>'+fmt(net,0)+' 斤 / ¥'+fmt(act,0)+'</span></div>';
+      arr.forEach(function(r){
+        html += '<div class="item"><div class="l">'+
+          '<div class="t">'+r.owner+(r.plate?'　'+r.plate:'')+'</div>'+
+          '<div class="m">'+r.date+(r.lot?'　'+r.lot:'')+'　'+fmt(r.net,0)+' 斤　单价 '+r.price+'</div>'+
+          '</div><div class="am">¥'+fmt(r.actual,0)+'<small>代办 '+fmt(r.feeTotal,2)+'</small></div>'+
+          '<button class="del" onclick="del('+r.id+')">×</button></div>';
+      });
+      html += '</div>';
+    });
+    box.innerHTML = html;
+  }
+
+  // 汇总
+  const totNet = data.reduce(function(a,b){ return a+b.net; }, 0);
+  const totAct = data.reduce(function(a,b){ return a+b.actual; }, 0);
+  const totFee = data.reduce(function(a,b){ return a+b.feeTotal; }, 0);
+  document.getElementById('sumBox').innerHTML =
+    '<div class="box"><div class="k">总笔数</div><div class="v">'+data.length+'<small> 笔</small></div></div>'+
+    '<div class="box"><div class="k">净总斤数</div><div class="v">'+fmt(totNet,0)+'<small> 斤</small></div></div>'+
+    '<div class="box"><div class="k">实际总价</div><div class="v">¥'+fmt(totAct,0)+'</div></div>'+
+    '<div class="box"><div class="k">代办总价</div><div class="v">¥'+fmt(totFee,0)+'</div></div>';
+
+  const cus = {};
+  data.forEach(function(r){
+    if(!cus[r.customer]) cus[r.customer] = {n:0, net:0, act:0};
+    cus[r.customer].n++;
+    cus[r.customer].net += r.net;
+    cus[r.customer].act += r.actual;
+  });
+  let ch = '';
+  Object.keys(cus).forEach(function(k){
+    ch += '<div class="item"><div class="l"><div class="t">'+k+'</div>'+
+          '<div class="m">'+cus[k].n+' 笔　'+fmt(cus[k].net,0)+' 斤</div></div>'+
+          '<div class="am">¥'+fmt(cus[k].act,0)+'</div></div>';
+  });
+  document.getElementById('cusBox').innerHTML = ch || '<div class="empty">暂无数据</div>';
+}
+
+function del(id){
+  if(!confirm('删掉这条记录？')) return;
+  data = data.filter(function(r){ return r.id !== id; });
+  persist(); render();
+}
+
+function clearAll(){
+  if(!confirm('会清空全部记录，确定吗？')) return;
+  if(!confirm('再确认一次：删了就找不回来了')) return;
+  data = []; persist(); render();
+}
+
+function exportCSV(){
+  if(!data.length){ alert('没有数据'); return; }
+  const head = ['收购日期','客户','批号','车牌号','货主','电话','基地','件数','单件斤数','总斤数','扣土率','扣土量','净总斤数','单价','总价','代办费','代办总价','实际总价'];
+  let csv = '\ufeff' + head.join(',') + '\n';
+  data.forEach(function(r){
+    csv += [r.date,r.customer,r.lot,r.plate,r.owner,r.tel,r.base,r.jian,r.per,
+      r.total,(r.soil*100)+'%',r.soilQty,r.net,r.price,r.amount,r.fee,r.feeTotal,r.actual].join(',') + '\n';
+  });
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '生姜收购台账_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+}
+
+function showTab(name){
+  document.querySelectorAll('nav button').forEach(function(b){
+    b.classList.toggle('on', b.dataset.tab === name);
+  });
+  ['in','list','sum'].forEach(function(k){
+    document.getElementById('tab-'+k).classList.toggle('hide', k !== name);
+  });
+  window.scrollTo(0,0);
+}
+
+document.querySelectorAll('nav button').forEach(function(b){
+  b.onclick = function(){ showTab(b.dataset.tab); };
+});
+
+// 初始化
+(function(){
+  const d = new Date();
+  document.getElementById('date').value = d.toISOString().slice(0,10);
+  document.getElementById('today').textContent = d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日';
+  load(); render(); recalc();
+})();
+</script>
+</body>
+</html>
