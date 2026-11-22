@@ -366,7 +366,7 @@ function render(){
           '<div class="row-main" onclick="toggleItem(this)">' +
             '<div class="li-l">' +
               '<div class="li-name">'+r.owner+'</div>' +
-              '<div class="li-m1">'+(r.date||'—')+'　'+fmt(total,0)+' 斤　单价 '+fmt(r.price,4)+'</div>' +
+              '<div class="li-m1">'+(r.date||'—')+'　'+fmt(total,0)+' 斤　单价 '+fmt(r.price,2)+'</div>' +
               '<div class="li-m2">总价 <b>'+fmt(r.amount,0)+'</b>　代办 <b>'+fmt(r.feeTotal,0)+'</b></div>' +
             '</div>' +
             '<div class="li-r">' +
@@ -385,7 +385,7 @@ function render(){
               '<div class="r"><span>净总斤数</span><b>'+fmt(r.net,2)+' 斤</b></div>' +
             '</div>' +
             '<div class="dl amount">' +
-              '<div class="r"><span>单价（元/斤）</span><b>'+fmt(r.price,4)+'</b></div>' +
+              '<div class="r"><span>单价（元/斤）</span><b>'+fmt(r.price,2)+'</b></div>' +
               '<div class="r"><span>总价 · 付货主</span><b>¥ '+fmt(r.amount,2)+'</b></div>' +
               '<div class="r"><span>代办总价 · 付代办</span><b>¥ '+fmt(r.feeTotal,2)+'</b></div>' +
               '<div class="r total"><span>实际总价 · 总款</span><b>¥ '+fmt(r.actual,2)+'</b></div>' +
