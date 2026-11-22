@@ -2,20 +2,26 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="生姜台账">
 <meta name="theme-color" content="#2F5D50">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
 <title>生姜收购台账</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{width:100%;overflow-x:hidden}
-body{width:100%;max-width:100vw;overflow-x:hidden;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;background:#F4F6F5;color:#1F2A24;font-size:16px;padding-bottom:20px}
+body{width:100%;max-width:100vw;overflow-x:hidden;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;background:#F4F6F5;color:#1F2A24;font-size:16px;padding-bottom:calc(20px + env(safe-area-inset-bottom))}
 header,nav,main,section,.card,.row,.calc,.sum,.grp,#listBox,#cusBox{max-width:100%}
 input,select,button{max-width:100%}
-header{background:#2F5D50;color:#fff;padding:14px 16px;font-size:18px;font-weight:600;position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:center;overflow:hidden}
+header{background:#2F5D50;color:#fff;padding:calc(14px + env(safe-area-inset-top)) 16px 14px;font-size:18px;font-weight:600;position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:center;overflow:hidden}
 header>span:first-child{white-space:nowrap}
 header .sub{font-size:11.5px;font-weight:400;opacity:.8;flex-shrink:0;margin-left:8px}
-nav{display:flex;background:#fff;border-bottom:1px solid #E3E8E5;position:sticky;top:50px;z-index:9}
+nav{display:flex;background:#fff;border-bottom:1px solid #E3E8E5;position:sticky;top:calc(50px + env(safe-area-inset-top));z-index:9}
 nav button{flex:1 1 0;min-width:0;padding:12px 0;border:0;background:none;font-size:15px;color:#6B7C74;font-family:inherit;border-bottom:3px solid transparent}
 nav button.on{color:#2F5D50;font-weight:600;border-bottom-color:#2F5D50}
 main{padding:12px;max-width:100%;overflow-x:hidden}
@@ -51,6 +57,11 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 .sum .box .v small{font-size:12px;font-weight:400;color:#7A8A82}
 .empty{text-align:center;color:#9AA8A1;padding:50px 20px;font-size:14px;line-height:1.8}
 .tip{font-size:12px;color:#9AA8A1;text-align:center;padding:14px 10px;line-height:1.7}
+.ibar{position:fixed;left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom));background:#1F2A24;color:#fff;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px;font-size:13px;line-height:1.5;z-index:99;box-shadow:0 8px 24px rgba(0,0,0,.28)}
+.ibar .txt{flex:1}
+.ibar button{border:0;border-radius:9px;padding:9px 14px;font-size:13px;font-family:inherit;white-space:nowrap}
+.ibar .go{background:#2F5D50;color:#fff;font-weight:600}
+.ibar .x{background:none;color:#7E8C85;font-size:20px;padding:2px 6px}
 .hide{display:none}
 </style>
 </head>
@@ -172,6 +183,12 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
     <button class="btn ghost" onclick="clearAll()" style="color:#C0392B">清空全部数据</button>
   </section>
 </main>
+
+<div id="ibar" class="ibar hide">
+  <span class="txt" id="ibarTxt"></span>
+  <button class="go" id="ibarGo">安装</button>
+  <button class="x" id="ibarX">×</button>
+</div>
 
 <script>
 const KEY = 'ginger_ledger_v1';
@@ -347,6 +364,49 @@ document.querySelectorAll('nav button').forEach(function(b){
   document.getElementById('today').textContent = d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日';
   load(); render(); recalc();
 })();
+
+/* ---------- PWA：装到桌面 ---------- */
+var deferredPrompt = null;
+var standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+var ibarClosed = localStorage.getItem('ibar_closed') === '1';
+
+function showIbar(txt){
+  if(standalone || ibarClosed) return;
+  document.getElementById('ibarTxt').textContent = txt;
+  document.getElementById('ibar').classList.remove('hide');
+}
+
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault();
+  deferredPrompt = e;
+  showIbar('装到桌面，以后点图标直接进，不用再找链接');
+});
+
+document.getElementById('ibarGo').onclick = function(){
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    deferredPrompt = null;
+    document.getElementById('ibar').classList.add('hide');
+  }else{
+    alert('苹果手机：点底部中间的「分享」按钮，选「添加到主屏幕」。\n安卓手机：点右上角菜单，选「添加到主屏幕」。');
+  }
+};
+document.getElementById('ibarX').onclick = function(){
+  localStorage.setItem('ibar_closed','1');
+  document.getElementById('ibar').classList.add('hide');
+};
+
+if(!standalone && /iPhone|iPad|iPod/.test(navigator.userAgent)){
+  setTimeout(function(){
+    showIbar('点底部「分享」→「添加到主屏幕」，以后点图标直接进');
+  }, 1500);
+}
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
 </script>
 </body>
 </html>
