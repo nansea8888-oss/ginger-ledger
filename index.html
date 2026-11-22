@@ -802,9 +802,9 @@ function guideAndroid(){
   showGuide({
     title: '把台账装到手机桌面',
     sub: '装好后点桌面图标直接进，不用再找链接',
-    steps: ['点浏览器菜单（≡ 或 ···）', '选「添加到桌面」或「添加到主屏幕」', '确认添加'],
-    arrow: 'bc',
-    btn: '我已经装好了，进入台账',
+    steps: ['点浏览器菜单（≡ 或 ⋮）', '选「添加到桌面」或「添加到主屏幕」', '确认添加'],
+    arrow: 'br',
+    btn: '已添加到桌面，进入台账',
     onMain: markInstalled
   });
 }
@@ -822,9 +822,19 @@ window.addEventListener('beforeinstallprompt', function(e){
     arrow: '',
     btn: '立即安装',
     onMain: function(){
-      if(!deferredPrompt) return;
-      deferredPrompt.prompt();
+      var dp = deferredPrompt;
+      if(!dp) return;
       deferredPrompt = null;
+      var ok = false;
+      try{ dp.prompt(); ok = true; }catch(err){ ok = false; }
+      if(dp.userChoice && dp.userChoice.then){
+        dp.userChoice.then(function(choice){
+          if(choice && choice.outcome === 'dismissed'){ setTimeout(guideAndroid, 200); }
+        }).catch(function(){ setTimeout(guideAndroid, 200); });
+      }else if(!ok){
+        // 华为等浏览器调不出系统安装框，直接退回手动添加
+        setTimeout(guideAndroid, 200);
+      }
     }
   });
 });
