@@ -84,6 +84,11 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 .sum .box.wide .v{color:#fff;font-size:26px}
 .item .m2{font-size:12px;color:#5A6B63;margin-top:3px}
 .empty{text-align:center;color:#9AA8A1;padding:50px 20px;font-size:14px;line-height:1.8}
+.store-info{background:#FAFCFB;border:1px solid #E9F0EC;border-radius:10px;padding:2px 13px;margin-bottom:12px}
+.si-row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:8px 0;border-bottom:1px solid #EFF4F1;font-size:13.5px}
+.si-row:last-child{border-bottom:0}
+.si-row span{color:#7A8A82}
+.si-row b{color:#1F2A24;font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
 .tip{font-size:12px;color:#9AA8A1;text-align:center;padding:14px 10px;line-height:1.7}
 .guide{position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(10,20,15,.93);display:flex;align-items:center;justify-content:center;padding:max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));overflow-y:auto;-webkit-overflow-scrolling:touch}
 .gbox{background:#fff;border-radius:20px;width:100%;max-width:min(340px, 88vw);padding:26px 20px 18px;text-align:center;margin:auto;box-shadow:0 20px 60px rgba(0,0,0,.4)}
@@ -218,7 +223,24 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
       <h3>按客户汇总</h3>
       <div id="cusBox"></div>
     </div>
-    <button class="btn ghost" onclick="exportCSV()">导出 Excel（CSV）</button>
+
+    <div class="card">
+      <h3>数据存储</h3>
+      <div id="storeInfo" class="store-info"></div>
+      <button class="btn ghost" onclick="exportJSON()">导出备份（JSON · 完整数据）</button>
+      <label class="btn ghost" style="display:block;text-align:center">
+        导入备份（JSON · 合并）
+        <input type="file" accept=".json,application/json" onchange="importJSON(this.files[0]); this.value='';" style="display:none">
+      </label>
+      <button class="btn ghost" onclick="exportCSV()">导出 Excel（CSV · 给会计）</button>
+    </div>
+
+    <div class="card">
+      <h3>录入人</h3>
+      <input id="opName" placeholder="填你的名字，例如：老王" onchange="saveOperator()">
+      <p class="tip" style="text-align:left;padding:8px 0 0">填了以后每笔账都会记下是谁录的，以后多人用能分清。</p>
+    </div>
+
     <button class="btn ghost" onclick="clearAll()" style="color:#C0392B">清空全部数据</button>
   </section>
 </main>
@@ -236,8 +258,89 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 </div>
 
 <script>
-const KEY = 'ginger_ledger_v1';
+const KEY = 'ginger_ledger_v1';   // 旧键，仅用于一次性迁移
 let data = [];
+
+/* 设备标识 & 录入人（为将来上云和权限预留） */
+var deviceId = localStorage.getItem('gl_device') || '';
+if(!deviceId){
+  deviceId = 'D' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  localStorage.setItem('gl_device', deviceId);
+}
+var operator = localStorage.getItem('gl_operator') || '';
+
+function uuid(){
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c){
+    var r = Math.random() * 16 | 0;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+}
+
+/* ---------- IndexedDB 本地库（主存储） ---------- */
+var DB = (function(){
+  var NAME = 'ginger_ledger', VER = 1, p = null;
+  function open(){
+    if(p) return p;
+    p = new Promise(function(res, rej){
+      var req = indexedDB.open(NAME, VER);
+      req.onupgradeneeded = function(e){
+        var db = e.target.result;
+        if(!db.objectStoreNames.contains('records')){
+          var st = db.createObjectStore('records', {keyPath: 'uuid'});
+          st.createIndex('date', 'date', {unique: false});
+          st.createIndex('createdAt', 'createdAt', {unique: false});
+        }
+      };
+      req.onsuccess = function(e){ res(e.target.result); };
+      req.onerror = function(e){ rej(e.target.error); };
+    });
+    return p;
+  }
+  function tx(mode, fn){
+    return open().then(function(db){
+      return new Promise(function(res, rej){
+        var t = db.transaction('records', mode);
+        var req = fn(t.objectStore('records'));
+        t.oncomplete = function(){ res(req ? req.result : undefined); };
+        t.onerror = function(){ rej(t.error); };
+        t.onabort = function(){ rej(t.error); };
+      });
+    });
+  }
+  return {
+    all: function(){ return tx('readonly', function(st){ return st.getAll(); }); },
+    put: function(r){ return tx('readwrite', function(st){ return st.put(r); }); },
+    putMany: function(list){ return tx('readwrite', function(st){ list.forEach(function(r){ st.put(r); }); }); },
+    del: function(k){ return tx('readwrite', function(st){ return st.delete(k); }); },
+    clear: function(){ return tx('readwrite', function(st){ return st.clear(); }); }
+  };
+})();
+
+/* 把老版本存在 localStorage 的数据搬进来（只搬一次） */
+function migrate(){
+  var raw = null;
+  try{ raw = localStorage.getItem(KEY); }catch(e){ return Promise.resolve(0); }
+  if(!raw) return Promise.resolve(0);
+  var arr = [];
+  try{ arr = JSON.parse(raw) || []; }catch(e){ arr = []; }
+  if(!arr.length){ try{ localStorage.removeItem(KEY); }catch(e){} return Promise.resolve(0); }
+  var now = Date.now();
+  arr.forEach(function(r, i){
+    if(!r.uuid) r.uuid = 'legacy-' + (r.id || (now + i)) + '-' + i;
+    r.createdAt = r.createdAt || r.id || (now + i);
+    r.updatedAt = r.updatedAt || now;
+    r.deviceId = r.deviceId || deviceId;
+    r.operator = r.operator || '';
+    r.deleted = false;
+    if(typeof r.amount === 'number' && typeof r.feeTotal === 'number'){
+      r.actual = r.amount + r.feeTotal;
+    }
+  });
+  return DB.putMany(arr).then(function(){
+    try{ localStorage.removeItem(KEY); }catch(e){}
+    return arr.length;
+  });
+}
 
 function n(id){ const v = parseFloat(document.getElementById(id).value); return isNaN(v) ? 0 : v; }
 function s(id){ return (document.getElementById(id).value || '').trim(); }
@@ -250,16 +353,46 @@ function fmt(x, d){
   return p.join('.');
 }
 
-function load(){
-  try{ data = JSON.parse(localStorage.getItem(KEY) || '[]'); }catch(e){ data = []; }
-  // 兼容修正：老版本把"实际总价"算成了减法，统一改成 总价 + 代办总价
+function normalizeData(){
+  data = (data || []).filter(function(r){ return !r.deleted; });
   data.forEach(function(r){
     if(typeof r.amount === 'number' && typeof r.feeTotal === 'number'){
       r.actual = r.amount + r.feeTotal;
     }
   });
+  data.sort(function(a, b){ return (b.createdAt || 0) - (a.createdAt || 0); });
 }
-function persist(){ localStorage.setItem(KEY, JSON.stringify(data)); }
+
+function load(cb){
+  var done = false;
+  function finish(){
+    if(done) return;
+    done = true;
+    if(cb) cb();
+  }
+  function fallback(){
+    try{ data = JSON.parse(localStorage.getItem(KEY) || '[]'); }catch(e){ data = []; }
+    normalizeData();
+    finish();
+  }
+  // 浏览器不支持 IndexedDB：直接走老路
+  if(!window.indexedDB){ fallback(); return; }
+
+  // 兜底：3 秒内无论如何都要渲染，绝不白屏
+  var timer = setTimeout(function(){ normalizeData(); finish(); }, 3000);
+
+  migrate().catch(function(){}).then(function(){
+    return DB.all();
+  }).then(function(list){
+    clearTimeout(timer);
+    data = list || [];
+    normalizeData();
+    finish();
+  }).catch(function(){
+    clearTimeout(timer);
+    fallback();
+  });
+}
 
 function recalc(){
   const jian=n('jian'), per=n('per'), soil=n('soil')/100, price=n('price'), fee=n('fee');
@@ -294,17 +427,24 @@ function saveRec(){
   const soilQty = total*soil;
   const net = total-soilQty;
 
-  data.unshift({
-    id: Date.now(),
+  var now = Date.now();
+  var rec = {
+    uuid: uuid(),
     date: s('date') || new Date().toISOString().slice(0,10),
     customer: customer, lot: s('lot'), plate: s('plate'),
     owner: owner, tel: s('tel'), base: s('base'),
     jian: jian, per: per, soil: soil,
     price: price, fee: fee,
     total: total, soilQty: soilQty, net: net,
-    amount: net*price, feeTotal: net*fee, actual: net*price + net*fee
-  });
-  persist();
+    amount: net*price, feeTotal: net*fee, actual: net*price + net*fee,
+    operator: operator || '',
+    deviceId: deviceId,
+    createdAt: now,
+    updatedAt: now,
+    deleted: false
+  };
+  data.unshift(rec);
+  DB.put(rec).catch(function(){});
 
   ['lot','plate','owner','tel','base','jian','per','price'].forEach(function(id){
     document.getElementById(id).value = '';
@@ -341,8 +481,8 @@ function render(){
       arr.forEach(function(r){
         var total = (typeof r.total === 'number') ? r.total : (r.jian * r.per);
         var soilQty = (typeof r.soilQty === 'number') ? r.soilQty : (total * (r.soil || 0));
-        var opened = (openId === r.id);
-        html += '<div class="item' + (opened ? ' open' : '') + '" data-id="' + r.id + '">' +
+        var opened = (openId === r.uuid);
+        html += '<div class="item' + (opened ? ' open' : '') + '" data-id="' + r.uuid + '">' +
           '<div class="row-main" onclick="toggleItem(this)">' +
             '<div class="li-l">' +
               '<div class="li-name">'+r.owner+'</div>' +
@@ -370,7 +510,7 @@ function render(){
               '<div class="r"><span>代办总价 · 付代办</span><b>¥ '+fmt(r.feeTotal,2)+'</b></div>' +
               '<div class="r total"><span>实际总价 · 总款</span><b>¥ '+fmt(r.actual,2)+'</b></div>' +
             '</div>' +
-            '<button class="del-btn" onclick="delRec('+r.id+')">删除这笔</button>' +
+            '<button class="del-btn" onclick="delRec(\''+r.uuid+'\')">删除这笔</button>' +
           '</div>' +
         '</div>';
       });
@@ -415,7 +555,7 @@ var openId = null;
 
 function toggleItem(el){
   var item = el.parentNode;
-  var id = parseInt(item.getAttribute('data-id'), 10);
+  var id = item.getAttribute('data-id');
   var wasOpen = item.classList.contains('open');
   var opened = document.querySelectorAll('.item.open');
   for(var i = 0; i < opened.length; i++){ opened[i].classList.remove('open'); }
@@ -429,16 +569,18 @@ function toggleItem(el){
 
 function delRec(id){
   if(!confirm('删掉这笔记录？删了找不回来。')) return;
-  data = data.filter(function(x){ return x.id !== id; });
+  data = data.filter(function(x){ return x.uuid !== id; });
   if(openId === id) openId = null;
-  persist();
+  DB.del(id).catch(function(){});
   render();
 }
 
 function clearAll(){
   if(!confirm('会清空全部记录，确定吗？')) return;
   if(!confirm('再确认一次：删了就找不回来了')) return;
-  data = []; persist(); render();
+  data = [];
+  DB.clear().catch(function(){});
+  render(); updateStoreInfo();
 }
 
 function exportCSV(){
@@ -454,6 +596,79 @@ function exportCSV(){
   a.href = URL.createObjectURL(blob);
   a.download = '生姜收购台账_' + new Date().toISOString().slice(0,10) + '.csv';
   a.click();
+}
+
+/* ---------- 数据存储：备份 / 恢复 / 录入人 ---------- */
+function saveOperator(){
+  var el = document.getElementById('opName');
+  var v = ((el && el.value) || '').trim();
+  operator = v;
+  try{ localStorage.setItem('gl_operator', v); }catch(e){}
+  updateStoreInfo();
+  alert(v ? '已设置录入人：' + v : '已清空录入人');
+}
+
+function updateStoreInfo(){
+  var el = document.getElementById('storeInfo');
+  if(!el) return;
+  el.innerHTML =
+    '<div class="si-row"><span>记录条数</span><b>' + data.length + ' 条</b></div>' +
+    '<div class="si-row"><span>存储位置</span><b>本机数据库</b></div>' +
+    '<div class="si-row"><span>设备编号</span><b>' + deviceId + '</b></div>' +
+    '<div class="si-row"><span>录入人</span><b>' + (operator || '未设置') + '</b></div>';
+}
+
+function exportJSON(){
+  if(!data.length){ alert('没有数据可导出'); return; }
+  var payload = {
+    app: 'ginger-ledger',
+    version: 2,
+    exportedAt: new Date().toISOString(),
+    deviceId: deviceId,
+    operator: operator,
+    count: data.length,
+    records: data
+  };
+  var blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '生姜台账备份_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+}
+
+function importJSON(file){
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(){
+    try{
+      var obj = JSON.parse(reader.result);
+      var list = (obj && obj.records) ? obj.records : obj;
+      if(!Array.isArray(list)) throw new Error('文件格式不对');
+      var map = {};
+      data.forEach(function(r){ map[r.uuid] = r; });
+      var added = 0, updated = 0;
+      list.forEach(function(r){
+        if(!r.uuid) r.uuid = uuid();
+        r.deleted = !!r.deleted;
+        var old = map[r.uuid];
+        if(!old){ map[r.uuid] = r; added++; }
+        else if((r.updatedAt || 0) > (old.updatedAt || 0)){ map[r.uuid] = r; updated++; }
+      });
+      var merged = Object.keys(map).map(function(k){ return map[k]; })
+        .filter(function(r){ return !r.deleted; })
+        .sort(function(a, b){ return (b.createdAt || 0) - (a.createdAt || 0); });
+      data = merged;
+      DB.putMany(merged).then(function(){
+        render(); updateStoreInfo();
+        alert('导入完成：新增 ' + added + ' 条，更新 ' + updated + ' 条，现有 ' + merged.length + ' 条');
+      }).catch(function(){
+        alert('写入失败，请重试');
+      });
+    }catch(e){
+      alert('导入失败：' + e.message);
+    }
+  };
+  reader.readAsText(file);
 }
 
 function showTab(name){
@@ -475,19 +690,47 @@ document.querySelectorAll('nav button').forEach(function(b){
   const d = new Date();
   document.getElementById('date').value = d.toISOString().slice(0,10);
   document.getElementById('today').textContent = d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日';
-  load(); render(); recalc();
+  recalc();
 
-  /* 演示数据：#demo 打开一次即可看到样例 */
-  if(location.hash.indexOf('#demo') === 0 && !data.length){
-    var d0 = new Date().toISOString().slice(0,10);
-    data = [
-      {id:1700000001,date:d0,customer:'山东姜业公司',lot:'20250217-01',plate:'鲁A12345',owner:'张建国',tel:'13900001111',base:'王家村基地',jian:120,per:50,soil:0.10,price:1.20,fee:0.05,total:6000,soilQty:600,net:5400,amount:6480,feeTotal:270,actual:6750},
-      {id:1700000002,date:d0,customer:'山东姜业公司',lot:'20250217-01',plate:'鲁A12345',owner:'赵国强',tel:'13600004444',base:'南山基地',jian:200,per:50,soil:0.12,price:1.10,fee:0.05,total:10000,soilQty:1200,net:8800,amount:9680,feeTotal:440,actual:10120},
-      {id:1700000003,date:d0,customer:'江苏调味品厂',lot:'20250217-02',plate:'鲁B88888',owner:'李秀兰',tel:'13800002222',base:'河西基地',jian:80,per:50,soil:0.08,price:1.15,fee:0.05,total:4000,soilQty:320,net:3680,amount:4232,feeTotal:184,actual:4416}
-    ];
-    persist(); render(); showTab('list');
-    if(location.hash === '#demo-detail'){ setTimeout(function(){ openId = 1700000001; render(); }, 400); }
-  }
+  var opEl = document.getElementById('opName');
+  if(opEl) opEl.value = operator;
+
+  load(function(){
+    render();
+    updateStoreInfo();
+
+    /* 演示数据：#demo 打开一次即可看到样例 */
+    if(location.hash.indexOf('#demo') === 0 && !data.length){
+      var d0 = new Date().toISOString().slice(0,10);
+      var now = Date.now();
+      var src = [
+        {customer:'山东姜业公司',lot:'20250217-01',plate:'鲁A12345',owner:'张建国',tel:'13900001111',base:'王家村基地',jian:120,per:50,soil:0.10,price:1.20,fee:0.05},
+        {customer:'山东姜业公司',lot:'20250217-01',plate:'鲁A12345',owner:'赵国强',tel:'13600004444',base:'南山基地',jian:200,per:50,soil:0.12,price:1.10,fee:0.05},
+        {customer:'江苏调味品厂',lot:'20250217-02',plate:'鲁B88888',owner:'李秀兰',tel:'13800002222',base:'河西基地',jian:80,per:50,soil:0.08,price:1.15,fee:0.05}
+      ];
+      var demo = src.map(function(x, i){
+        var total = x.jian * x.per;
+        var soilQty = total * x.soil;
+        var net = total - soilQty;
+        x.uuid = uuid();
+        x.date = d0;
+        x.total = total; x.soilQty = soilQty; x.net = net;
+        x.amount = net * x.price;
+        x.feeTotal = net * x.fee;
+        x.actual = x.amount + x.feeTotal;
+        x.createdAt = now - i;
+        x.updatedAt = now - i;
+        x.deviceId = deviceId;
+        x.operator = operator || '';
+        x.deleted = false;
+        return x;
+      });
+      data = demo;
+      DB.putMany(demo).catch(function(){});
+      render(); updateStoreInfo(); showTab('list');
+      if(location.hash === '#demo-detail'){ setTimeout(function(){ openId = demo[0].uuid; render(); }, 400); }
+    }
+  });
 })();
 
 /* ---------- 强制安装引导 ---------- */
@@ -569,6 +812,7 @@ function guideAndroid(){
 window.addEventListener('beforeinstallprompt', function(e){
   e.preventDefault();
   deferredPrompt = e;
+  if(standalone || installedFlag || location.hash.indexOf('#demo') === 0) return;
   showGuide({
     title: '一步装到桌面',
     sub: '点下面的按钮，系统会弹确认框，选「安装」即可',
@@ -588,7 +832,7 @@ window.addEventListener('appinstalled', function(){
   hideGuide();
 });
 
-if(standalone || installedFlag){
+if(standalone || installedFlag || location.hash.indexOf('#demo') === 0){
   hideGuide();
 }else if(isWeChat){
   guideWeChat();
