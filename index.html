@@ -50,12 +50,20 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 .it-hd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px;gap:8px}
 .it-name{font-size:16.5px;font-weight:600;color:#1F2A24;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .it-jin{font-size:15px;font-weight:600;color:#2F5D50;white-space:nowrap}
-.it-sub{font-size:12.5px;color:#7A8A82;margin-bottom:7px}
-.it-mid{font-size:13px;color:#4A5B53;line-height:1.7;margin-bottom:9px}
-.it-mid em{font-style:normal;color:#9AA8A1;margin:0 4px}
-.it-ft{display:flex;align-items:baseline;gap:16px;padding-top:9px;border-top:1px dashed #E5EBE8;font-size:12.5px;color:#7A8A82}
-.it-ft b{color:#1F2A24;font-weight:600;font-size:14px}
-.it-ft .grand{margin-left:auto;color:#C0392B;font-weight:700;font-size:16px}
+.it-sub{font-size:12.5px;color:#7A8A82;margin-bottom:9px;line-height:1.5}
+.kv{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#E9F0EC;border-radius:9px;overflow:hidden;margin-bottom:8px}
+.kv>div{background:#FBFDFC;padding:7px 3px;text-align:center}
+.kv em{display:block;font-size:10.5px;color:#9AA8A1;font-style:normal;margin-bottom:3px;white-space:nowrap}
+.kv b{font-size:13.5px;color:#1F2A24;font-weight:600;white-space:nowrap}
+.price-line{font-size:12.5px;color:#7A8A82;margin-bottom:9px;display:flex;justify-content:space-between;align-items:baseline}
+.price-line b{font-size:14px;color:#1F2A24;font-weight:600}
+.money{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#E9F0EC;border-radius:9px;overflow:hidden}
+.money>div{background:#FBFDFC;padding:9px 3px;text-align:center}
+.money em{display:block;font-size:10.5px;color:#9AA8A1;font-style:normal;margin-bottom:3px;white-space:nowrap}
+.money b{font-size:15.5px;font-weight:700;color:#1F2A24;letter-spacing:-.2px}
+.money .grand{background:#FDF3F2}
+.money .grand em{color:#D98880}
+.money .grand b{color:#C0392B;font-size:17px}
 .sum{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
 .sum .box{background:#fff;border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
 .sum .box .k{font-size:12px;color:#7A8A82;margin-bottom:6px}
@@ -256,7 +264,14 @@ let data = [];
 
 function n(id){ const v = parseFloat(document.getElementById(id).value); return isNaN(v) ? 0 : v; }
 function s(id){ return (document.getElementById(id).value || '').trim(); }
-function fmt(x, d){ return (Math.round(x*100)/100).toFixed(d===undefined?2:d).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+function fmt(x, d){
+  if(d === undefined) d = 2;
+  var f = Math.pow(10, d);
+  var s = (Math.round(x * f) / f).toFixed(d);
+  var p = s.split('.');
+  p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return p.join('.');
+}
 
 function load(){
   try{ data = JSON.parse(localStorage.getItem(KEY) || '[]'); }catch(e){ data = []; }
@@ -348,18 +363,25 @@ function render(){
               '<span class="g2">'+arr.length+' 笔 · '+fmt(net,0)+' 斤 · 总款 ¥'+fmt(act,0)+'</span></div>';
       arr.forEach(function(r){
         var total = (typeof r.total === 'number') ? r.total : (r.jian * r.per);
-        var soilPct = ((r.soil || 0) * 100).toFixed(0);
+        var soilQty = (typeof r.soilQty === 'number') ? r.soilQty : (total * (r.soil || 0));
         html += '<div class="item" onclick="openSheet(' + r.id + ')">' +
           '<div class="it-hd"><span class="it-name">'+r.owner+'</span>' +
           '<span class="it-jin">'+fmt(total,0)+' 斤</span></div>' +
           '<div class="it-sub">'+(r.base||'—')+' · '+(r.plate||'—')+' · '+(r.lot||'—')+'</div>' +
-          '<div class="it-mid">'+(r.jian||0)+' 件 × '+fmt(r.per,0)+' 斤<em>=</em>'+fmt(total,0)+' 斤' +
-            '<em>扣土</em>'+soilPct+'%<em>净</em>'+fmt(r.net,0)+' 斤' +
-            '<br>单价 '+fmt(r.price,4)+' 元/斤' +
+          '<div class="kv">' +
+            '<div><em>件数</em><b>'+fmt(r.jian,0)+'</b></div>' +
+            '<div><em>单件斤数</em><b>'+fmt(r.per,2)+'</b></div>' +
+            '<div><em>总斤数</em><b>'+fmt(total,2)+'</b></div>' +
+            '<div><em>扣土率</em><b>'+((r.soil||0)*100).toFixed(1)+'%</b></div>' +
+            '<div><em>扣土量</em><b>'+fmt(soilQty,2)+'</b></div>' +
+            '<div><em>净总斤数</em><b>'+fmt(r.net,2)+'</b></div>' +
           '</div>' +
-          '<div class="it-ft"><span>总价 <b>'+fmt(r.amount,0)+'</b></span>' +
-            '<span>代办 <b>'+fmt(r.feeTotal,0)+'</b></span>' +
-            '<span class="grand">总款 ¥'+fmt(r.actual,0)+'</span></div>' +
+          '<div class="price-line"><span>单价（元/斤）</span><b>'+fmt(r.price,4)+'</b></div>' +
+          '<div class="money">' +
+            '<div><em>总价 · 付货主</em><b>'+fmt(r.amount,0)+'</b></div>' +
+            '<div><em>代办总价 · 付代办</em><b>'+fmt(r.feeTotal,0)+'</b></div>' +
+            '<div class="grand"><em>实际总价 · 总款</em><b>'+fmt(r.actual,0)+'</b></div>' +
+          '</div>' +
         '</div>';
       });
       html += '</div>';
