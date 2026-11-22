@@ -222,7 +222,15 @@ function n(id){ const v = parseFloat(document.getElementById(id).value); return 
 function s(id){ return (document.getElementById(id).value || '').trim(); }
 function fmt(x, d){ return (Math.round(x*100)/100).toFixed(d===undefined?2:d).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
 
-function load(){ try{ data = JSON.parse(localStorage.getItem(KEY) || '[]'); }catch(e){ data = []; } }
+function load(){
+  try{ data = JSON.parse(localStorage.getItem(KEY) || '[]'); }catch(e){ data = []; }
+  // 兼容修正：老版本把"实际总价"算成了减法，统一改成 总价 + 代办总价
+  data.forEach(function(r){
+    if(typeof r.amount === 'number' && typeof r.feeTotal === 'number'){
+      r.actual = r.amount + r.feeTotal;
+    }
+  });
+}
 function persist(){ localStorage.setItem(KEY, JSON.stringify(data)); }
 
 function recalc(){
