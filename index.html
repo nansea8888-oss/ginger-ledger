@@ -45,17 +45,26 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 .grp .gh{padding:13px 14px;background:#EAF1ED;display:flex;justify-content:space-between;align-items:center;font-weight:600;color:#2F5D50;font-size:15px;gap:8px}
 .grp .gh .g1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .grp .gh .g2{font-size:12px;font-weight:400;color:#5A6B63;text-align:right;white-space:nowrap;flex-shrink:0}
-.item{padding:13px 14px;border-top:1px solid #F0F4F2;cursor:pointer}
-.item:active{background:#F5F9F7}
-.it-hd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px;gap:8px}
-.it-name{font-size:16.5px;font-weight:600;color:#1F2A24;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.it-jin{font-size:15px;font-weight:600;color:#2F5D50;white-space:nowrap}
-.it-sub{font-size:12.5px;color:#7A8A82;margin-bottom:9px;line-height:1.5}
+.item{border-top:1px solid #F0F4F2}
+.row-main{padding:13px 14px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;cursor:pointer}
+.row-main:active{background:#F5F9F7}
+.li-l{flex:1;min-width:0}
+.li-name{font-size:16.5px;font-weight:600;color:#1F2A24;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li-m1{font-size:12.5px;color:#7A8A82;margin-bottom:3px;line-height:1.5}
+.li-m2{font-size:12.5px;color:#7A8A82;line-height:1.5}
+.li-m2 b{color:#1F2A24;font-weight:600}
+.li-r{flex-shrink:0;text-align:right;display:flex;flex-direction:column;align-items:flex-end}
+.li-r b{font-size:17px;font-weight:700;color:#C0392B;line-height:1.2}
+.li-r small{font-size:11px;color:#9AA8A1;margin-top:2px}
+.li-arrow{font-size:10px;color:#B8C4BE;margin-top:5px;transition:transform .15s;display:inline-block}
+.item.open .li-arrow{transform:rotate(180deg)}
+.expand{display:none;padding:0 14px 14px}
+.item.open .expand{display:block}
 .kv{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#E9F0EC;border-radius:9px;overflow:hidden;margin-bottom:8px}
 .kv>div{background:#FBFDFC;padding:7px 3px;text-align:center}
 .kv em{display:block;font-size:10.5px;color:#9AA8A1;font-style:normal;margin-bottom:3px;white-space:nowrap}
 .kv b{font-size:13.5px;color:#1F2A24;font-weight:600;white-space:nowrap}
-.price-line{font-size:12.5px;color:#7A8A82;margin-bottom:9px;display:flex;justify-content:space-between;align-items:baseline}
+.price-line{font-size:12.5px;color:#7A8A82;margin-bottom:8px;display:flex;justify-content:space-between;align-items:baseline;padding:0 2px}
 .price-line b{font-size:14px;color:#1F2A24;font-weight:600}
 .money{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#E9F0EC;border-radius:9px;overflow:hidden}
 .money>div{background:#FBFDFC;padding:9px 3px;text-align:center}
@@ -64,6 +73,7 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 .money .grand{background:#FDF3F2}
 .money .grand em{color:#D98880}
 .money .grand b{color:#C0392B;font-size:17px}
+.del-btn{width:100%;margin-top:11px;padding:11px;border:0;border-radius:9px;background:#FDEDEC;color:#C0392B;font-size:14px;font-weight:600;font-family:inherit}
 .sum{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
 .sum .box{background:#fff;border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
 .sum .box .k{font-size:12px;color:#7A8A82;margin-bottom:6px}
@@ -246,18 +256,6 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
   </div>
 </div>
 
-<div id="sheet" class="sheet hide">
-  <div class="mask" onclick="closeSheet()"></div>
-  <div class="box">
-    <div class="hd">
-      <h3 id="shTitle"></h3>
-      <button onclick="closeSheet()">✕</button>
-    </div>
-    <div class="bd" id="shBody"></div>
-    <div class="ft"><button id="shDel">删除这笔</button></div>
-  </div>
-</div>
-
 <script>
 const KEY = 'ginger_ledger_v1';
 let data = [];
@@ -364,23 +362,35 @@ function render(){
       arr.forEach(function(r){
         var total = (typeof r.total === 'number') ? r.total : (r.jian * r.per);
         var soilQty = (typeof r.soilQty === 'number') ? r.soilQty : (total * (r.soil || 0));
-        html += '<div class="item" onclick="openSheet(' + r.id + ')">' +
-          '<div class="it-hd"><span class="it-name">'+r.owner+'</span>' +
-          '<span class="it-jin">'+fmt(total,0)+' 斤</span></div>' +
-          '<div class="it-sub">'+(r.base||'—')+' · '+(r.plate||'—')+' · '+(r.lot||'—')+'</div>' +
-          '<div class="kv">' +
-            '<div><em>件数</em><b>'+fmt(r.jian,0)+'</b></div>' +
-            '<div><em>单件斤数</em><b>'+fmt(r.per,2)+'</b></div>' +
-            '<div><em>总斤数</em><b>'+fmt(total,2)+'</b></div>' +
-            '<div><em>扣土率</em><b>'+((r.soil||0)*100).toFixed(1)+'%</b></div>' +
-            '<div><em>扣土量</em><b>'+fmt(soilQty,2)+'</b></div>' +
-            '<div><em>净总斤数</em><b>'+fmt(r.net,2)+'</b></div>' +
+        var opened = (openId === r.id);
+        html += '<div class="item' + (opened ? ' open' : '') + '" data-id="' + r.id + '">' +
+          '<div class="row-main" onclick="toggleItem(this)">' +
+            '<div class="li-l">' +
+              '<div class="li-name">'+r.owner+'</div>' +
+              '<div class="li-m1">'+(r.date||'—')+'　'+fmt(total,0)+' 斤　单价 '+fmt(r.price,4)+'</div>' +
+              '<div class="li-m2">总价 <b>'+fmt(r.amount,0)+'</b>　代办 <b>'+fmt(r.feeTotal,0)+'</b></div>' +
+            '</div>' +
+            '<div class="li-r">' +
+              '<b>¥'+fmt(r.actual,0)+'</b>' +
+              '<small>总款</small>' +
+              '<span class="li-arrow">▼</span>' +
+            '</div>' +
           '</div>' +
-          '<div class="price-line"><span>单价（元/斤）</span><b>'+fmt(r.price,4)+'</b></div>' +
-          '<div class="money">' +
-            '<div><em>总价 · 付货主</em><b>'+fmt(r.amount,0)+'</b></div>' +
-            '<div><em>代办总价 · 付代办</em><b>'+fmt(r.feeTotal,0)+'</b></div>' +
-            '<div class="grand"><em>实际总价 · 总款</em><b>'+fmt(r.actual,0)+'</b></div>' +
+          '<div class="expand">' +
+            '<div class="kv">' +
+              '<div><em>件数</em><b>'+fmt(r.jian,0)+'</b></div>' +
+              '<div><em>单件斤数</em><b>'+fmt(r.per,2)+'</b></div>' +
+              '<div><em>总斤数</em><b>'+fmt(total,2)+'</b></div>' +
+              '<div><em>扣土率</em><b>'+((r.soil||0)*100).toFixed(1)+'%</b></div>' +
+              '<div><em>扣土量</em><b>'+fmt(soilQty,2)+'</b></div>' +
+              '<div><em>净总斤数</em><b>'+fmt(r.net,2)+'</b></div>' +
+            '</div>' +
+            '<div class="money">' +
+              '<div><em>总价 · 付货主</em><b>'+fmt(r.amount,0)+'</b></div>' +
+              '<div><em>代办总价 · 付代办</em><b>'+fmt(r.feeTotal,0)+'</b></div>' +
+              '<div class="grand"><em>实际总价 · 总款</em><b>'+fmt(r.actual,0)+'</b></div>' +
+            '</div>' +
+            '<button class="del-btn" onclick="delRec('+r.id+')">删除这笔</button>' +
           '</div>' +
         '</div>';
       });
@@ -420,69 +430,30 @@ function render(){
   document.getElementById('cusBox').innerHTML = ch || '<div class="empty">暂无数据</div>';
 }
 
-/* ---------- 单笔详情 ---------- */
-var curId = null;
+/* ---------- 单笔原地展开（一次只开一条） ---------- */
+var openId = null;
 
-function findRec(id){
-  for(var i = 0; i < data.length; i++){ if(data[i].id === id) return data[i]; }
-  return null;
+function toggleItem(el){
+  var item = el.parentNode;
+  var id = parseInt(item.getAttribute('data-id'), 10);
+  var wasOpen = item.classList.contains('open');
+  var opened = document.querySelectorAll('.item.open');
+  for(var i = 0; i < opened.length; i++){ opened[i].classList.remove('open'); }
+  if(!wasOpen){
+    item.classList.add('open');
+    openId = id;
+  }else{
+    openId = null;
+  }
 }
 
-function openSheet(id){
-  var r = findRec(id);
-  if(!r) return;
-  curId = id;
-  document.getElementById('shTitle').innerHTML =
-    (r.owner || '—') + '<small>' + (r.base || '—') + ' · ' + (r.date || '—') + '</small>';
-  document.getElementById('shBody').innerHTML = buildDetail(r);
-  document.getElementById('sheet').classList.remove('hide');
-  document.getElementById('shBody').scrollTop = 0;
-}
-
-function closeSheet(){
-  document.getElementById('sheet').classList.add('hide');
-  curId = null;
-}
-
-function buildDetail(r){
-  function row(k, v){ return '<div class="dlg-r"><span>' + k + '</span><b>' + v + '</b></div>'; }
-  var total = (typeof r.total === 'number') ? r.total : (r.jian * r.per);
-  var soilQty = (typeof r.soilQty === 'number') ? r.soilQty : (total * (r.soil || 0));
-  var h = '';
-  h += '<div class="dlg-g">交易信息</div>';
-  h += row('客户（买家）', r.customer || '—');
-  h += row('批号', r.lot || '—');
-  h += row('车牌号', r.plate || '—');
-  h += row('收购日期', r.date || '—');
-  h += '<div class="dlg-g">货主信息</div>';
-  h += row('货主（卖家）', r.owner || '—');
-  h += row('电话', r.tel || '—');
-  h += row('基地', r.base || '—');
-  h += '<div class="dlg-g">计量</div>';
-  h += row('件数', (r.jian || 0) + ' 件');
-  h += row('单件斤数', fmt(r.per, 2) + ' 斤');
-  h += row('总斤数', fmt(total, 2) + ' 斤');
-  h += row('扣土率', ((r.soil || 0) * 100).toFixed(1) + ' %');
-  h += row('扣土量', fmt(soilQty, 2) + ' 斤');
-  h += row('净总斤数', fmt(r.net, 2) + ' 斤');
-  h += '<div class="dlg-g">金额</div>';
-  h += row('单价', fmt(r.price, 4) + ' 元/斤');
-  h += row('总价（付货主）', '¥ ' + fmt(r.amount, 2));
-  h += row('代办费', fmt(r.fee, 4) + ' 元/斤');
-  h += row('代办总价（付代办）', '¥ ' + fmt(r.feeTotal, 2));
-  h += '<div class="dlg-r hl"><span>实际总价（总款）</span><b>¥ ' + fmt(r.actual, 2) + '</b></div>';
-  return h;
-}
-
-document.getElementById('shDel').onclick = function(){
-  if(!curId) return;
+function delRec(id){
   if(!confirm('删掉这笔记录？删了找不回来。')) return;
-  var id = curId;
   data = data.filter(function(x){ return x.id !== id; });
+  if(openId === id) openId = null;
   persist();
-  closeSheet();
   render();
-};
+}
 
 function clearAll(){
   if(!confirm('会清空全部记录，确定吗？')) return;
@@ -535,7 +506,7 @@ document.querySelectorAll('nav button').forEach(function(b){
       {id:1700000003,date:d0,customer:'江苏调味品厂',lot:'20250217-02',plate:'鲁B88888',owner:'李秀兰',tel:'13800002222',base:'河西基地',jian:80,per:50,soil:0.08,price:1.15,fee:0.05,total:4000,soilQty:320,net:3680,amount:4232,feeTotal:184,actual:4416}
     ];
     persist(); render(); showTab('list');
-    if(location.hash === '#demo-detail'){ setTimeout(function(){ openSheet(1700000001); }, 400); }
+    if(location.hash === '#demo-detail'){ setTimeout(function(){ openId = 1700000001; render(); }, 400); }
   }
 })();
 
