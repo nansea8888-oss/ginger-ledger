@@ -1096,6 +1096,22 @@ function compressImg(file, cb){
   img.src = url;
 }
 
+function reverseGeo(lat, lng, cb){
+  // Demo 用免费服务试一下；正式版会换成腾讯位置服务（国内更准）
+  var url = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + lat + '&lon=' + lng + '&accept-language=zh-CN&zoom=18';
+  var done = false;
+  var timer = setTimeout(function(){ if(!done){ done = true; cb(''); } }, 6000);
+  fetch(url).then(function(r){ return r.json(); }).then(function(d){
+    if(done) return;
+    done = true; clearTimeout(timer);
+    cb((d && d.display_name) ? d.display_name : '');
+  }).catch(function(){
+    if(done) return;
+    done = true; clearTimeout(timer);
+    cb('');
+  });
+}
+
 function locate(){
   const st = document.getElementById('geoState');
   const dot = document.getElementById('geoDot');
@@ -1109,11 +1125,18 @@ function locate(){
     const lvl = geoInfo.acc <= 30 ? 'g' : geoInfo.acc <= 200 ? 'y' : 'r';
     const word = geoInfo.acc <= 30 ? '精准' : geoInfo.acc <= 200 ? '一般' : '偏差较大';
     dot.className = 'geo-dot ' + lvl;
-    txt.innerHTML = '纬度 <b>' + geoInfo.lat + '</b> · 经度 <b>' + geoInfo.lng + '</b><br>精度 ±' + geoInfo.acc + ' 米（' + word + '）';
+    txt.innerHTML = '纬度 <b>' + geoInfo.lat + '</b> · 经度 <b>' + geoInfo.lng + '</b><br>精度 ±' + geoInfo.acc + ' 米（' + word + '）　<span style="color:#B0BAB5">正在解析地址…</span>';
     st.textContent = '已定位';
-    if(!document.getElementById('addr').value){
-      document.getElementById('addr').value = '已定位（' + geoInfo.lat + ', ' + geoInfo.lng + '）';
-    }
+
+    reverseGeo(geoInfo.lat, geoInfo.lng, function(addr){
+      var addrEl = document.getElementById('addr');
+      if(addr){
+        addrEl.value = addr;
+        txt.innerHTML = '纬度 <b>' + geoInfo.lat + '</b> · 经度 <b>' + geoInfo.lng + '</b><br>精度 ±' + geoInfo.acc + ' 米（' + word + '）';
+      }else{
+        txt.innerHTML = '纬度 <b>' + geoInfo.lat + '</b> · 经度 <b>' + geoInfo.lng + '</b><br>精度 ±' + geoInfo.acc + ' 米（' + word + '）<br><span style="color:#C0392B">地址解析失败，请手动填写</span>';
+      }
+    });
   }, function(err){
     dot.className = 'geo-dot r';
     st.textContent = '定位失败';
