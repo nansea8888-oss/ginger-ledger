@@ -418,7 +418,7 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 
 <script>
 const KEY = 'ginger_ledger_v1';   // 旧键，仅用于一次性迁移
-const APP_VERSION = '1.3.2';
+const APP_VERSION = '1.3.3';
 let data = [];
 let expenses = [];
 var currentExpType = '差旅费';
@@ -428,6 +428,21 @@ function esc(s){
   return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){
     return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c];
   });
+}
+
+/* 金额精度：四舍五入到分；累加时转成整数分，避免浮点误差 */
+function round2(x){ return Math.round((x || 0) * 100) / 100; }
+function sumFen(list, pick){
+  var fen = 0;
+  for(var i = 0; i < list.length; i++){ fen += Math.round((pick(list[i]) || 0) * 100); }
+  return fen / 100;
+}
+
+/* 本地日期 YYYY-MM-DD（不能用 toISOString，那是格林尼治时间） */
+function localDate(d){
+  d = d || new Date();
+  function p(n){ return n < 10 ? '0' + n : '' + n; }
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
 }
 
 /* 设备标识 & 录入人（为将来上云和权限预留） */
@@ -611,13 +626,13 @@ function saveRec(){
   var now = Date.now();
   var rec = {
     uuid: uuid(),
-    date: s('date') || new Date().toISOString().slice(0,10),
+    date: s('date') || localDate(),
     customer: customer, customerTel: s('customerTel'), lot: s('lot'), plate: s('plate'),
     owner: owner, tel: s('tel'), base: s('base'),
     jian: jian, per: per, soil: soil,
     price: price, fee: fee,
     total: total, soilQty: soilQty, net: net,
-    amount: net*price, feeTotal: net*fee, actual: net*price + net*fee,
+    amount: round2(net*price), feeTotal: round2(net*fee), actual: round2(round2(net*price) + round2(net*fee)),
     operator: operator || '',
     deviceId: deviceId,
     createdAt: now,
@@ -664,8 +679,8 @@ function render(){
     let html = '';
     Object.keys(groups).forEach(function(cus){
       const arr = groups[cus];
-      const net = arr.reduce(function(a,b){ return a+b.net; }, 0);
-      const act = arr.reduce(function(a,b){ return a+b.actual; }, 0);
+      const net = sumFen(arr, function(x){ return x.net; });
+      const act = sumFen(arr, function(x){ return x.actual; });
       html += '<div class="grp"><div class="gh"><span class="g1">'+cus+'</span>'+
               '<span class="g2">'+arr.length+' 笔 · '+fmt(net,0)+' 斤 · 总款 ¥'+fmt(act,0)+'</span></div>';
       arr.forEach(function(r){
@@ -723,7 +738,7 @@ function render(){
 var customerFilter = null;
 
 function periodOf(list, key){
-  var today = new Date().toISOString().slice(0, 10);
+  var today = localDate();
   var ym = today.slice(0, 7);
   return list.filter(function(r){
     var d = String(r.date || '');
@@ -737,9 +752,9 @@ function statOf(key){
   var rs = periodOf(data, key);
   var es = periodOf(expenses, key);
   return {
-    cost: rs.reduce(function(a, b){ return a + (b.actual || 0); }, 0),
-    net: rs.reduce(function(a, b){ return a + (b.net || 0); }, 0),
-    fee: es.reduce(function(a, b){ return a + (b.amount || 0); }, 0)
+    cost: sumFen(rs, function(x){ return x.actual; }),
+    net: sumFen(rs, function(x){ return x.net; }),
+    fee: sumFen(es, function(x){ return x.amount; })
   };
 }
 
@@ -800,15 +815,13 @@ function clearFilter(){
 }
 
 function renderBoard(){
-  var today = new Date().toISOString().slice(0, 10);
-  var yest = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  var today = localDate();
+  var yest = localDate(new Date(Date.now() - 86400000));
 
   function dayTotal(ds){
-    var rc = data.filter(function(r){ return String(r.date || '') === ds; })
-                 .reduce(function(a, b){ return a + (b.actual || 0); }, 0);
-    var ex = expenses.filter(function(e){ return String(e.date || '') === ds; })
-                 .reduce(function(a, b){ return a + (b.amount || 0); }, 0);
-    return rc + ex;
+    var rc = sumFen(data.filter(function(r){ return String(r.date || '') === ds; }), function(x){ return x.actual; });
+    var ex = sumFen(expenses.filter(function(e){ return String(e.date || '') === ds; }), function(x){ return x.amount; });
+    return round2(rc + ex);
   }
 
   var t1 = dayTotal(today), t0 = dayTotal(yest);
@@ -834,11 +847,11 @@ function renderBoard(){
   var days = [];
   for(var i = 6; i >= 0; i--){
     var dt = new Date(Date.now() - i * 86400000);
-    var ds = dt.toISOString().slice(0, 10);
+    var ds = localDate(dt);
     days.push({label: ds.slice(5), v: dayTotal(ds), today: i === 0});
   }
   var mxd = Math.max.apply(null, days.map(function(x){ return x.v; })) || 1;
-  var sum = days.reduce(function(a, b){ return a + b.v; }, 0);
+  var sum = sumFen(days, function(x){ return x.v; });
   document.getElementById('chartBars').innerHTML =
     '<div class="ftype bars7">' +
       days.slice().reverse().map(function(x){
@@ -957,9 +970,9 @@ function renderExp(){
     box.innerHTML = html;
   }
 
-  var ym = new Date().toISOString().slice(0, 7);
+  var ym = localDate().slice(0, 7);
   var month = expenses.filter(function(e){ return String(e.date || '').slice(0, 7) === ym; });
-  var total = month.reduce(function(a, b){ return a + (b.amount || 0); }, 0);
+  var total = sumFen(month, function(x){ return x.amount; });
   var c = document.getElementById('expCount');
   var t = document.getElementById('expTotal');
   if(c) c.textContent = month.length + ' 笔';
@@ -969,7 +982,7 @@ function renderExp(){
 function saveExp(){
   var amount = parseFloat(document.getElementById('expAmount').value);
   var payer = (document.getElementById('expPayer').value || '').trim();
-  var date = document.getElementById('expDate').value || new Date().toISOString().slice(0, 10);
+  var date = document.getElementById('expDate').value || localDate();
   var note = (document.getElementById('expNote').value || '').trim();
 
   if(!amount || amount <= 0){ alert('请填写金额'); return; }
@@ -980,7 +993,7 @@ function saveExp(){
     uuid: uuid(),
     date: date,
     type: currentExpType,
-    amount: Math.round(amount * 100) / 100,
+    amount: round2(amount),
     payer: payer,
     note: note,
     operator: operator || '',
@@ -1030,7 +1043,7 @@ function exportCSV(){
   const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = '生姜收购台账_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.download = '生姜收购台账_' + localDate() + '.csv';
   a.click();
 }
 
@@ -1071,7 +1084,7 @@ function exportJSON(){
   var blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
   var a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = '生姜台账备份_' + new Date().toISOString().slice(0,10) + '.json';
+  a.download = '生姜台账备份_' + localDate() + '.json';
   a.click();
 }
 
@@ -1148,7 +1161,7 @@ document.querySelectorAll('nav button').forEach(function(b){
 // 初始化
 (function(){
   const d = new Date();
-  var todayStr = d.toISOString().slice(0,10);
+  var todayStr = localDate(d);
   document.getElementById('date').value = todayStr;
   var dpi = document.getElementById('datePick');
   if(dpi) dpi.value = todayStr;
@@ -1174,8 +1187,8 @@ document.querySelectorAll('nav button').forEach(function(b){
 
   var ed = document.getElementById('expDate');
   var ep = document.getElementById('expDatePick');
-  if(ed){ ed.value = d.toISOString().slice(0,10); }
-  if(ep){ ep.value = d.toISOString().slice(0,10); }
+  if(ed){ ed.value = localDate(d); }
+  if(ep){ ep.value = localDate(d); }
 
   document.querySelectorAll('#expTypes button').forEach(function(b){
     b.onclick = function(){
@@ -1191,7 +1204,7 @@ document.querySelectorAll('nav button').forEach(function(b){
 
     /* 演示数据：#demo 打开一次即可看到样例 */
     if(location.hash.indexOf('#demo') === 0 && !data.length){
-      var d0 = new Date().toISOString().slice(0,10);
+      var d0 = localDate();
       var now = Date.now();
       var src = [
         {customer:'山东姜业公司',lot:'20250217-01',plate:'鲁A12345',owner:'张建国',tel:'13900001111',base:'王家村基地',jian:120,per:50,soil:0.10,price:1.20,fee:0.05},
@@ -1225,8 +1238,8 @@ document.querySelectorAll('nav button').forEach(function(b){
     loadExp(function(){
       if(location.hash.indexOf('demo') >= 0 && !expenses.length){
         var t0 = Date.now();
-        var d1 = new Date().toISOString().slice(0,10);
-        var d2 = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+        var d1 = localDate();
+        var d2 = localDate(new Date(Date.now() - 86400000));
         expenses = [
           {uuid:uuid(),date:d1,type:'差旅费',amount:420,payer:'张三',note:'加油300 过路费120',operator:operator||'',deviceId:deviceId,createdAt:t0,updatedAt:t0,deleted:false},
           {uuid:uuid(),date:d1,type:'物料费',amount:320,payer:'李四',note:'编织袋 4 捆',operator:operator||'',deviceId:deviceId,createdAt:t0-1000,updatedAt:t0-1000,deleted:false},
