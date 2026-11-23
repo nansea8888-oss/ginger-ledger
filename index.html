@@ -89,6 +89,29 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 .si-row:last-child{border-bottom:0}
 .si-row span{color:#7A8A82}
 .si-row b{color:#1F2A24;font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
+.etabs{display:flex;gap:6px;margin-bottom:12px}
+.etabs button{flex:1 1 0;min-width:0;padding:10px 0;border:1px solid #D8E0DB;background:#fff;border-radius:9px;font-size:14px;font-family:inherit;color:#5A6B63}
+.etabs button.on{background:#2F5D50;color:#fff;border-color:#2F5D50;font-weight:600}
+.mb{margin-bottom:10px}
+.sumcard{background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);display:flex;justify-content:space-between;align-items:flex-end}
+.sumcard .k{font-size:12.5px;color:#7A8A82;margin-bottom:4px}
+.sumcard .n{font-size:13px;color:#5A6B63}
+.sumcard .v{font-size:clamp(22px,6.5vw,26px);font-weight:700;color:#C0392B;font-variant-numeric:tabular-nums;line-height:1}
+.exp{display:flex;align-items:center;gap:12px;padding:13px 14px;border-top:1px solid #F0F4F2}
+.exp:first-child{border-top:0}
+.exp-body{flex:1;min-width:0}
+.exp-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px}
+.exp-amt{font-size:17.5px;font-weight:700;color:#1F2A24;font-variant-numeric:tabular-nums;white-space:nowrap}
+.etag{display:inline-block;font-size:11.5px;padding:3px 9px;border-radius:6px;font-weight:600;letter-spacing:.2px;white-space:nowrap}
+.t1{background:#E8F0FE;color:#1A56C4}
+.t2{background:#FEF3E2;color:#A96200}
+.t3{background:#E6F4EA;color:#0F7B3F}
+.t4{background:#F0E9FD;color:#6A3AB2}
+.t5{background:#EFF1F3;color:#5F6B66}
+.exp-who{font-size:14px;color:#1F2A24;font-weight:600}
+.exp-date{font-size:12.5px;color:#9AA8A1;font-weight:400;margin-left:8px}
+.exp-note{font-size:12.5px;color:#9AA8A1;margin-top:4px;line-height:1.45;word-break:break-all}
+.exp-del{width:30px;height:30px;border-radius:50%;background:#F4F6F5;color:#AEB9B3;font-size:15px;border:0;flex-shrink:0;line-height:1;font-family:inherit}
 .tip{font-size:12px;color:#9AA8A1;text-align:center;padding:14px 10px;line-height:1.7}
 .guide{position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(10,20,15,.93);display:flex;align-items:center;justify-content:center;padding:max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));overflow-y:auto;-webkit-overflow-scrolling:touch}
 .gbox{background:#fff;border-radius:20px;width:100%;max-width:min(340px, 88vw);padding:26px 20px 18px;text-align:center;margin:auto;box-shadow:0 20px 60px rgba(0,0,0,.4)}
@@ -119,6 +142,7 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 <nav>
   <button class="on" data-tab="in">录入</button>
   <button data-tab="list">明细</button>
+  <button data-tab="exp">费用</button>
   <button data-tab="sum">汇总</button>
 </nav>
 
@@ -216,6 +240,51 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
     <div id="listBox"></div>
   </section>
 
+  <!-- 费用 -->
+  <section id="tab-exp" class="hide">
+    <div class="card">
+      <h3>记一笔费用</h3>
+      <div class="row">
+        <div>
+          <label>日期</label>
+          <input id="expDate" type="date">
+        </div>
+        <div>
+          <label>金额（元）</label>
+          <input id="expAmount" type="number" inputmode="decimal" placeholder="0.00">
+        </div>
+      </div>
+      <label>费用类型</label>
+      <div class="etabs" id="expTypes">
+        <button type="button" class="on" data-t="差旅费">差旅</button>
+        <button type="button" data-t="物料费">物料</button>
+        <button type="button" data-t="人工费">人工</button>
+        <button type="button" data-t="装卸费">装卸</button>
+        <button type="button" data-t="其它">其它</button>
+      </div>
+      <div class="mb">
+        <label>谁付的钱</label>
+        <input id="expPayer" list="dl-payer" placeholder="打名字，或从历史里选">
+        <datalist id="dl-payer"></datalist>
+      </div>
+      <div class="mb">
+        <label>说明（可不填）</label>
+        <input id="expNote" placeholder="比如：加油300 过路费120">
+      </div>
+      <button class="btn" onclick="saveExp()">保 存</button>
+    </div>
+
+    <div class="sumcard">
+      <div>
+        <div class="k">本月费用</div>
+        <div class="n" id="expCount">0 笔</div>
+      </div>
+      <div class="v" id="expTotal">¥0.00</div>
+    </div>
+
+    <div class="card" style="padding:0" id="expList"></div>
+  </section>
+
   <!-- 汇总 -->
   <section id="tab-sum" class="hide">
     <div class="sum" id="sumBox"></div>
@@ -259,8 +328,17 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 
 <script>
 const KEY = 'ginger_ledger_v1';   // 旧键，仅用于一次性迁移
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.1.0';
 let data = [];
+let expenses = [];
+var currentExpType = '差旅费';
+var TYPE_CLASS = {'差旅费':'t1','物料费':'t2','人工费':'t3','装卸费':'t4','其它':'t5'};
+
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){
+    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c];
+  });
+}
 
 /* 设备标识 & 录入人（为将来上云和权限预留） */
 var deviceId = localStorage.getItem('gl_device') || '';
@@ -279,7 +357,7 @@ function uuid(){
 
 /* ---------- IndexedDB 本地库（主存储） ---------- */
 var DB = (function(){
-  var NAME = 'ginger_ledger', VER = 1, p = null;
+  var NAME = 'ginger_ledger', VER = 2, p = null;
   function open(){
     if(p) return p;
     p = new Promise(function(res, rej){
@@ -291,17 +369,22 @@ var DB = (function(){
           st.createIndex('date', 'date', {unique: false});
           st.createIndex('createdAt', 'createdAt', {unique: false});
         }
+        if(!db.objectStoreNames.contains('expenses')){
+          var se = db.createObjectStore('expenses', {keyPath: 'uuid'});
+          se.createIndex('date', 'date', {unique: false});
+          se.createIndex('createdAt', 'createdAt', {unique: false});
+        }
       };
       req.onsuccess = function(e){ res(e.target.result); };
       req.onerror = function(e){ rej(e.target.error); };
     });
     return p;
   }
-  function tx(mode, fn){
+  function tx(store, mode, fn){
     return open().then(function(db){
       return new Promise(function(res, rej){
-        var t = db.transaction('records', mode);
-        var req = fn(t.objectStore('records'));
+        var t = db.transaction(store, mode);
+        var req = fn(t.objectStore(store));
         t.oncomplete = function(){ res(req ? req.result : undefined); };
         t.onerror = function(){ rej(t.error); };
         t.onabort = function(){ rej(t.error); };
@@ -309,11 +392,17 @@ var DB = (function(){
     });
   }
   return {
-    all: function(){ return tx('readonly', function(st){ return st.getAll(); }); },
-    put: function(r){ return tx('readwrite', function(st){ return st.put(r); }); },
-    putMany: function(list){ return tx('readwrite', function(st){ list.forEach(function(r){ st.put(r); }); }); },
-    del: function(k){ return tx('readwrite', function(st){ return st.delete(k); }); },
-    clear: function(){ return tx('readwrite', function(st){ return st.clear(); }); }
+    all: function(){ return tx('records', 'readonly', function(st){ return st.getAll(); }); },
+    put: function(r){ return tx('records', 'readwrite', function(st){ return st.put(r); }); },
+    putMany: function(list){ return tx('records', 'readwrite', function(st){ list.forEach(function(r){ st.put(r); }); }); },
+    del: function(k){ return tx('records', 'readwrite', function(st){ return st.delete(k); }); },
+    clear: function(){ return tx('records', 'readwrite', function(st){ return st.clear(); }); },
+    // 费用
+    expAll: function(){ return tx('expenses', 'readonly', function(st){ return st.getAll(); }); },
+    expPut: function(r){ return tx('expenses', 'readwrite', function(st){ return st.put(r); }); },
+    expPutMany: function(list){ return tx('expenses', 'readwrite', function(st){ list.forEach(function(r){ st.put(r); }); }); },
+    expDel: function(k){ return tx('expenses', 'readwrite', function(st){ return st.delete(k); }); },
+    expClear: function(){ return tx('expenses', 'readwrite', function(st){ return st.clear(); }); }
   };
 })();
 
@@ -576,12 +665,110 @@ function delRec(id){
   render();
 }
 
+/* ---------- 费用 ---------- */
+function loadExp(cb){
+  if(!window.indexedDB){ if(cb) cb(); return; }
+  var done = false;
+  function fin(){ if(done) return; done = true; if(cb) cb(); }
+  var timer = setTimeout(fin, 2500);
+  DB.expAll().then(function(list){
+    clearTimeout(timer);
+    expenses = list || [];
+    expenses.sort(function(a, b){ return (b.createdAt || 0) - (a.createdAt || 0); });
+    fin();
+  }).catch(function(){
+    clearTimeout(timer);
+    fin();
+  });
+}
+
+function renderExp(){
+  var box = document.getElementById('expList');
+  if(!box) return;
+
+  var set = {};
+  expenses.forEach(function(e){ if(e.payer) set[e.payer] = 1; });
+  var dl = document.getElementById('dl-payer');
+  if(dl) dl.innerHTML = Object.keys(set).map(function(k){ return '<option value="'+esc(k)+'">'; }).join('');
+
+  if(!expenses.length){
+    box.innerHTML = '<div class="empty">还没有费用记录</div>';
+  }else{
+    var html = '';
+    expenses.forEach(function(e){
+      var cls = TYPE_CLASS[e.type] || 't5';
+      html += '<div class="exp">' +
+        '<div class="exp-body">' +
+          '<div class="exp-top">' +
+            '<span class="etag '+cls+'">'+esc(e.type)+'</span>' +
+            '<span class="exp-amt">¥'+fmt(e.amount || 0, 2)+'</span>' +
+          '</div>' +
+          '<div><span class="exp-who">'+esc(e.payer || '—')+'</span>' +
+          '<span class="exp-date">'+esc(e.date || '')+'</span></div>' +
+          (e.note ? '<div class="exp-note">'+esc(e.note)+'</div>' : '') +
+        '</div>' +
+        '<button class="exp-del" onclick="delExp(\''+e.uuid+'\')">×</button>' +
+      '</div>';
+    });
+    box.innerHTML = html;
+  }
+
+  var ym = new Date().toISOString().slice(0, 7);
+  var month = expenses.filter(function(e){ return String(e.date || '').slice(0, 7) === ym; });
+  var total = month.reduce(function(a, b){ return a + (b.amount || 0); }, 0);
+  var c = document.getElementById('expCount');
+  var t = document.getElementById('expTotal');
+  if(c) c.textContent = month.length + ' 笔';
+  if(t) t.textContent = '¥' + fmt(total, 2);
+}
+
+function saveExp(){
+  var amount = parseFloat(document.getElementById('expAmount').value);
+  var payer = (document.getElementById('expPayer').value || '').trim();
+  var date = document.getElementById('expDate').value || new Date().toISOString().slice(0, 10);
+  var note = (document.getElementById('expNote').value || '').trim();
+
+  if(!amount || amount <= 0){ alert('请填写金额'); return; }
+  if(!payer){ alert('请填写谁付的钱'); return; }
+
+  var now = Date.now();
+  var rec = {
+    uuid: uuid(),
+    date: date,
+    type: currentExpType,
+    amount: Math.round(amount * 100) / 100,
+    payer: payer,
+    note: note,
+    operator: operator || '',
+    deviceId: deviceId,
+    createdAt: now,
+    updatedAt: now,
+    deleted: false
+  };
+  expenses.unshift(rec);
+  DB.expPut(rec).catch(function(){});
+
+  document.getElementById('expAmount').value = '';
+  document.getElementById('expNote').value = '';
+  renderExp();
+  alert('已保存 ✓');
+}
+
+function delExp(id){
+  if(!confirm('删掉这笔费用？')) return;
+  expenses = expenses.filter(function(e){ return e.uuid !== id; });
+  DB.expDel(id).catch(function(){});
+  renderExp();
+}
+
 function clearAll(){
-  if(!confirm('会清空全部记录，确定吗？')) return;
+  if(!confirm('会清空全部记录（含费用），确定吗？')) return;
   if(!confirm('再确认一次：删了就找不回来了')) return;
   data = [];
+  expenses = [];
   DB.clear().catch(function(){});
-  render(); updateStoreInfo();
+  DB.expClear().catch(function(){});
+  render(); renderExp(); updateStoreInfo();
 }
 
 function exportCSV(){
@@ -621,15 +808,17 @@ function updateStoreInfo(){
 }
 
 function exportJSON(){
-  if(!data.length){ alert('没有数据可导出'); return; }
+  if(!data.length && !expenses.length){ alert('没有数据可导出'); return; }
   var payload = {
     app: 'ginger-ledger',
-    version: 2,
+    version: 3,
     exportedAt: new Date().toISOString(),
     deviceId: deviceId,
     operator: operator,
     count: data.length,
-    records: data
+    expenseCount: expenses.length,
+    records: data,
+    expenses: expenses
   };
   var blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
   var a = document.createElement('a');
@@ -644,8 +833,10 @@ function importJSON(file){
   reader.onload = function(){
     try{
       var obj = JSON.parse(reader.result);
-      var list = (obj && obj.records) ? obj.records : obj;
-      if(!Array.isArray(list)) throw new Error('文件格式不对');
+      var list = (obj && obj.records) ? obj.records : (Array.isArray(obj) ? obj : []);
+      var exps = (obj && obj.expenses) ? obj.expenses : [];
+      if(!Array.isArray(list) && !Array.isArray(exps)) throw new Error('文件格式不对');
+
       var map = {};
       data.forEach(function(r){ map[r.uuid] = r; });
       var added = 0, updated = 0;
@@ -659,10 +850,26 @@ function importJSON(file){
       var merged = Object.keys(map).map(function(k){ return map[k]; })
         .filter(function(r){ return !r.deleted; })
         .sort(function(a, b){ return (b.createdAt || 0) - (a.createdAt || 0); });
+
+      var emap = {};
+      expenses.forEach(function(r){ emap[r.uuid] = r; });
+      var eAdded = 0;
+      exps.forEach(function(r){
+        if(!r.uuid) r.uuid = uuid();
+        r.deleted = !!r.deleted;
+        var old = emap[r.uuid];
+        if(!old){ emap[r.uuid] = r; eAdded++; }
+        else if((r.updatedAt || 0) > (old.updatedAt || 0)){ emap[r.uuid] = r; }
+      });
+      var emerg = Object.keys(emap).map(function(k){ return emap[k]; })
+        .filter(function(r){ return !r.deleted; })
+        .sort(function(a, b){ return (b.createdAt || 0) - (a.createdAt || 0); });
+
       data = merged;
-      DB.putMany(merged).then(function(){
-        render(); updateStoreInfo();
-        alert('导入完成：新增 ' + added + ' 条，更新 ' + updated + ' 条，现有 ' + merged.length + ' 条');
+      expenses = emerg;
+      Promise.all([DB.putMany(merged), DB.expPutMany(emerg)]).then(function(){
+        render(); renderExp(); updateStoreInfo();
+        alert('导入完成：\n收购 新增 ' + added + ' 条，更新 ' + updated + ' 条\n费用 新增 ' + eAdded + ' 条\n现有收购 ' + merged.length + ' 条、费用 ' + emerg.length + ' 条');
       }).catch(function(){
         alert('写入失败，请重试');
       });
@@ -677,7 +884,7 @@ function showTab(name){
   document.querySelectorAll('nav button').forEach(function(b){
     b.classList.toggle('on', b.dataset.tab === name);
   });
-  ['in','list','sum'].forEach(function(k){
+  ['in','list','exp','sum'].forEach(function(k){
     document.getElementById('tab-'+k).classList.toggle('hide', k !== name);
   });
   window.scrollTo(0,0);
@@ -696,6 +903,17 @@ document.querySelectorAll('nav button').forEach(function(b){
 
   var opEl = document.getElementById('opName');
   if(opEl) opEl.value = operator;
+
+  var ed = document.getElementById('expDate');
+  if(ed) ed.value = d.toISOString().slice(0,10);
+
+  document.querySelectorAll('#expTypes button').forEach(function(b){
+    b.onclick = function(){
+      document.querySelectorAll('#expTypes button').forEach(function(x){ x.classList.remove('on'); });
+      b.classList.add('on');
+      currentExpType = b.getAttribute('data-t');
+    };
+  });
 
   load(function(){
     render();
@@ -731,6 +949,28 @@ document.querySelectorAll('nav button').forEach(function(b){
       DB.putMany(demo).catch(function(){});
       render(); updateStoreInfo(); showTab('list');
       if(location.hash === '#demo-detail'){ setTimeout(function(){ openId = demo[0].uuid; render(); }, 400); }
+    }
+
+    /* 费用：统一在这里读一次 */
+    loadExp(function(){
+      if(location.hash === '#demo-exp' && !expenses.length){
+        var t0 = Date.now();
+        var d1 = new Date().toISOString().slice(0,10);
+        var d2 = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+        expenses = [
+          {uuid:uuid(),date:d1,type:'差旅费',amount:420,payer:'张三',note:'加油300 过路费120',operator:operator||'',deviceId:deviceId,createdAt:t0,updatedAt:t0,deleted:false},
+          {uuid:uuid(),date:d1,type:'物料费',amount:320,payer:'李四',note:'编织袋 4 捆',operator:operator||'',deviceId:deviceId,createdAt:t0-1000,updatedAt:t0-1000,deleted:false},
+          {uuid:uuid(),date:d2,type:'人工费',amount:600,payer:'老板',note:'临时工 3 人 × 200',operator:operator||'',deviceId:deviceId,createdAt:t0-2000,updatedAt:t0-2000,deleted:false},
+          {uuid:uuid(),date:d2,type:'装卸费',amount:180,payer:'王五',note:'过磅费',operator:operator||'',deviceId:deviceId,createdAt:t0-3000,updatedAt:t0-3000,deleted:false},
+          {uuid:uuid(),date:d2,type:'其它',amount:120,payer:'张三',note:'',operator:operator||'',deviceId:deviceId,createdAt:t0-4000,updatedAt:t0-4000,deleted:false}
+        ];
+        DB.expPutMany(expenses).catch(function(){});
+      }
+      renderExp();
+    });
+
+    if(location.hash === '#exp' || location.hash === '#demo-exp'){
+      showTab('exp');
     }
   });
 })();
