@@ -240,7 +240,7 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
   <button data-tab="exp">费用</button>
   <button data-tab="sum">汇总</button>
   <button data-tab="board">看板</button>
-  <button data-tab="coop">协作<span class="dot-badge hide" id="coopBadge">0</span></button>
+  <button data-tab="coop">协作<span class="dot-badge hide" id="coopBadge"></span></button>
 </nav>
 
 <main>
@@ -460,12 +460,12 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
   <!-- 协作 -->
   <section id="tab-coop" class="hide">
     <div class="card">
-      <h3>关联线</h3>
+      <h3>关联线 <span class="h3s" id="linkCount"></span></h3>
       <div id="linkBox"></div>
     </div>
 
     <div class="card">
-      <h3>新建关联</h3>
+      <h3>新建关联 <span class="h3s">可以加多个</span></h3>
       <div class="mb">
         <label>对方姓名</label>
         <input id="linkName" placeholder="比如：老王">
@@ -1186,7 +1186,10 @@ function ensureOwner(name, tel, base){
 /* 关联线 */
 function renderLinks(){
   const box = document.getElementById('linkBox');
+  const cnt = document.getElementById('linkCount');
   if(!box) return;
+  const active = linkList.filter(function(l){ return l.status === 'active'; });
+  if(cnt) cnt.textContent = active.length ? '已关联 ' + active.length + ' 个' : '';
   if(!linkList.length){ box.innerHTML = '<div class="chart-empty">还没有关联线</div>'; return; }
   box.innerHTML = linkList.map(function(l){
     const dir = l.direction === 'a2b' ? '我看他的账' : l.direction === 'b2a' ? '他看我的账' : '互相看';
@@ -1205,6 +1208,10 @@ function addLink(){
   if(!name){ alert('请填对方姓名'); return; }
   const dir = document.getElementById('linkDir').value;
   const scope = document.getElementById('linkScope').value;
+  if(linkList.some(function(l){ return l.name === name && l.status === 'active'; })){
+    alert('已经和「' + name + '」有关联了');
+    return;
+  }
   const rec = {
     uuid: uuid(), name: name, direction: dir,
     scope: {hideFields: scope === 'hide' ? ['price','amount','feeTotal','actual'] : []},
@@ -1214,7 +1221,7 @@ function addLink(){
   DB.linkPut(rec).catch(function(){});
   document.getElementById('linkName').value = '';
   renderLinks(); render();
-  alert('已建立关联：' + name);
+  alert('已添加「' + name + '」\n\n这是第 ' + linkList.filter(function(l){ return l.status === 'active'; }).length + ' 条关联\n可以继续填下一个人，重复添加即可');
 }
 
 function revokeLink(id){
@@ -1791,12 +1798,12 @@ if('serviceWorker' in navigator){
 <style>
 #markBtn{position:fixed;right:14px;bottom:28px;z-index:9000;padding:12px 18px;border-radius:24px;background:#C0392B;color:#fff;border:0;font-size:14px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.25);font-family:inherit}
 #markBtn.on{background:#2F5D50}
-#mkSubmit{position:fixed;left:14px;right:14px;bottom:28px;z-index:9000;padding:14px;border-radius:12px;background:#C0392B;color:#fff;border:0;font-size:15px;font-weight:600;box-shadow:0 4px 16px rgba(192,57,43,.35);font-family:inherit}
+#mkSubmit{position:fixed;right:14px;bottom:92px;z-index:9000;padding:11px 16px;border-radius:24px;background:#1E4A3C;color:#fff;border:0;font-size:13px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.25);font-family:inherit}
 body.marking *{cursor:crosshair!important}
 body.marking .mk-hover{outline:2px dashed #C0392B!important;outline-offset:2px;background:rgba(192,57,43,.06)!important}
 .mk-dot{position:fixed;width:20px;height:20px;border-radius:50%;background:#C0392B;color:#fff;font-size:11px;line-height:20px;text-align:center;z-index:8500;pointer-events:none;box-shadow:0 2px 6px rgba(0,0,0,.3)}
-#mkPanel{position:fixed;left:0;right:0;bottom:0;background:#fff;z-index:9600;padding:16px;border-radius:18px 18px 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.18);transform:translateY(110%);transition:transform .22s}
-#mkPanel.show{transform:translateY(0)}
+#mkPanel{position:fixed;left:0;right:0;bottom:0;background:#fff;z-index:9600;padding:16px;border-radius:18px 18px 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.18);transform:translateY(110%);transition:transform .22s;pointer-events:none}
+#mkPanel.show{transform:translateY(0);pointer-events:auto}
 #mkHead{font-size:14px;font-weight:700;margin-bottom:6px;color:#C0392B}
 #mkTarget{font-size:12px;color:#7A8A82;margin-bottom:10px;line-height:1.5;background:#F7F9F8;padding:8px;border-radius:8px;max-height:60px;overflow:auto}
 #mkText{width:100%;min-height:76px;padding:11px;border:1px solid #D8E0DB;border-radius:9px;font-size:15px;font-family:inherit;resize:vertical;box-sizing:border-box}
@@ -1864,8 +1871,10 @@ body.marking .mk-hover{outline:2px dashed #C0392B!important;outline-offset:2px;b
     marking = !marking;
     document.body.classList.toggle('marking', marking);
     btn.classList.toggle('on', marking);
-    btn.textContent = marking ? '✏️ 标注中（点要改的地方）' : '✏️ 标注';
-    submit.classList.toggle('hide', !marks.length || marking);
+    btn.textContent = marking
+      ? '✏️ 标注中' + (marks.length ? ' · 已标 ' + marks.length + ' 处' : '（点要改的地方）')
+      : '✏️ 标注';
+    submit.classList.toggle('hide', !marks.length);
     if(!marking) drawDots();
   };
 
@@ -1916,9 +1925,9 @@ body.marking .mk-hover{outline:2px dashed #C0392B!important;outline-offset:2px;b
     panel.classList.remove('show');
     pending = null;
     countEl.textContent = marks.length;
-    submit.classList.remove('hide');
-    submit.classList.toggle('hide', marking);
+    btn.textContent = '✏️ 标注中 · 已标 ' + marks.length + ' 处';
     drawDots();
+    // 保存后立刻可以继续点下一处
   };
 
   submit.onclick = function(){
