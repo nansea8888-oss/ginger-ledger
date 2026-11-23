@@ -772,7 +772,8 @@ function render(){
     box.innerHTML = '<div class="empty">' + (customerFilter ? '这个客户本月没有记录' : '还没有记录<br>去「录入」填第一笔吧') + '</div>';
   }else{
     const groups = {};
-    src.forEach(function(r){ (groups[r.customer] = groups[r.customer] || []).push(r); });
+    const gKey = customerFilter ? 'owner' : 'customer';
+    src.forEach(function(r){ var k = r[gKey] || '未命名'; (groups[k] = groups[k] || []).push(r); });
     let html = '';
     Object.keys(groups).forEach(function(cus){
       const arr = groups[cus];
@@ -884,16 +885,19 @@ function renderCus(){
   var cus = {};
   m.forEach(function(r){
     var k = r.customer || '未命名';
-    if(!cus[k]) cus[k] = {n: 0, net: 0, cost: 0};
+    if(!cus[k]) cus[k] = {n: 0, net: 0, cost: 0, ownSet: {}};
     cus[k].n++;
     cus[k].net += (r.net || 0);
     cus[k].cost += (r.actual || 0);
+    if(r.owner) cus[k].ownSet[r.owner] = 1;
   });
   var keys = Object.keys(cus).sort(function(a, b){ return cus[b].cost - cus[a].cost; });
   if(!keys.length){ box.innerHTML = '<div class="chart-empty">本月暂无数据</div>'; return; }
   box.innerHTML = keys.map(function(k){
+    var ownN = Object.keys(cus[k].ownSet).length;
     return '<div class="cus-row" onclick="drillCustomer(\'' + esc(k) + '\')">' +
-      '<div><div class="cn">' + esc(k) + '</div><div class="cm">' + cus[k].n + ' 笔 · ' + fmt(cus[k].net, 0) + ' 斤</div></div>' +
+      '<div><div class="cn">' + esc(k) + '</div>' +
+      '<div class="cm">' + cus[k].n + ' 笔 · ' + ownN + ' 个货主 · ' + fmt(cus[k].net, 0) + ' 斤</div></div>' +
       '<div class="cv">' + fmt(cus[k].cost, 0) + '<small>总款</small></div>' +
     '</div>';
   }).join('');
@@ -1049,26 +1053,47 @@ function renderShots(boxId, list){
     box.appendChild(d);
   });
   if(shotStore[key].length < 5){
-    const a = document.createElement('label');
-    a.className = 'addshot';
-    a.textContent = '+';
-    const inp = document.createElement('input');
-    inp.type = 'file'; inp.accept = 'image/*'; inp.style.display = 'none';
-    inp.onchange = function(ev){ addShot(ev, key); };
-    a.appendChild(inp);
-    box.appendChild(a);
+    box.appendChild(makePicker(key, true, false, '📷'));
+    box.appendChild(makePicker(key, false, true, '🖼'));
   }
 }
 
+function makePicker(key, camera, multiple, label){
+  const a = document.createElement('label');
+  a.className = 'addshot';
+  a.textContent = label;
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/*';
+  if(camera) inp.setAttribute('capture', 'environment');
+  if(multiple) inp.multiple = true;
+  inp.style.display = 'none';
+  inp.onchange = function(ev){ addShot(ev, key); };
+  a.appendChild(inp);
+  return a;
+}
+
 function addShot(ev, key){
-  const file = ev.target.files[0];
-  if(!file) return;
-  if(shotStore[key].length >= 5){ alert('最多 5 张'); return; }
-  const before = file.size;
-  compressImg(file, function(dataUrl, size){
-    shotStore[key].push(dataUrl);
-    renderShots(key === 'cus' ? 'cusShots' : 'ownShots', shotStore[key]);
-    alert('已压缩 ' + Math.round(before/1024) + 'KB → ' + Math.round(size/1024) + 'KB');
+  const files = Array.prototype.slice.call(ev.target.files || []);
+  if(!files.length) return;
+  const room = 5 - shotStore[key].length;
+  if(room <= 0){ alert('最多 5 张'); return; }
+  let take = files;
+  if(files.length > room){
+    take = files.slice(0, room);
+    alert('最多 5 张，只保留前 ' + room + ' 张');
+  }
+  let left = take.length;
+  take.forEach(function(file){
+    const before = file.size;
+    compressImg(file, function(dataUrl, size){
+      if(shotStore[key].length < 5) shotStore[key].push(dataUrl);
+      left--;
+      if(left <= 0){
+        renderShots(key === 'cus' ? 'cusShots' : 'ownShots', shotStore[key]);
+        if(take.length === 1) alert('已压缩 ' + Math.round(before/1024) + 'KB → ' + Math.round(size/1024) + 'KB');
+      }
+    });
   });
   ev.target.value = '';
 }
