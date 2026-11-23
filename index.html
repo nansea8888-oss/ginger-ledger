@@ -418,7 +418,7 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 
 <script>
 const KEY = 'ginger_ledger_v1';   // 旧键，仅用于一次性迁移
-const APP_VERSION = '1.3.3';
+const APP_VERSION = '1.4.0';
 let data = [];
 let expenses = [];
 var currentExpType = '差旅费';
@@ -531,7 +531,7 @@ function migrate(){
       r.actual = r.amount + r.feeTotal;
     }
   });
-  return DB.putMany(arr).then(function(){
+  return Repo.records.saveMany(arr).then(function(){
     try{ localStorage.removeItem(KEY); }catch(e){}
     return arr.length;
   });
@@ -578,7 +578,7 @@ function load(cb){
   var timer = setTimeout(function(){ normalizeData(); finish(); }, 3000);
 
   migrate().catch(function(){}).then(function(){
-    return DB.all();
+    return Repo.records.list();
   }).then(function(list){
     clearTimeout(timer);
     data = list || [];
@@ -640,7 +640,7 @@ function saveRec(){
     deleted: false
   };
   data.unshift(rec);
-  DB.put(rec).catch(function(){});
+  Repo.records.save(rec).catch(function(){});
 
   ['lot','plate','owner','tel','base','jian','per','price'].forEach(function(id){
     document.getElementById(id).value = '';
@@ -886,6 +886,68 @@ function renderBoard(){
   }
 }
 
+/* =========================================================
+   仓储层 Repo
+   ---------------------------------------------------------
+   界面只调 Repo.xxx，不直接碰 DB。
+   现在底下是本地 IndexedDB；将来接云端时只换这里的实现，
+   界面代码一行不用改。
+   ========================================================= */
+var Repo = (function(){
+
+  // 统一的"入库前处理"：补 id、时间戳、软删除标记、待同步标记
+  function stamp(obj, isNew){
+    var t = Date.now();
+    if(!obj.uuid) obj.uuid = uuid();
+    if(isNew || !obj.createdAt) obj.createdAt = t;
+    obj.updatedAt = t;
+    if(obj.deleted === undefined) obj.deleted = false;
+    obj._dirty = true;          // 待同步到云端
+    if(obj.version === undefined) obj.version = 1;
+    return obj;
+  }
+
+  function make(name, api){
+    return {
+      name: name,
+      list: function(){
+        return api.all().then(function(arr){
+          return (arr || []).filter(function(x){ return !x.deleted; });
+        });
+      },
+      save: function(obj){
+        stamp(obj, !obj.createdAt);
+        return api.put(obj);
+      },
+      saveMany: function(list){
+        (list || []).forEach(function(x){ stamp(x, !x.createdAt); });
+        return api.putMany(list);
+      },
+      remove: function(id){
+        // 软删除：标记 deleted，将来云端也能同步"删除"这个动作
+        return api.all().then(function(arr){
+          var hit = (arr || []).filter(function(x){ return x.uuid === id; })[0];
+          if(!hit) return null;
+          hit.deleted = true;
+          hit.updatedAt = Date.now();
+          hit._dirty = true;
+          return api.put(hit);
+        });
+      },
+      clearAll: function(){ return api.clear(); }
+    };
+  }
+
+  return {
+    records: make('records', {
+      all: DB.all, put: DB.put, putMany: DB.putMany, del: DB.del, clear: DB.clear
+    }),
+    expenses: make('expenses', {
+      all: DB.expAll, put: DB.expPut, putMany: DB.expPutMany, del: DB.expDel, clear: DB.expClear
+    })
+  };
+})();
+
 /* ---------- 单笔原地展开（一次只开一条） ---------- */
 var openId = null;
 
@@ -905,9 +967,13 @@ function toggleItem(el){
 
 function delRec(id){
   if(!confirm('删掉这笔记录？删了找不回来。')) return;
+  var rec = data.filter(function(x){ return x.uuid === id; })[0];
+  if(rec){
+    rec.deleted = true;
+    Repo.records.save(rec).catch(function(){});
+  }
   data = data.filter(function(x){ return x.uuid !== id; });
   if(openId === id) openId = null;
-  DB.del(id).catch(function(){});
   render();
   renderSum();
   renderCus();
@@ -928,7 +994,7 @@ function loadExp(cb){
   var done = false;
   function fin(){ if(done) return; done = true; if(cb) cb(); }
   var timer = setTimeout(fin, 2500);
-  DB.expAll().then(function(list){
+  Repo.expenses.list().then(function(list){
     clearTimeout(timer);
     expenses = list || [];
     expenses.sort(function(a, b){ return (b.createdAt || 0) - (a.createdAt || 0); });
@@ -1003,7 +1069,7 @@ function saveExp(){
     deleted: false
   };
   expenses.unshift(rec);
-  DB.expPut(rec).catch(function(){});
+  Repo.expenses.save(rec).catch(function(){});
 
   document.getElementById('expAmount').value = '';
   document.getElementById('expNote').value = '';
@@ -1015,8 +1081,12 @@ function saveExp(){
 
 function delExp(id){
   if(!confirm('删掉这笔费用？')) return;
+  var rec = expenses.filter(function(e){ return e.uuid === id; })[0];
+  if(rec){
+    rec.deleted = true;
+    Repo.expenses.save(rec).catch(function(){});
+  }
   expenses = expenses.filter(function(e){ return e.uuid !== id; });
-  DB.expDel(id).catch(function(){});
   renderExp();
   renderSum();
   renderCus();
@@ -1027,8 +1097,8 @@ function clearAll(){
   if(!confirm('再确认一次：删了就找不回来了')) return;
   data = [];
   expenses = [];
-  DB.clear().catch(function(){});
-  DB.expClear().catch(function(){});
+  Repo.records.clearAll().catch(function(){});
+  Repo.expenses.clearAll().catch(function(){});
   render(); renderExp(); renderSum(); renderCus(); updateStoreInfo();
 }
 
@@ -1128,7 +1198,7 @@ function importJSON(file){
 
       data = merged;
       expenses = emerg;
-      Promise.all([DB.putMany(merged), DB.expPutMany(emerg)]).then(function(){
+      Promise.all([Repo.records.saveMany(merged), Repo.expenses.saveMany(emerg)]).then(function(){
         render(); renderExp(); renderSum(); renderCus(); updateStoreInfo();
         alert('导入完成：\n收购 新增 ' + added + ' 条，更新 ' + updated + ' 条\n费用 新增 ' + eAdded + ' 条\n现有收购 ' + merged.length + ' 条、费用 ' + emerg.length + ' 条');
       }).catch(function(){
@@ -1229,7 +1299,7 @@ document.querySelectorAll('nav button').forEach(function(b){
         return x;
       });
       data = demo;
-      DB.putMany(demo).catch(function(){});
+      Repo.records.saveMany(demo).catch(function(){});
       render(); renderSum(); renderCus(); updateStoreInfo(); showTab('list');
       if(location.hash === '#demo-detail'){ setTimeout(function(){ openId = demo[0].uuid; render(); }, 400); }
     }
@@ -1247,7 +1317,7 @@ document.querySelectorAll('nav button').forEach(function(b){
           {uuid:uuid(),date:d2,type:'装卸费',amount:180,payer:'王五',note:'过磅费',operator:operator||'',deviceId:deviceId,createdAt:t0-3000,updatedAt:t0-3000,deleted:false},
           {uuid:uuid(),date:d2,type:'其它',amount:120,payer:'张三',note:'',operator:operator||'',deviceId:deviceId,createdAt:t0-4000,updatedAt:t0-4000,deleted:false}
         ];
-        DB.expPutMany(expenses).catch(function(){});
+        Repo.expenses.saveMany(expenses).catch(function(){});
       }
       renderExp();
       renderSum();

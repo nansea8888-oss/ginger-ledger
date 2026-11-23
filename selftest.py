@@ -60,6 +60,14 @@ TEST = r"""
       ok(Math.abs(s2b - 12696) < 0.01, 'T12 浮点累加=' + s2b);
 
       ok(round2(1.15 * 3680) === 4232, 'T13 1.15x3680=' + round2(1.15 * 3680));
+
+      var beforeDel = data.length;
+      window.confirm = function(){ return true; };
+      delRec(data[0].uuid);
+      ok(data.length === beforeDel - 1, 'T14 删除后=' + data.length + '条');
+      renderSum();
+      var s3 = (document.getElementById('sumBox').textContent || '').replace(/\s+/g, '');
+      ok(s3.indexOf('6,750') < 0 && s3.indexOf('6750') < 0, 'T15 删除后汇总清零');
     }catch(e){ log.push('ERROR ' + e.message); }
     var d = document.createElement('div');
     d.id = 'selftest-out';
