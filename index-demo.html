@@ -1879,6 +1879,8 @@ body.marking .mk-hover{outline:2px dashed #C0392B!important;outline-offset:2px;b
 
   document.addEventListener('click', function(e){
     if(!marking) return;
+    // 点页签 = 正常切换页面，不当作标注
+    if(e.target.closest('nav button')) return;
     if(e.target === btn || panel.contains(e.target) || submit.contains(e.target)) return;
     e.preventDefault();
     e.stopPropagation();
@@ -1921,26 +1923,38 @@ body.marking .mk-hover{outline:2px dashed #C0392B!important;outline-offset:2px;b
 
   submit.onclick = function(){
     if(!marks.length) return;
-    var lines = ['【台账 Demo 标注反馈】', ''];
+    // 一行一条，尽量短
+    var lines = ['【标注 ' + marks.length + ' 条】'];
     marks.forEach(function(m, i){
-      lines.push((i + 1) + '. 【' + (m.tab || '页面') + '】' + (m.card ? m.card + ' → ' : '') + (m.text || ''));
-      lines.push('   位置：' + m.path);
-      lines.push('   意见：' + m.note);
-      lines.push('');
+      var where = (m.tab || '') + (m.card ? '>' + m.card : '') + (m.text ? '>' + m.text : '');
+      lines.push((i + 1) + '. ' + where.replace(/\s+/g, '') + '：' + m.note);
     });
     var report = lines.join('\n');
+
+    function done(){
+      if(navigator.share){
+        navigator.share({title: '台账 Demo 标注', text: report}).catch(function(){});
+      }
+    }
+
     if(navigator.clipboard && navigator.clipboard.writeText){
       navigator.clipboard.writeText(report).then(function(){
-        alert('已复制 ' + marks.length + ' 条标注\n\n直接粘贴发给开发者即可。\n\n' + report);
+        alert('已复制，直接粘贴发我即可：\n\n' + report);
       }).catch(function(){
-        prompt('复制下面的内容发给我：', report);
+        prompt('复制下面的内容发我：', report);
       });
     }else{
-      prompt('复制下面的内容发给我：', report);
+      prompt('复制下面的内容发我：', report);
     }
+    done();
   };
 
   window.addEventListener('scroll', function(){ if(marks.length && !marking) drawDots(); }, {passive:true});
+
+  // 切换页签后，把还存在的标注点重新画一遍
+  document.addEventListener('click', function(e){
+    if(e.target.closest('nav button')){ setTimeout(drawDots, 120); }
+  }, false);
 })();
 </script>
 </body>
