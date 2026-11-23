@@ -210,11 +210,15 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
   <section id="tab-in">
     <div class="card">
       <h3>客户与批次</h3>
+      <div class="mb">
+        <label>客户（买家）</label>
+        <input id="customer" list="dl-cus" placeholder="选或直接打">
+        <datalist id="dl-cus"></datalist>
+      </div>
       <div class="row">
         <div>
-          <label>客户（买家）</label>
-          <input id="customer" list="dl-cus" placeholder="选或直接打">
-          <datalist id="dl-cus"></datalist>
+          <label>客户电话</label>
+          <input id="customerTel" type="tel" inputmode="tel" placeholder="手机号">
         </div>
         <div>
           <label>批号</label>
@@ -228,7 +232,10 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
         </div>
         <div>
           <label>收购日期</label>
-          <input id="date" type="date">
+          <div class="dwrap">
+            <input class="dtxt" id="date" type="text" readonly placeholder="2026-11-23" onclick="openPicker('date','datePick')">
+            <input class="dpick" id="datePick" type="date" onchange="document.getElementById('date').value=this.value">
+          </div>
         </div>
       </div>
     </div>
@@ -313,7 +320,7 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
         <div>
           <label>日期</label>
           <div class="dwrap">
-            <input class="dtxt" id="expDate" type="text" readonly placeholder="2026-11-23" onclick="openPicker()">
+            <input class="dtxt" id="expDate" type="text" readonly placeholder="2026-11-23" onclick="openPicker('expDate','expDatePick')">
             <input class="dpick" id="expDatePick" type="date" onchange="document.getElementById('expDate').value=this.value">
           </div>
         </div>
@@ -406,7 +413,7 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 
 <script>
 const KEY = 'ginger_ledger_v1';   // 旧键，仅用于一次性迁移
-const APP_VERSION = '1.2.3';
+const APP_VERSION = '1.3.0';
 let data = [];
 let expenses = [];
 var currentExpType = '差旅费';
@@ -527,6 +534,7 @@ function normalizeData(){
     if(typeof r.amount === 'number' && typeof r.feeTotal === 'number'){
       r.actual = r.amount + r.feeTotal;
     }
+    if(typeof r.customerTel !== 'string') r.customerTel = '';
   });
   data.sort(function(a, b){ return (b.createdAt || 0) - (a.createdAt || 0); });
 }
@@ -599,7 +607,7 @@ function saveRec(){
   var rec = {
     uuid: uuid(),
     date: s('date') || new Date().toISOString().slice(0,10),
-    customer: customer, lot: s('lot'), plate: s('plate'),
+    customer: customer, customerTel: s('customerTel'), lot: s('lot'), plate: s('plate'),
     owner: owner, tel: s('tel'), base: s('base'),
     jian: jian, per: per, soil: soil,
     price: price, fee: fee,
@@ -673,6 +681,11 @@ function render(){
             '</div>' +
           '</div>' +
           '<div class="expand">' +
+            '<div class="dl">' +
+              (r.customerTel ? '<div class="r"><span>客户电话</span><b>'+esc(r.customerTel)+'</b></div>' : '') +
+              '<div class="r"><span>批号</span><b>'+esc(r.lot || '—')+'</b></div>' +
+              '<div class="r"><span>车牌号</span><b>'+esc(r.plate || '—')+'</b></div>' +
+            '</div>' +
             '<div class="dl">' +
               '<div class="r"><span>件数</span><b>'+fmt(r.jian,0)+' 件</b></div>' +
               '<div class="r"><span>单件斤数</span><b>'+fmt(r.per,2)+' 斤</b></div>' +
@@ -876,8 +889,8 @@ function delRec(id){
 }
 
 /* ---------- 费用 ---------- */
-function openPicker(){
-  var p = document.getElementById('expDatePick');
+function openPicker(textId, pickId){
+  var p = document.getElementById(pickId || 'expDatePick');
   if(!p) return;
   if(p.showPicker){ try{ p.showPicker(); return; }catch(e){} }
   p.focus();
@@ -991,10 +1004,10 @@ function clearAll(){
 
 function exportCSV(){
   if(!data.length){ alert('没有数据'); return; }
-  const head = ['收购日期','客户','批号','车牌号','货主','电话','基地','件数','单件斤数','总斤数','扣土率','扣土量','净总斤数','单价','总价','代办费','代办总价','实际总价'];
+  const head = ['收购日期','客户','客户电话','批号','车牌号','货主','电话','基地','件数','单件斤数','总斤数','扣土率','扣土量','净总斤数','单价','总价','代办费','代办总价','实际总价'];
   let csv = '\ufeff' + head.join(',') + '\n';
   data.forEach(function(r){
-    csv += [r.date,r.customer,r.lot,r.plate,r.owner,r.tel,r.base,r.jian,r.per,
+    csv += [r.date,r.customer,r.customerTel||'',r.lot,r.plate,r.owner,r.tel,r.base,r.jian,r.per,
       r.total,(r.soil*100)+'%',r.soilQty,r.net,r.price,r.amount,r.fee,r.feeTotal,r.actual].join(',') + '\n';
   });
   const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
@@ -1116,9 +1129,26 @@ document.querySelectorAll('nav button').forEach(function(b){
 // 初始化
 (function(){
   const d = new Date();
-  document.getElementById('date').value = d.toISOString().slice(0,10);
+  var todayStr = d.toISOString().slice(0,10);
+  document.getElementById('date').value = todayStr;
+  var dpi = document.getElementById('datePick');
+  if(dpi) dpi.value = todayStr;
   document.getElementById('today').textContent = d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日';
   recalc();
+
+  // 选到老客户时，自动带出上次填的电话
+  var cusEl = document.getElementById('customer');
+  if(cusEl){
+    cusEl.addEventListener('change', function(){
+      var name = this.value.trim();
+      if(!name) return;
+      var telEl = document.getElementById('customerTel');
+      if(!telEl || telEl.value) return;
+      for(var i = 0; i < data.length; i++){
+        if(data[i].customer === name && data[i].customerTel){ telEl.value = data[i].customerTel; break; }
+      }
+    });
+  }
 
   var opEl = document.getElementById('opName');
   if(opEl) opEl.value = operator;
