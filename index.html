@@ -149,6 +149,7 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 .mini button,.mini .minibtn{flex:1;padding:13px 0;border:1px solid #DCE5E0;background:#fff;border-radius:10px;font-size:14px;font-family:inherit;color:#2F5D50;font-weight:600;text-align:center;display:block;cursor:pointer}
 
 .chart-empty{text-align:center;color:#B9C4BE;font-size:13px;padding:26px 0}
+.h3s{font-size:10.5px;color:#9AA8A1;font-weight:400;margin-left:4px}
 .bars{display:flex;align-items:flex-end;gap:7px;height:100px;padding:0 2px;margin-bottom:8px}
 .bars .b{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%}
 .bars .b i{display:block;width:100%;border-radius:4px 4px 0 0;background:linear-gradient(180deg,#5C8A7B,#2F5D50)}
@@ -377,15 +378,15 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
   <!-- 看板 -->
   <section id="tab-board" class="hide">
     <div class="card">
-      <h3>今日 vs 昨日</h3>
+      <h3>今日 vs 昨日 <span class="h3s">总支出（收购款 + 费用）</span></h3>
       <div id="chartCmp"></div>
     </div>
     <div class="card">
-      <h3>近 7 天总支出</h3>
+      <h3>近 7 天总支出 <span class="h3s">单位：元</span></h3>
       <div id="chartBars"></div>
     </div>
     <div class="card">
-      <h3>本月费用构成</h3>
+      <h3>本月费用构成 <span class="h3s">单位：元</span></h3>
       <div id="chartTypes"></div>
     </div>
   </section>
@@ -405,7 +406,7 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 
 <script>
 const KEY = 'ginger_ledger_v1';   // 旧键，仅用于一次性迁移
-const APP_VERSION = '1.2.1';
+const APP_VERSION = '1.2.2';
 let data = [];
 let expenses = [];
 var currentExpType = '差旅费';
@@ -803,9 +804,13 @@ function renderBoard(){
         : '和昨天一样'));
   document.getElementById('chartCmp').innerHTML =
     '<div class="cmp">' +
-      '<div class="r"><div class="lb">今日</div><div class="track"><div class="fill f1" style="width:' + w1 + '%">' + (t1 > 0 ? '¥' + fmt(t1, 0) : '') + '</div></div></div>' +
-      '<div class="r"><div class="lb">昨日</div><div class="track"><div class="fill f2" style="width:' + w0 + '%">' + (t0 > 0 ? '¥' + fmt(t0, 0) : '') + '</div></div></div>' +
-      '<div class="delta">' + delta + '</div>' +
+      '<div class="r"><div class="lb">今日</div><div class="track">' +
+        (t1 > 0 ? '<div class="fill f1" style="width:' + w1 + '%">¥' + fmt(t1, 0) + '</div>' : '') +
+      '</div></div>' +
+      '<div class="r"><div class="lb">昨日</div><div class="track">' +
+        (t0 > 0 ? '<div class="fill f2" style="width:' + w0 + '%">¥' + fmt(t0, 0) + '</div>' : '') +
+      '</div></div>' +
+      '<div class="delta">' + (t1 > 0 || t0 > 0 ? delta : '<span style="color:#B9C4BE">今天和昨天都还没有记录</span>') + '</div>' +
     '</div>';
 
   var days = [];
