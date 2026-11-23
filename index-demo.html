@@ -1751,5 +1751,174 @@ if('serviceWorker' in navigator){
   });
 }
 </script>
+
+<!-- ===== 标注工具 ===== -->
+<button id="markBtn">✏️ 标注</button>
+<button id="mkSubmit" class="hide">📋 生成反馈清单（<span id="mkCount">0</span>）</button>
+<div id="mkPanel">
+  <div id="mkHead">标注这一处</div>
+  <div id="mkTarget"></div>
+  <textarea id="mkText" placeholder="这里要改什么？比如：加号太小 / 这里应该显示对方名字 / 位置放错了"></textarea>
+  <div class="mk-acts">
+    <button id="mkCancel">取消</button>
+    <button id="mkSave">保存标注</button>
+  </div>
+</div>
+
+<style>
+#markBtn{position:fixed;right:14px;bottom:28px;z-index:9000;padding:12px 18px;border-radius:24px;background:#C0392B;color:#fff;border:0;font-size:14px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.25);font-family:inherit}
+#markBtn.on{background:#2F5D50}
+#mkSubmit{position:fixed;left:14px;right:14px;bottom:28px;z-index:9000;padding:14px;border-radius:12px;background:#C0392B;color:#fff;border:0;font-size:15px;font-weight:600;box-shadow:0 4px 16px rgba(192,57,43,.35);font-family:inherit}
+body.marking *{cursor:crosshair!important}
+body.marking .mk-hover{outline:2px dashed #C0392B!important;outline-offset:2px;background:rgba(192,57,43,.06)!important}
+.mk-dot{position:fixed;width:20px;height:20px;border-radius:50%;background:#C0392B;color:#fff;font-size:11px;line-height:20px;text-align:center;z-index:8500;pointer-events:none;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+#mkPanel{position:fixed;left:0;right:0;bottom:0;background:#fff;z-index:9600;padding:16px;border-radius:18px 18px 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.18);transform:translateY(110%);transition:transform .22s}
+#mkPanel.show{transform:translateY(0)}
+#mkHead{font-size:14px;font-weight:700;margin-bottom:6px;color:#C0392B}
+#mkTarget{font-size:12px;color:#7A8A82;margin-bottom:10px;line-height:1.5;background:#F7F9F8;padding:8px;border-radius:8px;max-height:60px;overflow:auto}
+#mkText{width:100%;min-height:76px;padding:11px;border:1px solid #D8E0DB;border-radius:9px;font-size:15px;font-family:inherit;resize:vertical;box-sizing:border-box}
+.mk-acts{display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-top:10px}
+.mk-acts button{padding:12px;border:0;border-radius:9px;font-size:14px;font-family:inherit;font-weight:600}
+#mkCancel{background:#F1F5F3;color:#5A6B63}
+#mkSave{background:#C0392B;color:#fff}
+</style>
+
+<script>
+(function(){
+  var marking = false;
+  var marks = [];
+  var pending = null;
+  var btn = document.getElementById('markBtn');
+  var panel = document.getElementById('mkPanel');
+  var target = document.getElementById('mkTarget');
+  var text = document.getElementById('mkText');
+  var submit = document.getElementById('mkSubmit');
+  var countEl = document.getElementById('mkCount');
+
+  function describe(el){
+    var bits = [];
+    var cur = el;
+    for(var i = 0; i < 3 && cur && cur !== document.body; i++){
+      var name = cur.tagName.toLowerCase();
+      if(cur.id) name += '#' + cur.id;
+      else if(cur.className && typeof cur.className === 'string'){
+        var c = cur.className.trim().split(/\s+/)[0];
+        if(c && c !== 'hide') name += '.' + c;
+      }
+      bits.unshift(name);
+      cur = cur.parentElement;
+    }
+    var txt = (el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 40);
+    var card = el.closest('.card');
+    var cardTitle = card ? ((card.querySelector('h3') || {}).textContent || '').trim().slice(0, 14) : '';
+    return {
+      path: bits.join(' > '),
+      text: txt,
+      card: cardTitle,
+      tab: (document.querySelector('nav button.on') || {}).textContent || ''
+    };
+  }
+
+  function clearDots(){
+    document.querySelectorAll('.mk-dot').forEach(function(d){ d.remove(); });
+  }
+
+  function drawDots(){
+    clearDots();
+    marks.forEach(function(m, i){
+      if(!m.el || !document.body.contains(m.el)) return;
+      var r = m.el.getBoundingClientRect();
+      var d = document.createElement('div');
+      d.className = 'mk-dot';
+      d.textContent = i + 1;
+      d.style.left = (r.left + 8) + 'px';
+      d.style.top = (r.top + window.scrollY + 8) + 'px';
+      document.body.appendChild(d);
+    });
+  }
+
+  btn.onclick = function(){
+    marking = !marking;
+    document.body.classList.toggle('marking', marking);
+    btn.classList.toggle('on', marking);
+    btn.textContent = marking ? '✏️ 标注中（点要改的地方）' : '✏️ 标注';
+    submit.classList.toggle('hide', !marks.length || marking);
+    if(!marking) drawDots();
+  };
+
+  document.addEventListener('mouseover', function(e){
+    if(!marking) return;
+    var el = e.target;
+    if(el === btn || panel.contains(el) || submit.contains(el)) return;
+    document.querySelectorAll('.mk-hover').forEach(function(x){ x.classList.remove('mk-hover'); });
+    el.classList.add('mk-hover');
+  }, true);
+
+  document.addEventListener('click', function(e){
+    if(!marking) return;
+    if(e.target === btn || panel.contains(e.target) || submit.contains(e.target)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var el = e.target;
+    document.querySelectorAll('.mk-hover').forEach(function(x){ x.classList.remove('mk-hover'); });
+    pending = {el: el, info: describe(el)};
+    target.innerHTML = '【' + (pending.info.tab || '页面') + '】' +
+      (pending.info.card ? pending.info.card + ' → ' : '') +
+      '<b>' + (pending.info.text || pending.info.path) + '</b><br>' +
+      '<span style="color:#B0BAB5">' + pending.info.path + '</span>';
+    text.value = '';
+    panel.classList.add('show');
+    setTimeout(function(){ text.focus(); }, 250);
+  }, true);
+
+  document.getElementById('mkCancel').onclick = function(){
+    panel.classList.remove('show');
+    pending = null;
+  };
+
+  document.getElementById('mkSave').onclick = function(){
+    if(!pending) return;
+    var note = text.value.trim();
+    if(!note){ text.focus(); return; }
+    marks.push({
+      el: pending.el,
+      tab: pending.info.tab,
+      card: pending.info.card,
+      text: pending.info.text,
+      path: pending.info.path,
+      note: note
+    });
+    panel.classList.remove('show');
+    pending = null;
+    countEl.textContent = marks.length;
+    submit.classList.remove('hide');
+    submit.classList.toggle('hide', marking);
+    drawDots();
+  };
+
+  submit.onclick = function(){
+    if(!marks.length) return;
+    var lines = ['【台账 Demo 标注反馈】', ''];
+    marks.forEach(function(m, i){
+      lines.push((i + 1) + '. 【' + (m.tab || '页面') + '】' + (m.card ? m.card + ' → ' : '') + (m.text || ''));
+      lines.push('   位置：' + m.path);
+      lines.push('   意见：' + m.note);
+      lines.push('');
+    });
+    var report = lines.join('\n');
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(report).then(function(){
+        alert('已复制 ' + marks.length + ' 条标注\n\n直接粘贴发给开发者即可。\n\n' + report);
+      }).catch(function(){
+        prompt('复制下面的内容发给我：', report);
+      });
+    }else{
+      prompt('复制下面的内容发给我：', report);
+    }
+  };
+
+  window.addEventListener('scroll', function(){ if(marks.length && !marking) drawDots(); }, {passive:true});
+})();
+</script>
 </body>
 </html>
