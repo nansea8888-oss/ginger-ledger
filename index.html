@@ -142,7 +142,8 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 .cus-row .cv{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
 .cus-row .cv small{display:block;font-size:10.5px;color:#9AA8A1;font-weight:400;margin-top:2px}
 
-.filter-bar{display:flex;align-items:center;gap:8px;background:#EAF1ED;border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:13px;color:#2F5D50;font-weight:600}
+.filter-bar{display:flex;align-items:center;background:#EAF1ED;border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:13px;color:#2F5D50;font-weight:600}
+.filter-bar>*+*{margin-left:8px}
 .filter-bar button{margin-left:auto;border:0;background:none;color:#7A8A82;font-size:16px;padding:0 4px;font-family:inherit}
 
 .mini{display:flex}.mini>*+*{margin-left:10px}
@@ -152,14 +153,16 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 .h3s{font-size:10.5px;color:#9AA8A1;font-weight:400;margin-left:4px}
 
 /* 合同缩略图 */
-.shots{display:flex;gap:8px;flex-wrap:wrap}
+.shots{display:flex;flex-wrap:wrap}
+.shots>*+*{margin-left:8px}
 .shot{width:62px;height:62px;border-radius:8px;overflow:hidden;position:relative;background:#F1F5F3}
 .shot img{width:100%;height:100%;object-fit:cover;display:block}
 .shot .x{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-size:11px;line-height:18px;text-align:center;border:0;padding:0;font-family:inherit}
 .addshot{width:62px;height:62px;border-radius:8px;border:1.5px dashed #C8D4CE;background:#fff;color:#9AA8A1;font-size:24px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 
 /* 定位 */
-.geo-box{display:flex;align-items:center;gap:8px;padding:11px;background:#F1F5F3;border-radius:8px;font-size:12.5px;color:#5A6B63;line-height:1.5}
+.geo-box{display:flex;align-items:center;padding:11px;background:#F1F5F3;border-radius:8px;font-size:12.5px;color:#5A6B63;line-height:1.5}
+.geo-box>*+*{margin-left:8px}
 .geo-dot{width:9px;height:9px;border-radius:50%;background:#C8D4CE;flex-shrink:0}
 .geo-dot.g{background:#2FA84F}
 .geo-dot.y{background:#E8A33D}
@@ -228,7 +231,7 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 </head>
 <body>
 
-<div id="loginMask" style="position:fixed;inset:0;background:linear-gradient(160deg,#2F5D50,#1E4A3C);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px">
+<div id="loginMask" style="position:fixed;top:0;right:0;bottom:0;left:0;background:linear-gradient(160deg,#2F5D50,#1E4A3C);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px">
   <div style="color:#fff;font-size:22px;font-weight:600;margin-bottom:6px">生姜收购台账</div>
   <div style="color:#A8C4BA;font-size:12.5px;margin-bottom:26px">输入 4 位数字进入</div>
   <input id="lgCode" placeholder="4 位数字" inputmode="numeric" maxlength="8" autocomplete="off"
