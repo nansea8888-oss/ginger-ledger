@@ -429,7 +429,7 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 
 <script>
 const KEY = 'ginger_ledger_v1';   // 旧键，仅用于一次性迁移
-const APP_VERSION = '2.0.1';
+const APP_VERSION = '2.0.2';
 let data = [];
 let expenses = [];
 var currentExpType = '差旅费';
@@ -1477,6 +1477,17 @@ if('serviceWorker' in navigator){
 <script src="cloudbase.bundle.js"></script>
 <script>
 /* ========== 云同步 ========== */
+function errText(e){
+  if (!e) return '未知错误';
+  if (typeof e === 'string') return e;
+  if (e.message) return e.message;
+  if (e.errMsg) return e.errMsg;
+  if (e.error_description) return e.error_description;
+  if (e.name && e.code) return e.name + ' / ' + e.code;
+  if (e.code) return String(e.code);
+  try { var s = JSON.stringify(e); if (s && s !== '{}') return s; } catch(_) {}
+  return String(e);
+}
 var CLOUD_API = 'https://head-crab-d1g485if3fb037f2a.api.tcloudbasegateway.com/v1/rdb/rest';
 var cloudApp = null, cloudToken = null, cloudUser = null;
 
@@ -1487,7 +1498,7 @@ function cloudInit(){
       var cb = window.cloudbase && (window.cloudbase.default || window.cloudbase);
       if (!cb) { rej(new Error('SDK 未加载，请刷新页面')); return; }
       cloudApp = cb.init({ env: 'head-crab-d1g485if3fb037f2a' });
-      var auth = cloudApp.auth({ persistence: 'local' });
+      var auth = cloudApp.auth({ persistence: 'none' });
       auth.signInAnonymously().then(function(){
         return auth.getAccessToken();
       }).then(function(t){
@@ -1532,7 +1543,7 @@ function doLogin(){
     document.getElementById('loginMask').style.display = 'none';
     cloudPull();
   }).catch(function(e){
-    msg.textContent = '失败: ' + (e && e.message ? e.message : String(e));
+    msg.textContent = '失败: ' + errText(e);
   }).then(function(){
     btn.textContent = '登 录'; btn.disabled = false;
   });
