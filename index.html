@@ -1819,7 +1819,7 @@ if('serviceWorker' in navigator){
 
 <!-- ===== 标注工具 ===== -->
 <button id="markBtn">✏️ 标注</button>
-<button id="mkSubmit" class="hide">📋 生成反馈清单（<span id="mkCount">0</span>）</button>
+<button id="mkSubmit" class="hide">📋 提交标注（<span id="mkCount">0</span>）</button>
 <div id="mkPanel">
   <div id="mkHead">标注这一处</div>
   <div id="mkTarget"></div>
@@ -1967,30 +1967,49 @@ body.marking .mk-hover{outline:2px dashed #C0392B!important;outline-offset:2px;b
 
   submit.onclick = function(){
     if(!marks.length) return;
-    // 一行一条，尽量短
-    var lines = ['【标注 ' + marks.length + ' 条】'];
-    marks.forEach(function(m, i){
-      var where = (m.tab || '') + (m.card ? '>' + m.card : '') + (m.text ? '>' + m.text : '');
-      lines.push((i + 1) + '. ' + where.replace(/\s+/g, '') + '：' + m.note);
+
+    // 直接写入云端 feedback 表
+    var rows = marks.map(function(m){
+      return {
+        id: 'fb_' + Date.now() + '_' + Math.random().toString(36).slice(2,8),
+        created_at: Date.now(),
+        user_name: (window.cloudUser && window.cloudUser.name) || '未登录',
+        user_id: (window.cloudUser && window.cloudUser.id) || '',
+        page: m.tab || '',
+        card: m.card || '',
+        elem_text: (m.text || '').slice(0, 100),
+        note: m.note || '',
+        device: navigator.userAgent.slice(0, 120),
+        status: 'new'
+      };
     });
-    var report = lines.join('\n');
 
-    function done(){
-      if(navigator.share){
-        navigator.share({title: '台账 Demo 标注', text: report}).catch(function(){});
-      }
-    }
+    submit.textContent = '提交中…';
+    submit.disabled = true;
 
-    if(navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(report).then(function(){
-        alert('已复制，直接粘贴发我即可：\n\n' + report);
-      }).catch(function(){
-        prompt('复制下面的内容发我：', report);
-      });
-    }else{
-      prompt('复制下面的内容发我：', report);
-    }
-    done();
+    var send = (window.cloudReq && window.cloudToken) ? window.cloudReq('/feedback', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=merge-duplicates' },
+      body: JSON.stringify(rows)
+    }) : Promise.reject(new Error('未登录，无法提交'));
+
+    send.then(function(){
+      marks.length = 0;
+      document.querySelectorAll('.mk-dot').forEach(function(d){ d.remove(); });
+      countEl.textContent = '0';
+      submit.classList.add('hide');
+      submit.textContent = '📋 提交标注';
+      submit.disabled = false;
+      btn.textContent = '✏️ 标注';
+      marking = false;
+      document.body.classList.remove('marking');
+      btn.classList.remove('on');
+      alert('✅ 已提交 ' + rows.length + ' 条标注\n\n老板直接就能看到，不用再发消息了。');
+    }).catch(function(e){
+      submit.textContent = '📋 提交标注';
+      submit.disabled = false;
+      alert('提交失败：' + (e && e.message ? e.message : e) + '\n\n请检查网络后重试。');
+    });
   };
 
   window.addEventListener('scroll', function(){ if(marks.length && !marking) drawDots(); }, {passive:true});
