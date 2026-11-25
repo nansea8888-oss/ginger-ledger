@@ -429,7 +429,7 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 
 <script>
 const KEY = 'ginger_ledger_v1';   // 旧键，仅用于一次性迁移
-const APP_VERSION = '2.0.2';
+const APP_VERSION = '2.0.3';
 let data = [];
 let expenses = [];
 var currentExpType = '差旅费';
@@ -1498,11 +1498,18 @@ function cloudInit(){
       var cb = window.cloudbase && (window.cloudbase.default || window.cloudbase);
       if (!cb) { rej(new Error('SDK 未加载，请刷新页面')); return; }
       cloudApp = cb.init({ env: 'head-crab-d1g485if3fb037f2a' });
-      var auth = cloudApp.auth({ persistence: 'none' });
-      auth.signInAnonymously().then(function(){
-        return auth.getAccessToken();
-      }).then(function(t){
-        cloudToken = (typeof t === 'string') ? t : (t && t.accessToken);
+      var auth = cloudApp.auth({ persistence: 'local' });
+      auth.signInAnonymously().then(function(r){
+        // 先从登录返回值里取
+        var s = r && r.data && r.data.session;
+        if (s && s.access_token) cloudToken = s.access_token;
+        if (!cloudToken && r && r.accessToken) cloudToken = r.accessToken;
+        // 再兜底问 auth
+        if (cloudToken) return null;
+        return auth.getAccessToken().then(function(t){
+          cloudToken = (typeof t === 'string') ? t : (t && t.accessToken);
+        });
+      }).then(function(){
         if (!cloudToken) throw new Error('未拿到 token');
         res();
       }).catch(rej);
