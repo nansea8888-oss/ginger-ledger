@@ -304,6 +304,31 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 .exp-line input{flex:1;border:1px solid #DCE7E2;border-radius:9px;padding:9px 12px;font-size:15px;text-align:right;background:#fff;font-family:inherit}
 .exp-line input:focus{outline:none;border-color:#2F5D50;background:#F8FCFA}
 .exp-line input:not(:placeholder-shown){background:#F8FCFA;border-color:#C9DCD4}
+
+/* ===== v3 分项费用 ===== */
+.eb{border:1px solid #E4ECE8;border-radius:11px;margin-top:10px;overflow:hidden;background:#FCFDFC}
+.eb-head{display:flex;align-items:center;padding:12px 13px;cursor:pointer;background:#FAFCFB;-webkit-tap-highlight-color:transparent}
+.eb-head:active{background:#F2F7F4}
+.eb-t{flex:1;font-size:14px;font-weight:600;color:#2F5D50}
+.eb-s{font-size:13px;color:#C0392B;font-weight:600;margin-right:8px}
+.eb-ar{font-size:12px;color:#8A9992;width:12px;text-align:center}
+.eb-body{padding:0 13px 11px}
+.eb-add{width:100%;margin-top:9px;padding:9px;border:1.5px dashed #C8D8D1;border-radius:9px;background:#fff;color:#5A6B65;font-size:13px;font-family:inherit}
+.eb-add:active{background:#F2F7F4}
+.eb-item{display:flex;align-items:center;gap:6px;padding:9px 0;border-bottom:1px solid #EFF4F1}
+.eb-item:last-child{border-bottom:0}
+.eb-item input{border:1px solid #DCE7E2;border-radius:8px;padding:9px 10px;font-size:14px;background:#fff;font-family:inherit;min-width:0;box-sizing:border-box}
+.eb-item input:focus{outline:none;border-color:#2F5D50;background:#F8FCFA}
+.f-sub{width:68px;flex-shrink:0}
+.f-amt{flex:1;text-align:right}
+.f-num{width:64px;flex-shrink:0;text-align:right;padding:9px 6px}
+.f-name{flex:1}
+.f-x{width:20px;text-align:center;color:#C0392B;font-size:18px;line-height:1;cursor:pointer;flex-shrink:0;user-select:none}
+.f-eq{font-size:11.5px;color:#A0AEA8;flex-shrink:0;width:10px;text-align:center}
+.f-res{font-size:12.5px;color:#2F5D50;font-weight:700;width:64px;text-align:right;flex-shrink:0}
+.eb-simple{display:flex;align-items:center;padding:12px 13px;border:1px solid #E4ECE8;border-radius:11px;margin-top:10px;background:#FCFDFC}
+.eb-simple input{flex:1;border:1px solid #DCE7E2;border-radius:9px;padding:9px 12px;font-size:15px;text-align:right;background:#fff;font-family:inherit}
+.eb-simple input:focus{outline:none;border-color:#2F5D50}
 </style>
 </head>
 <body>
@@ -433,28 +458,68 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
         </div>
       </div>
 
-      <label style="margin-top:13px;display:block">填金额（同一笔几种费用一起填，空的不存）</label>
-      <div id="expLines">
-        <div class="exp-line" data-t="差旅费"><span class="el-t">差旅</span><input type="number" inputmode="decimal" placeholder="0.00"></div>
-        <div class="exp-line" data-t="物料费"><span class="el-t">物料</span><input type="number" inputmode="decimal" placeholder="0.00"></div>
-        <div class="exp-line" data-t="人工费"><span class="el-t">人工</span><input type="number" inputmode="decimal" placeholder="0.00"></div>
-        <div class="exp-line" data-t="装卸费"><span class="el-t">装卸</span><input type="number" inputmode="decimal" placeholder="0.00"></div>
-        <div class="exp-line" data-t="其它"><span class="el-t">其它</span><input type="number" inputmode="decimal" placeholder="0.00"></div>
-      </div>
-
-      <div class="mb">
-        <label>说明（可不填，整笔共用）</label>
-        <input id="expNote" placeholder="比如：今天的收购开销">
-      </div>
-
-      <div id="expSumBar" style="display:none;padding:11px 13px;background:#F3F8F5;border:1px solid #E4EEE9;border-radius:10px;margin-bottom:10px">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:12.5px;color:#5A6B65">本次合计 <b id="expSumCnt" style="color:#2F5D50">0</b> 笔</span>
-          <b style="font-size:16px;color:#C0392B" id="expSumAmt">¥0.00</b>
+      <!-- 差旅费 -->
+      <div class="eb">
+        <div class="eb-head" onclick="toggleEB('travel')">
+          <span class="eb-t">差旅费</span>
+          <span class="eb-s" id="sum_travel">¥0.00</span>
+          <span class="eb-ar" id="ar_travel">▸</span>
+        </div>
+        <div class="eb-body" id="body_travel" style="display:none">
+          <div id="travelItems"></div>
+          <button class="eb-add" onclick="addTravel()">＋ 添加一项</button>
         </div>
       </div>
 
-      <button class="btn" onclick="saveExpBatch()">保 存</button>
+      <!-- 人工费 -->
+      <div class="eb">
+        <div class="eb-head" onclick="toggleEB('labor')">
+          <span class="eb-t">人工费</span>
+          <span class="eb-s" id="sum_labor">¥0.00</span>
+          <span class="eb-ar" id="ar_labor">▸</span>
+        </div>
+        <div class="eb-body" id="body_labor" style="display:none">
+          <div id="laborItems"></div>
+          <button class="eb-add" onclick="addLabor()">＋ 添加一组</button>
+        </div>
+      </div>
+
+      <!-- 物料费 -->
+      <div class="eb">
+        <div class="eb-head" onclick="toggleEB('material')">
+          <span class="eb-t">物料费</span>
+          <span class="eb-s" id="sum_material">¥0.00</span>
+          <span class="eb-ar" id="ar_material">▸</span>
+        </div>
+        <div class="eb-body" id="body_material" style="display:none">
+          <div id="materialItems"></div>
+          <button class="eb-add" onclick="addMaterial()">＋ 添加一种</button>
+        </div>
+      </div>
+
+      <!-- 装卸费 -->
+      <div class="eb-simple">
+        <span class="eb-t">装卸费</span>
+        <input id="expLoad" type="number" inputmode="decimal" placeholder="0.00">
+      </div>
+
+      <!-- 其它 -->
+      <div class="eb-simple" style="align-items:flex-start;flex-direction:column;gap:8px;padding-top:11px">
+        <div style="display:flex;align-items:center;width:100%">
+          <span class="eb-t">其它</span>
+          <input id="expOther" type="number" inputmode="decimal" placeholder="0.00">
+        </div>
+        <input id="expOtherNote" placeholder="说明是什么（必填）" style="width:100%;border:1px solid #DCE7E2;border-radius:9px;padding:9px 12px;font-size:14px">
+      </div>
+
+      <div id="expSumBar" style="display:none;padding:12px 14px;background:#F3F8F5;border:1px solid #E4EEE9;border-radius:10px;margin-top:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:12.5px;color:#5A6B65">本次合计 <b id="expSumCnt" style="color:#2F5D50">0</b> 项</span>
+          <b style="font-size:17px;color:#C0392B" id="expSumAmt">¥0.00</b>
+        </div>
+      </div>
+
+      <button class="btn" style="margin-top:12px" onclick="saveExpBatch()">保 存</button>
     </div>
 
     </div>
@@ -763,6 +828,18 @@ setTimeout(function TEST_MODE(){
     document.title = 'TEST[' + log.join(' | ') + ']';
   } catch(e) { document.title = 'TESTERR:' + e.message; }
 }, 2500);
+setTimeout(function autoOpenEB(){
+  if (location.search.indexOf('open=1') < 0) return;
+  try { ['travel','labor','material'].forEach(function(k){ toggleEB(k); }); } catch(e){}
+}, 1600);
+setTimeout(function expInit(){
+  try { initExpForm(); } catch(e) { console.log('exp init', e); }
+  var ids = ['expLoad','expOther'];
+  for (var i2 = 0; i2 < ids.length; i2++) {
+    var el = document.getElementById(ids[i2]);
+    if (el) el.addEventListener('input', updSums);
+  }
+}, 1300);
 setTimeout(function tabFallback(){
   var tp = (location.search.match(/[?&]tab=([a-z]+)/) || [])[1];
   if (tp && typeof showTab === 'function') { try { showTab(tp); } catch(e){} }
@@ -1787,37 +1864,184 @@ function expClearPending(){
   if (nt) nt.value = '';
 }
 
+
+/* ========== v3 分项费用 ========== */
+var expData = {
+  travel:   [{ sub: '加油',   amt: '' }, { sub: '过路费', amt: '' }],
+  labor:    [{ people: '', rate: '' }],
+  material: [{ name: '', qty: '', unit: '' }]
+};
+var TRAVEL_PRESETS = ['加油', '过路费', '住宿', '宴请', '停车费', '修车'];
+
+function toggleEB(key){
+  var body = document.getElementById('body_' + key);
+  var ar = document.getElementById('ar_' + key);
+  if (!body) return;
+  var open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if (ar) ar.textContent = open ? '▸' : '▾';
+}
+
+function renderTravel(){
+  var box = document.getElementById('travelItems');
+  if (!box) return;
+  box.innerHTML = expData.travel.map(function(it, i){
+    var amt = parseFloat(it.amt) || 0;
+    return '<div class="eb-item">' +
+      '<input class="f-sub" value="' + escHtml(it.sub) + '" placeholder="费用项" list="dl-travel" oninput="expData.travel[' + i + '].sub=this.value">' +
+      '<input class="f-amt" type="number" inputmode="decimal" value="' + it.amt + '" placeholder="0.00" oninput="expData.travel[' + i + '].amt=this.value;updSums()">' +
+      '<span class="f-x" onclick="delTravel(' + i + ')">×</span>' +
+    '</div>';
+  }).join('') + '<datalist id="dl-travel">' + TRAVEL_PRESETS.map(function(x){ return '<option value="' + x + '">'; }).join('') + '</datalist>';
+}
+
+function addTravel(){
+  expData.travel.push({ sub: '', amt: '' });
+  renderTravel();
+}
+
+function delTravel(i){
+  if (expData.travel.length <= 1) { expData.travel[0] = { sub: '', amt: '' }; }
+  else { expData.travel.splice(i, 1); }
+  renderTravel(); updSums();
+}
+
+function renderLabor(){
+  var box = document.getElementById('laborItems');
+  if (!box) return;
+  box.innerHTML = expData.labor.map(function(it, i){
+    var p = parseFloat(it.people) || 0, r = parseFloat(it.rate) || 0;
+    var res = p * r;
+    return '<div class="eb-item">' +
+      '<input class="f-num" type="number" inputmode="decimal" value="' + it.people + '" placeholder="人数" oninput="expData.labor[' + i + '].people=this.value;renderLabor();updSums()">' +
+      '<span class="f-eq">×</span>' +
+      '<input class="f-amt" type="number" inputmode="decimal" value="' + it.rate + '" placeholder="单价" oninput="expData.labor[' + i + '].rate=this.value;renderLabor();updSums()">' +
+      '<span class="f-res">' + (res ? '¥' + res.toFixed(2) : '¥0.00') + '</span>' +
+      '<span class="f-x" onclick="delLabor(' + i + ')">×</span>' +
+    '</div>';
+  }).join('');
+}
+
+function addLabor(){
+  expData.labor.push({ people: '', rate: '' });
+  renderLabor();
+}
+
+function delLabor(i){
+  if (expData.labor.length <= 1) { expData.labor[0] = { people: '', rate: '' }; }
+  else { expData.labor.splice(i, 1); }
+  renderLabor(); updSums();
+}
+
+function renderMaterial(){
+  var box = document.getElementById('materialItems');
+  if (!box) return;
+  box.innerHTML = expData.material.map(function(it, i){
+    var q = parseFloat(it.qty) || 0, u = parseFloat(it.unit) || 0;
+    var res = q * u;
+    return '<div class="eb-item">' +
+      '<div style="flex:1;min-width:0">' +
+        '<input class="f-name" style="width:100%" value="' + escHtml(it.name) + '" placeholder="名称（如编织袋）" oninput="expData.material[' + i + '].name=this.value">' +
+      '</div>' +
+      '<input class="f-num" type="number" inputmode="decimal" value="' + it.qty + '" placeholder="数量" oninput="expData.material[' + i + '].qty=this.value;renderMaterial();updSums()">' +
+      '<span class="f-eq">×</span>' +
+      '<input class="f-num" style="width:70px" type="number" inputmode="decimal" value="' + it.unit + '" placeholder="单价" oninput="expData.material[' + i + '].unit=this.value;renderMaterial();updSums()">' +
+      '<span class="f-x" onclick="delMaterial(' + i + ')">×</span>' +
+    '</div>' +
+    '<div style="text-align:right;font-size:12px;color:#2F5D50;font-weight:700;padding:0 0 7px">= ¥' + res.toFixed(2) + '</div>';
+  }).join('');
+}
+
+function addMaterial(){
+  expData.material.push({ name: '', qty: '', unit: '' });
+  renderMaterial();
+}
+
+function delMaterial(i){
+  if (expData.material.length <= 1) { expData.material[0] = { name: '', qty: '', unit: '' }; }
+  else { expData.material.splice(i, 1); }
+  renderMaterial(); updSums();
+}
+
+function sumTravel(){
+  return expData.travel.reduce(function(s, it){ return s + (parseFloat(it.amt) || 0); }, 0);
+}
+function sumLabor(){
+  return expData.labor.reduce(function(s, it){ return s + (parseFloat(it.people) || 0) * (parseFloat(it.rate) || 0); }, 0);
+}
+function sumMaterial(){
+  return expData.material.reduce(function(s, it){ return s + (parseFloat(it.qty) || 0) * (parseFloat(it.unit) || 0); }, 0);
+}
+
+function updSums(){
+  var st = sumTravel(), sl = sumLabor(), sm = sumMaterial();
+  var load = parseFloat((document.getElementById('expLoad') || {}).value) || 0;
+  var other = parseFloat((document.getElementById('expOther') || {}).value) || 0;
+
+  var e1 = document.getElementById('sum_travel'); if (e1) e1.textContent = '¥' + st.toFixed(2);
+  var e2 = document.getElementById('sum_labor');  if (e2) e2.textContent = '¥' + sl.toFixed(2);
+  var e3 = document.getElementById('sum_material'); if (e3) e3.textContent = '¥' + sm.toFixed(2);
+
+  var cnt = 0;
+  expData.travel.forEach(function(x){ if ((parseFloat(x.amt)||0) > 0) cnt++; });
+  expData.labor.forEach(function(x){ if ((parseFloat(x.people)||0) * (parseFloat(x.rate)||0) > 0) cnt++; });
+  expData.material.forEach(function(x){ if ((parseFloat(x.qty)||0) * (parseFloat(x.unit)||0) > 0) cnt++; });
+  if (load > 0) cnt++;
+  if (other > 0) cnt++;
+
+  var total = st + sl + sm + load + other;
+  var bar = document.getElementById('expSumBar');
+  var bc = document.getElementById('expSumCnt');
+  var ba = document.getElementById('expSumAmt');
+  if (bar) {
+    if (cnt > 0) { bar.style.display = 'block'; if (bc) bc.textContent = cnt; if (ba) ba.textContent = '¥' + total.toFixed(2); }
+    else bar.style.display = 'none';
+  }
+}
+
+function initExpForm(){
+  renderTravel(); renderLabor(); renderMaterial(); updSums();
+}
+
 function saveExpBatch(){
   var payer = ((document.getElementById('expPayer') || {}).value || '').trim();
   var date = (document.getElementById('expDate') || {}).value || localDate();
-  var note = ((document.getElementById('expNote') || {}).value || '').trim();
-
-  var items = [];
-  document.querySelectorAll('#expLines .exp-line').forEach(function(line){
-    var inp = line.querySelector('input');
-    var amt = parseFloat(inp ? inp.value : 0);
-    if (!amt || amt <= 0) return;
-    items.push({ type: line.getAttribute('data-t'), amount: Math.round(amt * 100) / 100 });
-  });
-
-  if (!items.length) { alert('请至少填一个金额'); return; }
   if (!payer) { alert('请填写谁付的钱'); return; }
+
+  var rows = [];
+  expData.travel.forEach(function(it){
+    var a = parseFloat(it.amt) || 0;
+    if (a > 0) rows.push({ type: '差旅费', subtype: (it.sub || '').trim(), amount: a, qty: null, unit_price: null });
+  });
+  expData.labor.forEach(function(it){
+    var p2 = parseFloat(it.people) || 0, r2 = parseFloat(it.rate) || 0;
+    if (p2 > 0 && r2 > 0) rows.push({ type: '人工费', subtype: '', amount: p2 * r2, qty: p2, unit_price: r2 });
+  });
+  expData.material.forEach(function(it){
+    var q = parseFloat(it.qty) || 0, u = parseFloat(it.unit) || 0;
+    if (q > 0 && u > 0) rows.push({ type: '物料费', subtype: (it.name || '').trim(), amount: q * u, qty: q, unit_price: u });
+  });
+  var load = parseFloat((document.getElementById('expLoad') || {}).value) || 0;
+  if (load > 0) rows.push({ type: '装卸费', subtype: '', amount: load, qty: null, unit_price: null });
+  var other = parseFloat((document.getElementById('expOther') || {}).value) || 0;
+  var otherNote = ((document.getElementById('expOtherNote') || {}).value || '').trim();
+  if (other > 0) {
+    if (!otherNote) { alert('「其它」填了金额，请写一句说明是什么'); return; }
+    rows.push({ type: '其它', subtype: otherNote, amount: other, qty: null, unit_price: null });
+  }
+
+  if (!rows.length) { alert('请至少填一个金额'); return; }
 
   var now = Date.now();
   var n = 0;
-  items.forEach(function(it, i2){
+  rows.forEach(function(r, i2){
     var rec = {
-      uuid: uuid(),
-      date: date,
-      type: it.type,
-      amount: it.amount,
-      payer: payer,
-      note: note,
-      operator: operator || '',
-      deviceId: deviceId,
-      createdAt: now + i2,
-      updatedAt: now + i2,
-      deleted: false
+      uuid: uuid(), date: date, type: r.type, subtype: r.subtype || '',
+      amount: Math.round(r.amount * 100) / 100,
+      qty: r.qty, unit_price: r.unit_price,
+      payer: payer, note: r.subtype || '',
+      operator: operator || '', deviceId: deviceId,
+      createdAt: now + i2, updatedAt: now + i2, deleted: false
     };
     expenses.unshift(rec);
     DB.expPut(rec).catch(function(){});
@@ -1825,15 +2049,17 @@ function saveExpBatch(){
     n++;
   });
 
-  // 清空金额和说明，保留日期和付款人
-  document.querySelectorAll('#expLines input').forEach(function(x){ x.value = ''; });
-  var nt = document.getElementById('expNote');
-  if (nt) nt.value = '';
-  updateExpSum();
+  expData.travel = [{ sub: '加油', amt: '' }, { sub: '过路费', amt: '' }];
+  expData.labor = [{ people: '', rate: '' }];
+  expData.material = [{ name: '', qty: '', unit: '' }];
+  var le = document.getElementById('expLoad'); if (le) le.value = '';
+  var oe = document.getElementById('expOther'); if (oe) oe.value = '';
+  var on = document.getElementById('expOtherNote'); if (on) on.value = '';
+  initExpForm();
 
   renderExp();
   if (typeof renderSum === 'function') renderSum();
-  alert('已保存 ' + n + ' 笔费用 ✓（日期和付款人保留，可继续录）');
+  alert('已保存 ' + n + ' 项费用');
 }
 
 function updateExpSum(){
