@@ -150,6 +150,37 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 
 .chart-empty{text-align:center;color:#B9C4BE;font-size:13px;padding:26px 0}
 .h3s{font-size:10.5px;color:#9AA8A1;font-weight:400;margin-left:4px}
+
+/* 合同缩略图 */
+.shots{display:flex;gap:8px;flex-wrap:wrap}
+.shot{width:62px;height:62px;border-radius:8px;overflow:hidden;position:relative;background:#F1F5F3}
+.shot img{width:100%;height:100%;object-fit:cover;display:block}
+.shot .x{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-size:11px;line-height:18px;text-align:center;border:0;padding:0;font-family:inherit}
+.addshot{width:62px;height:62px;border-radius:8px;border:1.5px dashed #C8D4CE;background:#fff;color:#9AA8A1;font-size:24px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+
+/* 定位 */
+.geo-box{display:flex;align-items:center;gap:8px;padding:11px;background:#F1F5F3;border-radius:8px;font-size:12.5px;color:#5A6B63;line-height:1.5}
+.geo-dot{width:9px;height:9px;border-radius:50%;background:#C8D4CE;flex-shrink:0}
+.geo-dot.g{background:#2FA84F}
+.geo-dot.y{background:#E8A33D}
+.geo-dot.r{background:#C0392B}
+
+/* 协作 */
+.dot-badge{display:inline-block;min-width:15px;height:15px;line-height:15px;padding:0 4px;border-radius:8px;background:#C0392B;color:#fff;font-size:10px;margin-left:3px}
+.link-card{border:1px solid #E8F0EC;border-radius:10px;padding:11px 12px;margin-bottom:9px}
+.link-card .hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.link-card .nm{font-size:14px;font-weight:600}
+.link-card .st{font-size:10.5px;padding:2px 8px;border-radius:20px}
+.st.on{background:#E3F0EA;color:#1E4A3C}
+.st.off{background:#F5F5F5;color:#9AA8A1}
+.link-card .meta{font-size:11.5px;color:#9AA8A1;line-height:1.7}
+.ap-item{border:1px solid #FFF0D9;background:#FFFCF6;border-radius:10px;padding:11px 12px;margin-bottom:9px}
+.ap-item .hd{display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;font-weight:600}
+.ap-item .bd{font-size:12px;color:#7A6A4A;line-height:1.6;margin-bottom:9px}
+.ap-item .acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ap-item .acts button{padding:8px;border:0;border-radius:8px;font-size:13px;font-family:inherit}
+.ap-item .ok{background:#2F5D50;color:#fff}
+.ap-item .no{background:#fff;color:#C0392B;border:1px solid #F0C9C4}
 .bars{display:flex;align-items:flex-end;height:100px;padding:0 2px;margin-bottom:8px}.bars>*+*{margin-left:7px}
 .bars .b{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%}
 .bars .b i{display:block;width:100%;border-radius:4px 4px 0 0;background:linear-gradient(180deg,#5C8A7B,#2F5D50)}
@@ -204,7 +235,7 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
     style="width:100%;max-width:300px;padding:15px;border:0;border-radius:12px;font-size:17px;text-align:center;letter-spacing:2px;margin-bottom:12px">
   <button id="lgBtn" onclick="doLogin()"
     style="width:100%;max-width:300px;padding:15px;border:0;border-radius:12px;background:#FFC94D;color:#2F5D50;font-size:16px;font-weight:700;font-family:inherit">登 录</button>
-  <div id="lgMsg" style="color:#FFB3A7;font-size:12.5px;margin-top:14px;min-height:18px;text-align:center"></div>
+  <div id="lgMsg" style="color:#FFB3A7;font-size:12.5px;margin-top:14px;min-height:18px;text-align:center;line-height:1.6"></div>
 </div>
 
 
@@ -219,6 +250,7 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
   <button data-tab="exp">费用</button>
   <button data-tab="sum">汇总</button>
   <button data-tab="board">看板</button>
+  <button data-tab="coop">协作<span class="dot-badge hide" id="coopBadge"></span></button>
 </nav>
 
 <main>
@@ -254,6 +286,10 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
           </div>
         </div>
       </div>
+      <div class="mb">
+        <label>客户合同（最多 5 张）</label>
+        <div class="shots" id="cusShots"></div>
+      </div>
     </div>
 
     <div class="card">
@@ -272,6 +308,10 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
       <div>
         <label>基地</label>
         <input id="base" placeholder="王家村基地">
+      </div>
+      <div style="margin-top:10px">
+        <label>货主合同（最多 5 张）</label>
+        <div class="shots" id="ownShots"></div>
       </div>
     </div>
 
@@ -312,6 +352,19 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
       </div>
 
       <button class="btn" onclick="saveRec()">保 存</button>
+    </div>
+
+    <div class="card">
+      <h3>收购地点 <span class="pill" id="geoState">未定位</span></h3>
+      <div class="geo-box" id="geoBox">
+        <span class="geo-dot" id="geoDot"></span>
+        <span id="geoText">点下面按钮获取当前位置</span>
+      </div>
+      <button class="btn ghost" style="margin-top:10px" onclick="locate()">📍 获取当前位置</button>
+      <div style="margin-top:10px">
+        <label>地址（可手动修改）</label>
+        <input id="addr" placeholder="山东省潍坊市安丘市XX镇XX村">
+      </div>
     </div>
 
     <div class="card">
@@ -413,6 +466,44 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
       <div id="chartTypes"></div>
     </div>
   </section>
+
+  <!-- 协作 -->
+  <section id="tab-coop" class="hide">
+    <div class="card">
+      <h3>关联线 <span class="h3s" id="linkCount"></span></h3>
+      <div id="linkBox"></div>
+    </div>
+
+    <div class="card">
+      <h3>新建关联 <span class="h3s">可以加多个</span></h3>
+      <div class="mb">
+        <label>对方姓名</label>
+        <input id="linkName" placeholder="比如：老王">
+      </div>
+      <div class="mb">
+        <label>方向</label>
+        <select id="linkDir">
+          <option value="a2b">我看他的账</option>
+          <option value="b2a">他看我的账</option>
+          <option value="both">互相看</option>
+        </select>
+      </div>
+      <div class="mb">
+        <label>范围</label>
+        <select id="linkScope">
+          <option value="all">全部数据</option>
+          <option value="hide">全部数据，但隐藏金额</option>
+        </select>
+      </div>
+      <button class="btn" onclick="addLink()">生成邀请码并关联</button>
+      <p class="hint" style="text-align:center;padding:10px 0">Demo：关联线存在本机，用来演示多来源展示</p>
+    </div>
+
+    <div class="card">
+      <h3>待审批 <span class="pill" id="apCount">0</span></h3>
+      <div id="apBox"></div>
+    </div>
+  </section>
 </main>
 
 <div id="guide" class="guide">
@@ -429,31 +520,22 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 
 <script>
 const KEY = 'ginger_ledger_v1';   // 旧键，仅用于一次性迁移
-const APP_VERSION = '2.0.3';
+const APP_VERSION = '2.1.0';
 let data = [];
 let expenses = [];
+let customers = [];
+let ownerList = [];
+let linkList = [];
+let apList = [];
 var currentExpType = '差旅费';
+var shotStore = {cus:[], own:[]};
+var geoInfo = {lat:null, lng:null, acc:null};
 var TYPE_CLASS = {'差旅费':'t1','物料费':'t2','人工费':'t3','装卸费':'t4','其它':'t5'};
 
 function esc(s){
   return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){
     return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c];
   });
-}
-
-/* 金额精度：四舍五入到分；累加时转成整数分，避免浮点误差 */
-function round2(x){ return Math.round((x || 0) * 100) / 100; }
-function sumFen(list, pick){
-  var fen = 0;
-  for(var i = 0; i < list.length; i++){ fen += Math.round((pick(list[i]) || 0) * 100); }
-  return fen / 100;
-}
-
-/* 本地日期 YYYY-MM-DD（不能用 toISOString，那是格林尼治时间） */
-function localDate(d){
-  d = d || new Date();
-  function p(n){ return n < 10 ? '0' + n : '' + n; }
-  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
 }
 
 /* 设备标识 & 录入人（为将来上云和权限预留） */
@@ -473,23 +555,16 @@ function uuid(){
 
 /* ---------- IndexedDB 本地库（主存储） ---------- */
 var DB = (function(){
-  var NAME = 'ginger_ledger', VER = 2, p = null;
+  var NAME = 'ginger_ledger', VER = 1, p = null;
   function open(){
     if(p) return p;
     p = new Promise(function(res, rej){
       var req = indexedDB.open(NAME, VER);
       req.onupgradeneeded = function(e){
         var db = e.target.result;
-        if(!db.objectStoreNames.contains('records')){
-          var st = db.createObjectStore('records', {keyPath: 'uuid'});
-          st.createIndex('date', 'date', {unique: false});
-          st.createIndex('createdAt', 'createdAt', {unique: false});
-        }
-        if(!db.objectStoreNames.contains('expenses')){
-          var se = db.createObjectStore('expenses', {keyPath: 'uuid'});
-          se.createIndex('date', 'date', {unique: false});
-          se.createIndex('createdAt', 'createdAt', {unique: false});
-        }
+        ['records','expenses','customers','owners','links','approvals'].forEach(function(n){
+          if(!db.objectStoreNames.contains(n)) db.createObjectStore(n, {keyPath: 'uuid'});
+        });
       };
       req.onsuccess = function(e){ res(e.target.result); };
       req.onerror = function(e){ rej(e.target.error); };
@@ -507,19 +582,25 @@ var DB = (function(){
       });
     });
   }
-  return {
+  var api = {
     all: function(){ return tx('records', 'readonly', function(st){ return st.getAll(); }); },
     put: function(r){ return tx('records', 'readwrite', function(st){ return st.put(r); }); },
     putMany: function(list){ return tx('records', 'readwrite', function(st){ list.forEach(function(r){ st.put(r); }); }); },
     del: function(k){ return tx('records', 'readwrite', function(st){ return st.delete(k); }); },
     clear: function(){ return tx('records', 'readwrite', function(st){ return st.clear(); }); },
-    // 费用
     expAll: function(){ return tx('expenses', 'readonly', function(st){ return st.getAll(); }); },
     expPut: function(r){ return tx('expenses', 'readwrite', function(st){ return st.put(r); }); },
     expPutMany: function(list){ return tx('expenses', 'readwrite', function(st){ list.forEach(function(r){ st.put(r); }); }); },
     expDel: function(k){ return tx('expenses', 'readwrite', function(st){ return st.delete(k); }); },
     expClear: function(){ return tx('expenses', 'readwrite', function(st){ return st.clear(); }); }
   };
+  ['cus','own','link','ap'].forEach(function(pre){
+    var store = pre === 'cus' ? 'customers' : pre === 'own' ? 'owners' : pre === 'link' ? 'links' : 'approvals';
+    api[pre + 'All'] = function(){ return tx(store, 'readonly', function(st){ return st.getAll(); }); };
+    api[pre + 'Put'] = function(r){ return tx(store, 'readwrite', function(st){ return st.put(r); }); };
+    api[pre + 'Del'] = function(k){ return tx(store, 'readwrite', function(st){ return st.delete(k); }); };
+  });
+  return api;
 })();
 
 /* 把老版本存在 localStorage 的数据搬进来（只搬一次） */
@@ -542,7 +623,7 @@ function migrate(){
       r.actual = r.amount + r.feeTotal;
     }
   });
-  return Repo.records.saveMany(arr).then(function(){
+  return DB.putMany(arr).then(function(){
     try{ localStorage.removeItem(KEY); }catch(e){}
     return arr.length;
   });
@@ -589,7 +670,7 @@ function load(cb){
   var timer = setTimeout(function(){ normalizeData(); finish(); }, 3000);
 
   migrate().catch(function(){}).then(function(){
-    return Repo.records.list();
+    return DB.all();
   }).then(function(list){
     clearTimeout(timer);
     data = list || [];
@@ -637,26 +718,40 @@ function saveRec(){
   var now = Date.now();
   var rec = {
     uuid: uuid(),
-    date: s('date') || localDate(),
+    date: s('date') || new Date().toISOString().slice(0,10),
     customer: customer, customerTel: s('customerTel'), lot: s('lot'), plate: s('plate'),
     owner: owner, tel: s('tel'), base: s('base'),
+    contracts: shotStore.cus.slice(),
+    ownerContracts: shotStore.own.slice(),
+    address: (document.getElementById('addr') || {}).value || '',
+    lat: geoInfo.lat, lng: geoInfo.lng, accuracy: geoInfo.acc,
     jian: jian, per: per, soil: soil,
     price: price, fee: fee,
     total: total, soilQty: soilQty, net: net,
-    amount: round2(net*price), feeTotal: round2(net*fee), actual: round2(round2(net*price) + round2(net*fee)),
+    amount: net*price, feeTotal: net*fee, actual: net*price + net*fee,
     operator: operator || '',
     deviceId: deviceId,
     createdAt: now,
     updatedAt: now,
     deleted: false
   };
+  ensureCustomer(customer, s('customerTel'));
+  ensureOwner(owner, s('tel'), s('base'));
+
   data.unshift(rec);
-  Repo.records.save(rec).catch(function(){});
-  if (typeof cloudSaveRecord === 'function') { try { cloudSaveRecord(rec); } catch(e) {} }
+  DB.put(rec).catch(function(){});
 
   ['lot','plate','owner','tel','base','jian','per','price'].forEach(function(id){
     document.getElementById(id).value = '';
   });
+  var addrEl = document.getElementById('addr');
+  if(addrEl) addrEl.value = '';
+  shotStore = {cus:[], own:[]};
+  renderShots('cusShots', []);
+  renderShots('ownShots', []);
+  geoInfo = {lat:null, lng:null, acc:null};
+  var gs = document.getElementById('geoState');
+  if(gs) gs.textContent = '未定位';
   recalc();
   render();
   alert('已保存 ✓');
@@ -687,12 +782,13 @@ function render(){
     box.innerHTML = '<div class="empty">' + (customerFilter ? '这个客户本月没有记录' : '还没有记录<br>去「录入」填第一笔吧') + '</div>';
   }else{
     const groups = {};
-    src.forEach(function(r){ (groups[r.customer] = groups[r.customer] || []).push(r); });
+    const gKey = customerFilter ? 'owner' : 'customer';
+    src.forEach(function(r){ var k = r[gKey] || '未命名'; (groups[k] = groups[k] || []).push(r); });
     let html = '';
     Object.keys(groups).forEach(function(cus){
       const arr = groups[cus];
-      const net = sumFen(arr, function(x){ return x.net; });
-      const act = sumFen(arr, function(x){ return x.actual; });
+      const net = arr.reduce(function(a,b){ return a+b.net; }, 0);
+      const act = arr.reduce(function(a,b){ return a+b.actual; }, 0);
       html += '<div class="grp"><div class="gh"><span class="g1">'+cus+'</span>'+
               '<span class="g2">'+arr.length+' 笔 · '+fmt(net,0)+' 斤 · 总款 ¥'+fmt(act,0)+'</span></div>';
       arr.forEach(function(r){
@@ -750,7 +846,7 @@ function render(){
 var customerFilter = null;
 
 function periodOf(list, key){
-  var today = localDate();
+  var today = new Date().toISOString().slice(0, 10);
   var ym = today.slice(0, 7);
   return list.filter(function(r){
     var d = String(r.date || '');
@@ -764,9 +860,9 @@ function statOf(key){
   var rs = periodOf(data, key);
   var es = periodOf(expenses, key);
   return {
-    cost: sumFen(rs, function(x){ return x.actual; }),
-    net: sumFen(rs, function(x){ return x.net; }),
-    fee: sumFen(es, function(x){ return x.amount; })
+    cost: rs.reduce(function(a, b){ return a + (b.actual || 0); }, 0),
+    net: rs.reduce(function(a, b){ return a + (b.net || 0); }, 0),
+    fee: es.reduce(function(a, b){ return a + (b.amount || 0); }, 0)
   };
 }
 
@@ -799,16 +895,19 @@ function renderCus(){
   var cus = {};
   m.forEach(function(r){
     var k = r.customer || '未命名';
-    if(!cus[k]) cus[k] = {n: 0, net: 0, cost: 0};
+    if(!cus[k]) cus[k] = {n: 0, net: 0, cost: 0, ownSet: {}};
     cus[k].n++;
     cus[k].net += (r.net || 0);
     cus[k].cost += (r.actual || 0);
+    if(r.owner) cus[k].ownSet[r.owner] = 1;
   });
   var keys = Object.keys(cus).sort(function(a, b){ return cus[b].cost - cus[a].cost; });
   if(!keys.length){ box.innerHTML = '<div class="chart-empty">本月暂无数据</div>'; return; }
   box.innerHTML = keys.map(function(k){
+    var ownN = Object.keys(cus[k].ownSet).length;
     return '<div class="cus-row" onclick="drillCustomer(\'' + esc(k) + '\')">' +
-      '<div><div class="cn">' + esc(k) + '</div><div class="cm">' + cus[k].n + ' 笔 · ' + fmt(cus[k].net, 0) + ' 斤</div></div>' +
+      '<div><div class="cn">' + esc(k) + '</div>' +
+      '<div class="cm">' + cus[k].n + ' 笔 · ' + ownN + ' 个货主 · ' + fmt(cus[k].net, 0) + ' 斤</div></div>' +
       '<div class="cv">' + fmt(cus[k].cost, 0) + '<small>总款</small></div>' +
     '</div>';
   }).join('');
@@ -827,13 +926,15 @@ function clearFilter(){
 }
 
 function renderBoard(){
-  var today = localDate();
-  var yest = localDate(new Date(Date.now() - 86400000));
+  var today = new Date().toISOString().slice(0, 10);
+  var yest = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
 
   function dayTotal(ds){
-    var rc = sumFen(data.filter(function(r){ return String(r.date || '') === ds; }), function(x){ return x.actual; });
-    var ex = sumFen(expenses.filter(function(e){ return String(e.date || '') === ds; }), function(x){ return x.amount; });
-    return round2(rc + ex);
+    var rc = data.filter(function(r){ return String(r.date || '') === ds; })
+                 .reduce(function(a, b){ return a + (b.actual || 0); }, 0);
+    var ex = expenses.filter(function(e){ return String(e.date || '') === ds; })
+                 .reduce(function(a, b){ return a + (b.amount || 0); }, 0);
+    return rc + ex;
   }
 
   var t1 = dayTotal(today), t0 = dayTotal(yest);
@@ -859,11 +960,11 @@ function renderBoard(){
   var days = [];
   for(var i = 6; i >= 0; i--){
     var dt = new Date(Date.now() - i * 86400000);
-    var ds = localDate(dt);
+    var ds = dt.toISOString().slice(0, 10);
     days.push({label: ds.slice(5), v: dayTotal(ds), today: i === 0});
   }
   var mxd = Math.max.apply(null, days.map(function(x){ return x.v; })) || 1;
-  var sum = sumFen(days, function(x){ return x.v; });
+  var sum = days.reduce(function(a, b){ return a + b.v; }, 0);
   document.getElementById('chartBars').innerHTML =
     '<div class="ftype bars7">' +
       days.slice().reverse().map(function(x){
@@ -898,68 +999,6 @@ function renderBoard(){
   }
 }
 
-/* =========================================================
-   仓储层 Repo
-   ---------------------------------------------------------
-   界面只调 Repo.xxx，不直接碰 DB。
-   现在底下是本地 IndexedDB；将来接云端时只换这里的实现，
-   界面代码一行不用改。
-   ========================================================= */
-var Repo = (function(){
-
-  // 统一的"入库前处理"：补 id、时间戳、软删除标记、待同步标记
-  function stamp(obj, isNew){
-    var t = Date.now();
-    if(!obj.uuid) obj.uuid = uuid();
-    if(isNew || !obj.createdAt) obj.createdAt = t;
-    obj.updatedAt = t;
-    if(obj.deleted === undefined) obj.deleted = false;
-    obj._dirty = true;          // 待同步到云端
-    if(obj.version === undefined) obj.version = 1;
-    return obj;
-  }
-
-  function make(name, api){
-    return {
-      name: name,
-      list: function(){
-        return api.all().then(function(arr){
-          return (arr || []).filter(function(x){ return !x.deleted; });
-        });
-      },
-      save: function(obj){
-        stamp(obj, !obj.createdAt);
-        return api.put(obj);
-      },
-      saveMany: function(list){
-        (list || []).forEach(function(x){ stamp(x, !x.createdAt); });
-        return api.putMany(list);
-      },
-      remove: function(id){
-        // 软删除：标记 deleted，将来云端也能同步"删除"这个动作
-        return api.all().then(function(arr){
-          var hit = (arr || []).filter(function(x){ return x.uuid === id; })[0];
-          if(!hit) return null;
-          hit.deleted = true;
-          hit.updatedAt = Date.now();
-          hit._dirty = true;
-          return api.put(hit);
-        });
-      },
-      clearAll: function(){ return api.clear(); }
-    };
-  }
-
-  return {
-    records: make('records', {
-      all: DB.all, put: DB.put, putMany: DB.putMany, del: DB.del, clear: DB.clear
-    }),
-    expenses: make('expenses', {
-      all: DB.expAll, put: DB.expPut, putMany: DB.expPutMany, del: DB.expDel, clear: DB.expClear
-    })
-  };
-})();
-
 /* ---------- 单笔原地展开（一次只开一条） ---------- */
 var openId = null;
 
@@ -979,13 +1018,9 @@ function toggleItem(el){
 
 function delRec(id){
   if(!confirm('删掉这笔记录？删了找不回来。')) return;
-  var rec = data.filter(function(x){ return x.uuid === id; })[0];
-  if(rec){
-    rec.deleted = true;
-    Repo.records.save(rec).catch(function(){});
-  }
   data = data.filter(function(x){ return x.uuid !== id; });
   if(openId === id) openId = null;
+  DB.del(id).catch(function(){});
   render();
   renderSum();
   renderCus();
@@ -1001,12 +1036,279 @@ function openPicker(textId, pickId){
   p.click();
 }
 
+/* ---------- 档案 / 关联 / 审批 ---------- */
+function loadExtras(cb){
+  if(!window.indexedDB){ if(cb) cb(); return; }
+  Promise.all([DB.cusAll(), DB.ownAll(), DB.linkAll(), DB.apAll()]).then(function(r){
+    customers = r[0] || []; ownerList = r[1] || []; linkList = r[2] || []; apList = r[3] || [];
+    if(cb) cb();
+  }).catch(function(){ if(cb) cb(); });
+}
+
+function renderShots(boxId, list){
+  const key = boxId === 'cusShots' ? 'cus' : 'own';
+  shotStore[key] = (list || []).slice();
+  const box = document.getElementById(boxId);
+  if(!box) return;
+  box.innerHTML = '';
+  shotStore[key].forEach(function(src, i){
+    const d = document.createElement('div');
+    d.className = 'shot';
+    const im = document.createElement('img');
+    im.src = src;
+    const x = document.createElement('button');
+    x.className = 'x'; x.textContent = '×';
+    x.onclick = function(){ delShot(key, i); };
+    d.appendChild(im); d.appendChild(x);
+    box.appendChild(d);
+  });
+  if(shotStore[key].length < 5){
+    box.appendChild(makePicker(key, true, false, '📷'));
+    box.appendChild(makePicker(key, false, true, '🖼'));
+  }
+}
+
+function makePicker(key, camera, multiple, label){
+  const a = document.createElement('label');
+  a.className = 'addshot';
+  a.textContent = label;
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/*';
+  if(camera) inp.setAttribute('capture', 'environment');
+  if(multiple) inp.multiple = true;
+  inp.style.display = 'none';
+  inp.onchange = function(ev){ addShot(ev, key); };
+  a.appendChild(inp);
+  return a;
+}
+
+function addShot(ev, key){
+  const files = Array.prototype.slice.call(ev.target.files || []);
+  if(!files.length) return;
+  const room = 5 - shotStore[key].length;
+  if(room <= 0){ alert('最多 5 张'); return; }
+  let take = files;
+  if(files.length > room){
+    take = files.slice(0, room);
+    alert('最多 5 张，只保留前 ' + room + ' 张');
+  }
+  let left = take.length;
+  take.forEach(function(file){
+    const before = file.size;
+    compressImg(file, function(dataUrl, size){
+      if(shotStore[key].length < 5) shotStore[key].push(dataUrl);
+      left--;
+      if(left <= 0){
+        renderShots(key === 'cus' ? 'cusShots' : 'ownShots', shotStore[key]);
+        if(take.length === 1) alert('已压缩 ' + Math.round(before/1024) + 'KB → ' + Math.round(size/1024) + 'KB');
+      }
+    });
+  });
+  ev.target.value = '';
+}
+
+function delShot(key, i){
+  shotStore[key].splice(i, 1);
+  renderShots(key === 'cus' ? 'cusShots' : 'ownShots', shotStore[key]);
+}
+
+function compressImg(file, cb){
+  const img = new Image();
+  const url = URL.createObjectURL(file);
+  img.onload = function(){
+    const MAX = 1600;
+    let w = img.width, h = img.height;
+    if(w > h && w > MAX){ h = h * MAX / w; w = MAX; }
+    else if(h >= w && h > MAX){ w = w * MAX / h; h = MAX; }
+    const cv = document.createElement('canvas');
+    cv.width = w; cv.height = h;
+    cv.getContext('2d').drawImage(img, 0, 0, w, h);
+    const out = cv.toDataURL('image/jpeg', 0.75);
+    URL.revokeObjectURL(url);
+    cb(out, Math.round(out.length * 0.75));
+  };
+  img.src = url;
+}
+
+function reverseGeo(lat, lng, cb){
+  // Demo 用免费服务试一下；正式版会换成腾讯位置服务（国内更准）
+  var url = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + lat + '&lon=' + lng + '&accept-language=zh-CN&zoom=18';
+  var done = false;
+  var timer = setTimeout(function(){ if(!done){ done = true; cb(''); } }, 6000);
+  fetch(url).then(function(r){ return r.json(); }).then(function(d){
+    if(done) return;
+    done = true; clearTimeout(timer);
+    cb((d && d.display_name) ? d.display_name : '');
+  }).catch(function(){
+    if(done) return;
+    done = true; clearTimeout(timer);
+    cb('');
+  });
+}
+
+function locate(){
+  const st = document.getElementById('geoState');
+  const dot = document.getElementById('geoDot');
+  const txt = document.getElementById('geoText');
+  if(!navigator.geolocation){ alert('此浏览器不支持定位'); return; }
+  st.textContent = '定位中…';
+  navigator.geolocation.getCurrentPosition(function(pos){
+    geoInfo.lat = +pos.coords.latitude.toFixed(6);
+    geoInfo.lng = +pos.coords.longitude.toFixed(6);
+    geoInfo.acc = Math.round(pos.coords.accuracy);
+    const lvl = geoInfo.acc <= 30 ? 'g' : geoInfo.acc <= 200 ? 'y' : 'r';
+    const word = geoInfo.acc <= 30 ? '精准' : geoInfo.acc <= 200 ? '一般' : '偏差较大';
+    dot.className = 'geo-dot ' + lvl;
+    txt.innerHTML = '纬度 <b>' + geoInfo.lat + '</b> · 经度 <b>' + geoInfo.lng + '</b><br>精度 ±' + geoInfo.acc + ' 米（' + word + '）　<span style="color:#B0BAB5">正在解析地址…</span>';
+    st.textContent = '已定位';
+
+    reverseGeo(geoInfo.lat, geoInfo.lng, function(addr){
+      var addrEl = document.getElementById('addr');
+      if(addr){
+        addrEl.value = addr;
+        txt.innerHTML = '纬度 <b>' + geoInfo.lat + '</b> · 经度 <b>' + geoInfo.lng + '</b><br>精度 ±' + geoInfo.acc + ' 米（' + word + '）';
+      }else{
+        txt.innerHTML = '纬度 <b>' + geoInfo.lat + '</b> · 经度 <b>' + geoInfo.lng + '</b><br>精度 ±' + geoInfo.acc + ' 米（' + word + '）<br><span style="color:#C0392B">地址解析失败，请手动填写</span>';
+      }
+    });
+  }, function(err){
+    dot.className = 'geo-dot r';
+    st.textContent = '定位失败';
+    txt.textContent = '定位失败，请手动填写地址';
+  }, {enableHighAccuracy:true, timeout:8000, maximumAge:0});
+}
+
+function matchCustomerTel(){
+  const v = (document.getElementById('customer').value || '').trim();
+  if(!v) return;
+  const hit = customers.find(function(c){ return c.name === v; });
+  if(hit){
+    if(hit.tel && !document.getElementById('customerTel').value) document.getElementById('customerTel').value = hit.tel;
+    renderShots('cusShots', hit.contracts || []);
+  }
+}
+
+function matchOwnerTel(){
+  const v = (document.getElementById('owner').value || '').trim();
+  if(!v) return;
+  const hit = ownerList.find(function(o){ return o.name === v; });
+  if(hit){
+    if(hit.tel && !document.getElementById('tel').value) document.getElementById('tel').value = hit.tel;
+    if(hit.base && !document.getElementById('base').value) document.getElementById('base').value = hit.base;
+    renderShots('ownShots', hit.contracts || []);
+  }
+}
+
+function ensureCustomer(name, tel){
+  let hit = customers.find(function(c){ return c.name === name; });
+  if(hit){ hit.tel = tel || hit.tel; hit.contracts = shotStore.cus.slice(); DB.cusPut(hit).catch(function(){}); return hit; }
+  const rec = {uuid: uuid(), name: name, tel: tel, contracts: shotStore.cus.slice(), createdAt: Date.now()};
+  customers.push(rec);
+  DB.cusPut(rec).catch(function(){});
+  return rec;
+}
+
+function ensureOwner(name, tel, base){
+  let hit = ownerList.find(function(o){ return o.name === name; });
+  if(hit){ hit.tel = tel || hit.tel; hit.base = base || hit.base; hit.contracts = shotStore.own.slice(); DB.ownPut(hit).catch(function(){}); return hit; }
+  const rec = {uuid: uuid(), name: name, tel: tel, base: base, contracts: shotStore.own.slice(), createdAt: Date.now()};
+  ownerList.push(rec);
+  DB.ownPut(rec).catch(function(){});
+  return rec;
+}
+
+/* 关联线 */
+function renderLinks(){
+  const box = document.getElementById('linkBox');
+  const cnt = document.getElementById('linkCount');
+  if(!box) return;
+  const active = linkList.filter(function(l){ return l.status === 'active'; });
+  if(cnt) cnt.textContent = active.length ? '已关联 ' + active.length + ' 个' : '';
+  if(!linkList.length){ box.innerHTML = '<div class="chart-empty">还没有关联线</div>'; return; }
+  box.innerHTML = linkList.map(function(l){
+    const dir = l.direction === 'a2b' ? '我看他的账' : l.direction === 'b2a' ? '他看我的账' : '互相看';
+    const hide = (l.scope && l.scope.hideFields && l.scope.hideFields.length) ? '（隐藏金额）' : '';
+    return '<div class="link-card">' +
+      '<div class="hd"><span class="nm">' + esc(l.name) + '</span>' +
+      '<span class="st ' + (l.status === 'active' ? 'on' : 'off') + '">' + (l.status === 'active' ? '生效中' : '已解除') + '</span></div>' +
+      '<div class="meta">方向：' + dir + '<br>范围：全部数据' + hide + '</div>' +
+      (l.status === 'active' ? '<button class="btn ghost" style="margin-top:8px;padding:8px;font-size:13px" onclick="revokeLink(\'' + l.uuid + '\')">解除关联</button>' : '') +
+    '</div>';
+  }).join('');
+}
+
+function addLink(){
+  const name = (document.getElementById('linkName').value || '').trim();
+  if(!name){ alert('请填对方姓名'); return; }
+  const dir = document.getElementById('linkDir').value;
+  const scope = document.getElementById('linkScope').value;
+  if(linkList.some(function(l){ return l.name === name && l.status === 'active'; })){
+    alert('已经和「' + name + '」有关联了');
+    return;
+  }
+  const rec = {
+    uuid: uuid(), name: name, direction: dir,
+    scope: {hideFields: scope === 'hide' ? ['price','amount','feeTotal','actual'] : []},
+    status: 'active', createdAt: Date.now()
+  };
+  linkList.push(rec);
+  DB.linkPut(rec).catch(function(){});
+  document.getElementById('linkName').value = '';
+  renderLinks(); render();
+  alert('已添加「' + name + '」\n\n这是第 ' + linkList.filter(function(l){ return l.status === 'active'; }).length + ' 条关联\n可以继续填下一个人，重复添加即可');
+}
+
+function revokeLink(id){
+  const l = linkList.find(function(x){ return x.uuid === id; });
+  if(!l) return;
+  if(!confirm('解除后，' + l.name + ' 将看不到你的新数据（历史保留只读）。确定？')) return;
+  l.status = 'revoked';
+  DB.linkPut(l).catch(function(){});
+  renderLinks(); render();
+}
+
+/* 审批 */
+function renderApprovals(){
+  const box = document.getElementById('apBox');
+  const cnt = document.getElementById('apCount');
+  const badge = document.getElementById('coopBadge');
+  if(!box) return;
+  const pending = apList.filter(function(a){ return a.status === 'pending'; });
+  if(cnt) cnt.textContent = pending.length;
+  if(badge){
+    if(pending.length){ badge.textContent = pending.length; badge.classList.remove('hide'); }
+    else badge.classList.add('hide');
+  }
+  if(!apList.length){ box.innerHTML = '<div class="chart-empty">没有待审批</div>'; return; }
+  box.innerHTML = apList.slice().reverse().map(function(a){
+    const st = a.status === 'pending' ? '待审批' : a.status === 'approved' ? '已同意' : '已拒绝';
+    return '<div class="ap-item">' +
+      '<div class="hd"><span>' + esc(a.applicant || '对方') + ' 申请修改</span><span style="font-size:11px;color:#9AA8A1">' + st + '</span></div>' +
+      '<div class="bd">' + esc(a.desc || '') + '<br>理由：' + esc(a.reason || '') + '</div>' +
+      (a.status === 'pending'
+        ? '<div class="acts"><button class="ok" onclick="decideAp(\'' + a.uuid + '\',\'approved\')">同意</button>' +
+          '<button class="no" onclick="decideAp(\'' + a.uuid + '\',\'rejected\')">拒绝</button></div>'
+        : '') +
+    '</div>';
+  }).join('');
+}
+
+function decideAp(id, st){
+  const a = apList.find(function(x){ return x.uuid === id; });
+  if(!a) return;
+  a.status = st;
+  DB.apPut(a).catch(function(){});
+  renderApprovals();
+  alert(st === 'approved' ? '已同意' : '已拒绝');
+}
+
 function loadExp(cb){
   if(!window.indexedDB){ if(cb) cb(); return; }
   var done = false;
   function fin(){ if(done) return; done = true; if(cb) cb(); }
   var timer = setTimeout(fin, 2500);
-  Repo.expenses.list().then(function(list){
+  DB.expAll().then(function(list){
     clearTimeout(timer);
     expenses = list || [];
     expenses.sort(function(a, b){ return (b.createdAt || 0) - (a.createdAt || 0); });
@@ -1048,9 +1350,9 @@ function renderExp(){
     box.innerHTML = html;
   }
 
-  var ym = localDate().slice(0, 7);
+  var ym = new Date().toISOString().slice(0, 7);
   var month = expenses.filter(function(e){ return String(e.date || '').slice(0, 7) === ym; });
-  var total = sumFen(month, function(x){ return x.amount; });
+  var total = month.reduce(function(a, b){ return a + (b.amount || 0); }, 0);
   var c = document.getElementById('expCount');
   var t = document.getElementById('expTotal');
   if(c) c.textContent = month.length + ' 笔';
@@ -1060,7 +1362,7 @@ function renderExp(){
 function saveExp(){
   var amount = parseFloat(document.getElementById('expAmount').value);
   var payer = (document.getElementById('expPayer').value || '').trim();
-  var date = document.getElementById('expDate').value || localDate();
+  var date = document.getElementById('expDate').value || new Date().toISOString().slice(0, 10);
   var note = (document.getElementById('expNote').value || '').trim();
 
   if(!amount || amount <= 0){ alert('请填写金额'); return; }
@@ -1071,7 +1373,7 @@ function saveExp(){
     uuid: uuid(),
     date: date,
     type: currentExpType,
-    amount: round2(amount),
+    amount: Math.round(amount * 100) / 100,
     payer: payer,
     note: note,
     operator: operator || '',
@@ -1081,7 +1383,7 @@ function saveExp(){
     deleted: false
   };
   expenses.unshift(rec);
-  Repo.expenses.save(rec).catch(function(){});
+  DB.expPut(rec).catch(function(){});
 
   document.getElementById('expAmount').value = '';
   document.getElementById('expNote').value = '';
@@ -1093,12 +1395,8 @@ function saveExp(){
 
 function delExp(id){
   if(!confirm('删掉这笔费用？')) return;
-  var rec = expenses.filter(function(e){ return e.uuid === id; })[0];
-  if(rec){
-    rec.deleted = true;
-    Repo.expenses.save(rec).catch(function(){});
-  }
   expenses = expenses.filter(function(e){ return e.uuid !== id; });
+  DB.expDel(id).catch(function(){});
   renderExp();
   renderSum();
   renderCus();
@@ -1109,8 +1407,8 @@ function clearAll(){
   if(!confirm('再确认一次：删了就找不回来了')) return;
   data = [];
   expenses = [];
-  Repo.records.clearAll().catch(function(){});
-  Repo.expenses.clearAll().catch(function(){});
+  DB.clear().catch(function(){});
+  DB.expClear().catch(function(){});
   render(); renderExp(); renderSum(); renderCus(); updateStoreInfo();
 }
 
@@ -1125,7 +1423,7 @@ function exportCSV(){
   const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = '生姜收购台账_' + localDate() + '.csv';
+  a.download = '生姜收购台账_' + new Date().toISOString().slice(0,10) + '.csv';
   a.click();
 }
 
@@ -1166,7 +1464,7 @@ function exportJSON(){
   var blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
   var a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = '生姜台账备份_' + localDate() + '.json';
+  a.download = '生姜台账备份_' + new Date().toISOString().slice(0,10) + '.json';
   a.click();
 }
 
@@ -1210,7 +1508,7 @@ function importJSON(file){
 
       data = merged;
       expenses = emerg;
-      Promise.all([Repo.records.saveMany(merged), Repo.expenses.saveMany(emerg)]).then(function(){
+      Promise.all([DB.putMany(merged), DB.expPutMany(emerg)]).then(function(){
         render(); renderExp(); renderSum(); renderCus(); updateStoreInfo();
         alert('导入完成：\n收购 新增 ' + added + ' 条，更新 ' + updated + ' 条\n费用 新增 ' + eAdded + ' 条\n现有收购 ' + merged.length + ' 条、费用 ' + emerg.length + ' 条');
       }).catch(function(){
@@ -1227,12 +1525,13 @@ function showTab(name){
   document.querySelectorAll('nav button').forEach(function(b){
     b.classList.toggle('on', b.dataset.tab === name);
   });
-  ['in','list','exp','sum','board'].forEach(function(k){
+  ['in','list','exp','sum','board','coop'].forEach(function(k){
     document.getElementById('tab-'+k).classList.toggle('hide', k !== name);
   });
   if(name === 'board'){ renderBoard(); }
   if(name === 'sum'){ renderSum(); renderCus(); }
   if(name === 'exp'){ renderExp(); }
+  if(name === 'coop'){ renderLinks(); renderApprovals(); }
   window.scrollTo(0,0);
 }
 
@@ -1243,7 +1542,7 @@ document.querySelectorAll('nav button').forEach(function(b){
 // 初始化
 (function(){
   const d = new Date();
-  var todayStr = localDate(d);
+  var todayStr = d.toISOString().slice(0,10);
   document.getElementById('date').value = todayStr;
   var dpi = document.getElementById('datePick');
   if(dpi) dpi.value = todayStr;
@@ -1269,8 +1568,8 @@ document.querySelectorAll('nav button').forEach(function(b){
 
   var ed = document.getElementById('expDate');
   var ep = document.getElementById('expDatePick');
-  if(ed){ ed.value = localDate(d); }
-  if(ep){ ep.value = localDate(d); }
+  if(ed){ ed.value = d.toISOString().slice(0,10); }
+  if(ep){ ep.value = d.toISOString().slice(0,10); }
 
   document.querySelectorAll('#expTypes button').forEach(function(b){
     b.onclick = function(){
@@ -1284,9 +1583,41 @@ document.querySelectorAll('nav button').forEach(function(b){
     render();
     updateStoreInfo();
 
+    /* Demo 首次打开塞两条样例，方便体验 */
+    if(!data.length && !localStorage.getItem('gl_demo_seeded')){
+      var d0 = new Date().toISOString().slice(0,10);
+      var t0 = Date.now();
+      var s1 = {uuid:uuid(), date:d0, customer:'山东姜业公司', customerTel:'13500001111',
+        lot:'20250217-01', plate:'鲁A12345', owner:'张建国', tel:'13900001111', base:'王家村基地',
+        jian:120, per:50, soil:0.10, price:1.20, fee:0.05,
+        total:6000, soilQty:600, net:5400, amount:6480, feeTotal:270, actual:6750,
+        contracts:[], ownerContracts:[], address:'山东省潍坊市安丘市王家村', lat:36.48, lng:119.12, accuracy:18,
+        operator:'老王', deviceId:deviceId, createdAt:t0, updatedAt:t0, deleted:false};
+      var s2 = {uuid:uuid(), date:d0, customer:'江苏调味品厂', customerTel:'13600002222',
+        lot:'20250217-02', plate:'鲁B88888', owner:'李秀兰', tel:'13800002222', base:'河西基地',
+        jian:80, per:50, soil:0.08, price:1.15, fee:0.05,
+        total:4000, soilQty:320, net:3680, amount:4232, feeTotal:184, actual:4416,
+        contracts:[], ownerContracts:[], address:'', lat:null, lng:null, accuracy:null,
+        operator:'老王', deviceId:deviceId, createdAt:t0-1000, updatedAt:t0-1000, deleted:false};
+      data = [s1, s2];
+      DB.putMany(data).catch(function(){});
+      customers = [
+        {uuid:uuid(), name:'山东姜业公司', tel:'13500001111', contracts:[], createdAt:t0},
+        {uuid:uuid(), name:'江苏调味品厂', tel:'13600002222', contracts:[], createdAt:t0}
+      ];
+      ownerList = [
+        {uuid:uuid(), name:'张建国', tel:'13900001111', base:'王家村基地', contracts:[], createdAt:t0},
+        {uuid:uuid(), name:'李秀兰', tel:'13800002222', base:'河西基地', contracts:[], createdAt:t0}
+      ];
+      DB.cusPut(customers[0]).catch(function(){}); DB.cusPut(customers[1]).catch(function(){});
+      DB.ownPut(ownerList[0]).catch(function(){}); DB.ownPut(ownerList[1]).catch(function(){});
+      localStorage.setItem('gl_demo_seeded', '1');
+      render();
+    }
+
     /* 演示数据：#demo 打开一次即可看到样例 */
     if(location.hash.indexOf('#demo') === 0 && !data.length){
-      var d0 = localDate();
+      var d0 = new Date().toISOString().slice(0,10);
       var now = Date.now();
       var src = [
         {customer:'山东姜业公司',lot:'20250217-01',plate:'鲁A12345',owner:'张建国',tel:'13900001111',base:'王家村基地',jian:120,per:50,soil:0.10,price:1.20,fee:0.05},
@@ -1311,7 +1642,7 @@ document.querySelectorAll('nav button').forEach(function(b){
         return x;
       });
       data = demo;
-      Repo.records.saveMany(demo).catch(function(){});
+      DB.putMany(demo).catch(function(){});
       render(); renderSum(); renderCus(); updateStoreInfo(); showTab('list');
       if(location.hash === '#demo-detail'){ setTimeout(function(){ openId = demo[0].uuid; render(); }, 400); }
     }
@@ -1320,8 +1651,8 @@ document.querySelectorAll('nav button').forEach(function(b){
     loadExp(function(){
       if(location.hash.indexOf('demo') >= 0 && !expenses.length){
         var t0 = Date.now();
-        var d1 = localDate();
-        var d2 = localDate(new Date(Date.now() - 86400000));
+        var d1 = new Date().toISOString().slice(0,10);
+        var d2 = new Date(Date.now() - 86400000).toISOString().slice(0,10);
         expenses = [
           {uuid:uuid(),date:d1,type:'差旅费',amount:420,payer:'张三',note:'加油300 过路费120',operator:operator||'',deviceId:deviceId,createdAt:t0,updatedAt:t0,deleted:false},
           {uuid:uuid(),date:d1,type:'物料费',amount:320,payer:'李四',note:'编织袋 4 捆',operator:operator||'',deviceId:deviceId,createdAt:t0-1000,updatedAt:t0-1000,deleted:false},
@@ -1329,16 +1660,27 @@ document.querySelectorAll('nav button').forEach(function(b){
           {uuid:uuid(),date:d2,type:'装卸费',amount:180,payer:'王五',note:'过磅费',operator:operator||'',deviceId:deviceId,createdAt:t0-3000,updatedAt:t0-3000,deleted:false},
           {uuid:uuid(),date:d2,type:'其它',amount:120,payer:'张三',note:'',operator:operator||'',deviceId:deviceId,createdAt:t0-4000,updatedAt:t0-4000,deleted:false}
         ];
-        Repo.expenses.saveMany(expenses).catch(function(){});
+        DB.expPutMany(expenses).catch(function(){});
       }
       renderExp();
       renderSum();
       renderCus();
+      renderShots('cusShots', []);
+      renderShots('ownShots', []);
+      loadExtras(function(){
+        renderLinks();
+        renderApprovals();
+      });
+      var cusI = document.getElementById('customer');
+      if(cusI) cusI.addEventListener('change', matchCustomerTel);
+      var ownI = document.getElementById('owner');
+      if(ownI) ownI.addEventListener('change', matchOwnerTel);
       if(location.hash.indexOf('#exp') >= 0 || location.hash === '#demo-exp'){
         showTab('exp');
       }
       if(location.hash.indexOf('board') >= 0){ renderBoard(); showTab('board'); }
       if(location.hash.indexOf('sum') >= 0){ showTab('sum'); }
+      if(location.hash.indexOf('coop') >= 0){ showTab('coop'); }
     });
   });
 })();
@@ -1474,7 +1816,193 @@ if('serviceWorker' in navigator){
   });
 }
 </script>
+
+<!-- ===== 标注工具 ===== -->
+<button id="markBtn">✏️ 标注</button>
+<button id="mkSubmit" class="hide">📋 生成反馈清单（<span id="mkCount">0</span>）</button>
+<div id="mkPanel">
+  <div id="mkHead">标注这一处</div>
+  <div id="mkTarget"></div>
+  <textarea id="mkText" placeholder="这里要改什么？比如：加号太小 / 这里应该显示对方名字 / 位置放错了"></textarea>
+  <div class="mk-acts">
+    <button id="mkCancel">取消</button>
+    <button id="mkSave">保存标注</button>
+  </div>
+</div>
+
+<style>
+#markBtn{position:fixed;right:14px;bottom:28px;z-index:9000;padding:12px 18px;border-radius:24px;background:#C0392B;color:#fff;border:0;font-size:14px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.25);font-family:inherit}
+#markBtn.on{background:#2F5D50}
+#mkSubmit{position:fixed;right:14px;bottom:92px;z-index:9000;padding:11px 16px;border-radius:24px;background:#1E4A3C;color:#fff;border:0;font-size:13px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.25);font-family:inherit}
+body.marking *{cursor:crosshair!important}
+body.marking .mk-hover{outline:2px dashed #C0392B!important;outline-offset:2px;background:rgba(192,57,43,.06)!important}
+.mk-dot{position:fixed;width:20px;height:20px;border-radius:50%;background:#C0392B;color:#fff;font-size:11px;line-height:20px;text-align:center;z-index:8500;pointer-events:none;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+#mkPanel{position:fixed;left:0;right:0;bottom:0;background:#fff;z-index:9600;padding:16px;border-radius:18px 18px 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.18);transform:translateY(110%);transition:transform .22s;pointer-events:none}
+#mkPanel.show{transform:translateY(0);pointer-events:auto}
+#mkHead{font-size:14px;font-weight:700;margin-bottom:6px;color:#C0392B}
+#mkTarget{font-size:12px;color:#7A8A82;margin-bottom:10px;line-height:1.5;background:#F7F9F8;padding:8px;border-radius:8px;max-height:60px;overflow:auto}
+#mkText{width:100%;min-height:76px;padding:11px;border:1px solid #D8E0DB;border-radius:9px;font-size:15px;font-family:inherit;resize:vertical;box-sizing:border-box}
+.mk-acts{display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-top:10px}
+.mk-acts button{padding:12px;border:0;border-radius:9px;font-size:14px;font-family:inherit;font-weight:600}
+#mkCancel{background:#F1F5F3;color:#5A6B63}
+#mkSave{background:#C0392B;color:#fff}
+</style>
+
+<script>
+(function(){
+  var marking = false;
+  var marks = [];
+  var pending = null;
+  var btn = document.getElementById('markBtn');
+  var panel = document.getElementById('mkPanel');
+  var target = document.getElementById('mkTarget');
+  var text = document.getElementById('mkText');
+  var submit = document.getElementById('mkSubmit');
+  var countEl = document.getElementById('mkCount');
+
+  function describe(el){
+    var bits = [];
+    var cur = el;
+    for(var i = 0; i < 3 && cur && cur !== document.body; i++){
+      var name = cur.tagName.toLowerCase();
+      if(cur.id) name += '#' + cur.id;
+      else if(cur.className && typeof cur.className === 'string'){
+        var c = cur.className.trim().split(/\s+/)[0];
+        if(c && c !== 'hide') name += '.' + c;
+      }
+      bits.unshift(name);
+      cur = cur.parentElement;
+    }
+    var txt = (el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 40);
+    var card = el.closest('.card');
+    var cardTitle = card ? ((card.querySelector('h3') || {}).textContent || '').trim().slice(0, 14) : '';
+    return {
+      path: bits.join(' > '),
+      text: txt,
+      card: cardTitle,
+      tab: (document.querySelector('nav button.on') || {}).textContent || ''
+    };
+  }
+
+  function clearDots(){
+    document.querySelectorAll('.mk-dot').forEach(function(d){ d.remove(); });
+  }
+
+  function drawDots(){
+    clearDots();
+    marks.forEach(function(m, i){
+      if(!m.el || !document.body.contains(m.el)) return;
+      var r = m.el.getBoundingClientRect();
+      var d = document.createElement('div');
+      d.className = 'mk-dot';
+      d.textContent = i + 1;
+      d.style.left = (r.left + 8) + 'px';
+      d.style.top = (r.top + window.scrollY + 8) + 'px';
+      document.body.appendChild(d);
+    });
+  }
+
+  btn.onclick = function(){
+    marking = !marking;
+    document.body.classList.toggle('marking', marking);
+    btn.classList.toggle('on', marking);
+    btn.textContent = marking
+      ? '✏️ 标注中' + (marks.length ? ' · 已标 ' + marks.length + ' 处' : '（点要改的地方）')
+      : '✏️ 标注';
+    submit.classList.toggle('hide', !marks.length);
+    if(!marking) drawDots();
+  };
+
+  document.addEventListener('mouseover', function(e){
+    if(!marking) return;
+    var el = e.target;
+    if(el === btn || panel.contains(el) || submit.contains(el)) return;
+    document.querySelectorAll('.mk-hover').forEach(function(x){ x.classList.remove('mk-hover'); });
+    el.classList.add('mk-hover');
+  }, true);
+
+  document.addEventListener('click', function(e){
+    if(!marking) return;
+    // 点页签 = 正常切换页面，不当作标注
+    if(e.target.closest('nav button')) return;
+    if(e.target === btn || panel.contains(e.target) || submit.contains(e.target)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var el = e.target;
+    document.querySelectorAll('.mk-hover').forEach(function(x){ x.classList.remove('mk-hover'); });
+    pending = {el: el, info: describe(el)};
+    target.innerHTML = '【' + (pending.info.tab || '页面') + '】' +
+      (pending.info.card ? pending.info.card + ' → ' : '') +
+      '<b>' + (pending.info.text || pending.info.path) + '</b><br>' +
+      '<span style="color:#B0BAB5">' + pending.info.path + '</span>';
+    text.value = '';
+    panel.classList.add('show');
+    setTimeout(function(){ text.focus(); }, 250);
+  }, true);
+
+  document.getElementById('mkCancel').onclick = function(){
+    panel.classList.remove('show');
+    pending = null;
+  };
+
+  document.getElementById('mkSave').onclick = function(){
+    if(!pending) return;
+    var note = text.value.trim();
+    if(!note){ text.focus(); return; }
+    marks.push({
+      el: pending.el,
+      tab: pending.info.tab,
+      card: pending.info.card,
+      text: pending.info.text,
+      path: pending.info.path,
+      note: note
+    });
+    panel.classList.remove('show');
+    pending = null;
+    countEl.textContent = marks.length;
+    btn.textContent = '✏️ 标注中 · 已标 ' + marks.length + ' 处';
+    drawDots();
+    // 保存后立刻可以继续点下一处
+  };
+
+  submit.onclick = function(){
+    if(!marks.length) return;
+    // 一行一条，尽量短
+    var lines = ['【标注 ' + marks.length + ' 条】'];
+    marks.forEach(function(m, i){
+      var where = (m.tab || '') + (m.card ? '>' + m.card : '') + (m.text ? '>' + m.text : '');
+      lines.push((i + 1) + '. ' + where.replace(/\s+/g, '') + '：' + m.note);
+    });
+    var report = lines.join('\n');
+
+    function done(){
+      if(navigator.share){
+        navigator.share({title: '台账 Demo 标注', text: report}).catch(function(){});
+      }
+    }
+
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(report).then(function(){
+        alert('已复制，直接粘贴发我即可：\n\n' + report);
+      }).catch(function(){
+        prompt('复制下面的内容发我：', report);
+      });
+    }else{
+      prompt('复制下面的内容发我：', report);
+    }
+    done();
+  };
+
+  window.addEventListener('scroll', function(){ if(marks.length && !marking) drawDots(); }, {passive:true});
+
+  // 切换页签后，把还存在的标注点重新画一遍
+  document.addEventListener('click', function(e){
+    if(e.target.closest('nav button')){ setTimeout(drawDots, 120); }
+  }, false);
+})();
+</script>
 <script src="cloudbase.bundle.js"></script>
+
 <script>
 /* ========== 云同步 ========== */
 function errText(e){
@@ -1488,6 +2016,7 @@ function errText(e){
   try { var s = JSON.stringify(e); if (s && s !== '{}') return s; } catch(_) {}
   return String(e);
 }
+
 var CLOUD_API = 'https://head-crab-d1g485if3fb037f2a.api.tcloudbasegateway.com/v1/rdb/rest';
 var cloudApp = null, cloudToken = null, cloudUser = null;
 
@@ -1496,15 +2025,13 @@ function cloudInit(){
     if (cloudToken) { res(); return; }
     try {
       var cb = window.cloudbase && (window.cloudbase.default || window.cloudbase);
-      if (!cb) { rej(new Error('SDK 未加载，请刷新页面')); return; }
+      if (!cb) { rej(new Error('SDK 未加载，请刷新')); return; }
       cloudApp = cb.init({ env: 'head-crab-d1g485if3fb037f2a' });
       var auth = cloudApp.auth({ persistence: 'local' });
       auth.signInAnonymously().then(function(r){
-        // 先从登录返回值里取
         var s = r && r.data && r.data.session;
         if (s && s.access_token) cloudToken = s.access_token;
         if (!cloudToken && r && r.accessToken) cloudToken = r.accessToken;
-        // 再兜底问 auth
         if (cloudToken) return null;
         return auth.getAccessToken().then(function(t){
           cloudToken = (typeof t === 'string') ? t : (t && t.accessToken);
@@ -1526,7 +2053,7 @@ function cloudReq(path, opt){
   }, opt.headers || {});
   return fetch(CLOUD_API + path, opt).then(function(r){
     return r.text().then(function(txt){
-      if (!r.ok) throw new Error(r.status + ' ' + txt.slice(0, 160));
+      if (!r.ok) throw new Error(r.status + ' ' + txt.slice(0, 140));
       return txt ? JSON.parse(txt) : null;
     });
   });
@@ -1539,16 +2066,16 @@ function doLogin(){
   if (!code) { msg.textContent = '请输入邀请码'; return; }
   btn.textContent = '登录中…'; btn.disabled = true; msg.textContent = '';
   cloudInit().then(function(){
-    msg.textContent = '正在查询…';
+    msg.textContent = '正在验证…';
     return cloudReq('/users?invite_code=eq.' + encodeURIComponent(code) + '&limit=1');
   }).then(function(rows){
     if (!rows || !rows.length) throw new Error('邀请码无效');
     var u = rows[0];
     if (u.status !== 'active') throw new Error('账号已停用');
     cloudUser = u;
-    localStorage.setItem('gl_cloud_user', JSON.stringify(u));
+    try { localStorage.setItem('gl_cloud_user', JSON.stringify(u)); } catch(e) {}
     document.getElementById('loginMask').style.display = 'none';
-    cloudPull();
+    if (typeof cloudPull === 'function') cloudPull();
   }).catch(function(e){
     msg.textContent = '失败: ' + errText(e);
   }).then(function(){
@@ -1556,33 +2083,25 @@ function doLogin(){
   });
 }
 
-/* 登录时恢复会话 */
 function cloudRestore(){
   try {
     var s = localStorage.getItem('gl_cloud_user');
     if (s) {
       cloudUser = JSON.parse(s);
       document.getElementById('loginMask').style.display = 'none';
-      cloudInit().then(cloudPull).catch(function(){});
+      cloudInit().then(function(){ if (typeof cloudPull === 'function') cloudPull(); }).catch(function(){});
       return true;
     }
   } catch(e) {}
   return false;
 }
 
-/* 拉取云端数据并合并到本地 */
 function cloudPull(){
-  if (!cloudUser) return;
-  var uid = cloudUser.id;
-  var isPlatform = cloudUser.type === 'platform';
-
-  cloudInit().then(function(){
-    return cloudReq('/records?select=*&limit=1000&order=created_at.desc');
-  }).then(function(rows){
+  if (!cloudUser || !cloudToken) return;
+  cloudReq('/records?select=*&limit=500&order=created_at.desc').then(function(rows){
     if (!rows || !Array.isArray(rows)) return;
     var changed = false;
     rows.forEach(function(r){
-      // 转成本地结构
       var rec = {
         uuid: r.id, date: r.date, customer: r.customer, customerTel: r.customer_tel,
         lot: r.lot, plate: r.plate, owner: r.owner_name, tel: r.owner_tel, base: r.base,
@@ -1590,22 +2109,24 @@ function cloudPull(){
         price: Number(r.price), fee: Number(r.fee),
         total: Number(r.total), soilQty: Number(r.soil_qty), net: Number(r.net),
         amount: Number(r.amount), feeTotal: Number(r.fee_total), actual: Number(r.actual),
-        address: r.address, lat: r.lat, lng: r.lng, accuracy: r.accuracy,
-        contracts: r.contracts || [], operator: r.operator, deviceId: r.device_id,
+        address: r.address || '', lat: r.lat, lng: r.lng, accuracy: r.accuracy,
+        contracts: r.contracts || [], operator: r.operator || '', deviceId: r.device_id,
         createdAt: Number(r.created_at), updatedAt: Number(r.updated_at),
-        deleted: !!r.deleted, _fromCloud: true
+        deleted: !!r.deleted
       };
       var idx = data.findIndex(function(x){ return x.uuid === rec.uuid; });
       if (idx < 0) { data.push(rec); changed = true; }
+      else if ((rec.updatedAt||0) > (data[idx].updatedAt||0)) { data[idx] = rec; changed = true; }
     });
     if (changed) {
       data.sort(function(a,b){ return (b.createdAt||0) - (a.createdAt||0); });
-      render(); renderSum(); renderCus();
+      if (typeof render === 'function') render();
+      if (typeof renderSum === 'function') renderSum();
+      if (typeof renderCus === 'function') renderCus();
     }
-  }).catch(function(e){ console.log('拉取失败', e); });
+  }).catch(function(e){ console.log('拉取失败', errText(e)); });
 }
 
-/* 保存到云端 */
 function cloudSaveRecord(rec){
   if (!cloudUser) return;
   cloudInit().then(function(){
@@ -1618,26 +2139,26 @@ function cloudSaveRecord(rec){
       amount: rec.amount, fee_total: rec.feeTotal, actual: rec.actual,
       address: rec.address || '', lat: rec.lat, lng: rec.lng, accuracy: rec.accuracy,
       contracts: rec.contracts || [], operator: rec.operator || '',
-      device_id: deviceId, created_at: rec.createdAt, updated_at: Date.now(), deleted: false
+      device_id: rec.deviceId || '', created_at: rec.createdAt, updated_at: Date.now(), deleted: false
     };
     return cloudReq('/records', {
       method: 'POST',
       headers: { 'Prefer': 'resolution=merge-duplicates' },
       body: JSON.stringify(body)
     });
-  }).catch(function(e){ console.log('上传失败', e); });
+  }).catch(function(e){ console.log('上传失败', errText(e)); });
 }
 
-/* 启动时恢复会话 */
 setTimeout(function(){
   if (location.search.indexOf('auto=1') >= 0) {
     var c = document.getElementById('lgCode');
     if (c) c.value = 'GL-TEST01';
-    setTimeout(function(){ try { doLogin(); } catch(e) { console.log(e); } }, 300);
+    setTimeout(function(){ try { doLogin(); } catch(e) {} }, 300);
   } else {
     cloudRestore();
   }
 }, 1500);
 </script>
+
 </body>
 </html>
