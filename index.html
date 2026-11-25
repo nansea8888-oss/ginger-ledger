@@ -1474,7 +1474,8 @@ if('serviceWorker' in navigator){
   });
 }
 </script>
-<script src="cloudbase.bundle.js">
+<script src="cloudbase.bundle.js"></script>
+<script>
 /* ========== 云同步 ========== */
 var CLOUD_API = 'https://head-crab-d1g485if3fb037f2a.api.tcloudbasegateway.com/v1/rdb/rest';
 var cloudApp = null, cloudToken = null, cloudUser = null;
@@ -1610,7 +1611,6 @@ function cloudSaveRecord(rec){
 
 /* 启动时恢复会话 */
 setTimeout(function(){ cloudRestore(); }, 1200);
-
 </script>
 </body>
 </html>
