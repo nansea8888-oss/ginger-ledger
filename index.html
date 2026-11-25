@@ -429,7 +429,7 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 
 <script>
 const KEY = 'ginger_ledger_v1';   // 旧键，仅用于一次性迁移
-const APP_VERSION = '2.0.0';
+const APP_VERSION = '2.0.1';
 let data = [];
 let expenses = [];
 var currentExpType = '差旅费';
@@ -1485,7 +1485,7 @@ function cloudInit(){
     if (cloudToken) { res(); return; }
     try {
       var cb = window.cloudbase && (window.cloudbase.default || window.cloudbase);
-      if (!cb) { rej(new Error('SDK 未加载')); return; }
+      if (!cb) { rej(new Error('SDK 未加载，请刷新页面')); return; }
       cloudApp = cb.init({ env: 'head-crab-d1g485if3fb037f2a' });
       var auth = cloudApp.auth({ persistence: 'local' });
       auth.signInAnonymously().then(function(){
@@ -1521,6 +1521,7 @@ function doLogin(){
   if (!code) { msg.textContent = '请输入邀请码'; return; }
   btn.textContent = '登录中…'; btn.disabled = true; msg.textContent = '';
   cloudInit().then(function(){
+    msg.textContent = '正在查询…';
     return cloudReq('/users?invite_code=eq.' + encodeURIComponent(code) + '&limit=1');
   }).then(function(rows){
     if (!rows || !rows.length) throw new Error('邀请码无效');
@@ -1531,7 +1532,7 @@ function doLogin(){
     document.getElementById('loginMask').style.display = 'none';
     cloudPull();
   }).catch(function(e){
-    msg.textContent = e.message || '登录失败';
+    msg.textContent = '失败: ' + (e && e.message ? e.message : String(e));
   }).then(function(){
     btn.textContent = '登 录'; btn.disabled = false;
   });
@@ -1610,7 +1611,15 @@ function cloudSaveRecord(rec){
 }
 
 /* 启动时恢复会话 */
-setTimeout(function(){ cloudRestore(); }, 1200);
+setTimeout(function(){
+  if (location.search.indexOf('auto=1') >= 0) {
+    var c = document.getElementById('lgCode');
+    if (c) c.value = 'GL-TEST01';
+    setTimeout(function(){ try { doLogin(); } catch(e) { console.log(e); } }, 300);
+  } else {
+    cloudRestore();
+  }
+}, 1500);
 </script>
 </body>
 </html>
