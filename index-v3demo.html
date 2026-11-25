@@ -867,8 +867,8 @@ function renderOwnerShots(o){
     return '<div class="shot"><img src="' + src + '"><span class="x" onclick="delOwnerShot(\'' + o.id + '\',' + i + ')">×</span></div>';
   }).join('');
   if (o.contracts.length < 5) {
-    html += '<label class="shot add"><span>拍照</span><input type="file" accept="image/*" capture="environment" onchange="addOwnerShot(\'' + o.id + '\',this)"></label>';
-    html += '<label class="shot add"><span>相册</span><input type="file" accept="image/*" onchange="addOwnerShot(\'' + o.id + '\',this)"></label>';
+    html += '<label class="addshot"><span style="font-size:12.5px">拍照</span><input type="file" accept="image/*" capture="environment" style="display:none" onchange="addOwnerShot(\'' + o.id + '\',this)"></label>';
+    html += '<label class="addshot"><span style="font-size:12.5px">相册</span><input type="file" accept="image/*" style="display:none" onchange="addOwnerShot(\'' + o.id + '\',this)"></label>';
   }
   box.innerHTML = html;
 }
