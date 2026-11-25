@@ -197,6 +197,17 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 </head>
 <body>
 
+<div id="loginMask" style="position:fixed;inset:0;background:linear-gradient(160deg,#2F5D50,#1E4A3C);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px">
+  <div style="color:#fff;font-size:22px;font-weight:600;margin-bottom:6px">生姜收购台账</div>
+  <div style="color:#A8C4BA;font-size:12.5px;margin-bottom:26px">请输入邀请码</div>
+  <input id="lgCode" placeholder="GL-XXXXXX" autocomplete="off"
+    style="width:100%;max-width:300px;padding:15px;border:0;border-radius:12px;font-size:17px;text-align:center;letter-spacing:2px;margin-bottom:12px">
+  <button id="lgBtn" onclick="doLogin()"
+    style="width:100%;max-width:300px;padding:15px;border:0;border-radius:12px;background:#FFC94D;color:#2F5D50;font-size:16px;font-weight:700;font-family:inherit">登 录</button>
+  <div id="lgMsg" style="color:#FFB3A7;font-size:12.5px;margin-top:14px;min-height:18px;text-align:center"></div>
+</div>
+
+
 <header>
   <span>生姜收购台账</span>
   <span class="sub" id="today"></span>
@@ -418,7 +429,7 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 
 <script>
 const KEY = 'ginger_ledger_v1';   // 旧键，仅用于一次性迁移
-const APP_VERSION = '1.4.0';
+const APP_VERSION = '2.0.0';
 let data = [];
 let expenses = [];
 var currentExpType = '差旅费';
@@ -641,6 +652,7 @@ function saveRec(){
   };
   data.unshift(rec);
   Repo.records.save(rec).catch(function(){});
+  if (typeof cloudSaveRecord === 'function') { try { cloudSaveRecord(rec); } catch(e) {} }
 
   ['lot','plate','owner','tel','base','jian','per','price'].forEach(function(id){
     document.getElementById(id).value = '';
@@ -1461,6 +1473,144 @@ if('serviceWorker' in navigator){
     navigator.serviceWorker.register('sw.js').catch(function(){});
   });
 }
+</script>
+<script src="cloudbase.bundle.js">
+/* ========== 云同步 ========== */
+var CLOUD_API = 'https://head-crab-d1g485if3fb037f2a.api.tcloudbasegateway.com/v1/rdb/rest';
+var cloudApp = null, cloudToken = null, cloudUser = null;
+
+function cloudInit(){
+  return new Promise(function(res, rej){
+    if (cloudToken) { res(); return; }
+    try {
+      var cb = window.cloudbase && (window.cloudbase.default || window.cloudbase);
+      if (!cb) { rej(new Error('SDK 未加载')); return; }
+      cloudApp = cb.init({ env: 'head-crab-d1g485if3fb037f2a' });
+      var auth = cloudApp.auth({ persistence: 'local' });
+      auth.signInAnonymously().then(function(){
+        return auth.getAccessToken();
+      }).then(function(t){
+        cloudToken = (typeof t === 'string') ? t : (t && t.accessToken);
+        if (!cloudToken) throw new Error('未拿到 token');
+        res();
+      }).catch(rej);
+    } catch(e) { rej(e); }
+  });
+}
+
+function cloudReq(path, opt){
+  opt = opt || {};
+  opt.headers = Object.assign({
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ' + cloudToken
+  }, opt.headers || {});
+  return fetch(CLOUD_API + path, opt).then(function(r){
+    return r.text().then(function(txt){
+      if (!r.ok) throw new Error(r.status + ' ' + txt.slice(0, 160));
+      return txt ? JSON.parse(txt) : null;
+    });
+  });
+}
+
+function doLogin(){
+  var code = (document.getElementById('lgCode').value || '').trim().toUpperCase();
+  var msg = document.getElementById('lgMsg');
+  var btn = document.getElementById('lgBtn');
+  if (!code) { msg.textContent = '请输入邀请码'; return; }
+  btn.textContent = '登录中…'; btn.disabled = true; msg.textContent = '';
+  cloudInit().then(function(){
+    return cloudReq('/users?invite_code=eq.' + encodeURIComponent(code) + '&limit=1');
+  }).then(function(rows){
+    if (!rows || !rows.length) throw new Error('邀请码无效');
+    var u = rows[0];
+    if (u.status !== 'active') throw new Error('账号已停用');
+    cloudUser = u;
+    localStorage.setItem('gl_cloud_user', JSON.stringify(u));
+    document.getElementById('loginMask').style.display = 'none';
+    cloudPull();
+  }).catch(function(e){
+    msg.textContent = e.message || '登录失败';
+  }).then(function(){
+    btn.textContent = '登 录'; btn.disabled = false;
+  });
+}
+
+/* 登录时恢复会话 */
+function cloudRestore(){
+  try {
+    var s = localStorage.getItem('gl_cloud_user');
+    if (s) {
+      cloudUser = JSON.parse(s);
+      document.getElementById('loginMask').style.display = 'none';
+      cloudInit().then(cloudPull).catch(function(){});
+      return true;
+    }
+  } catch(e) {}
+  return false;
+}
+
+/* 拉取云端数据并合并到本地 */
+function cloudPull(){
+  if (!cloudUser) return;
+  var uid = cloudUser.id;
+  var isPlatform = cloudUser.type === 'platform';
+
+  cloudInit().then(function(){
+    return cloudReq('/records?select=*&limit=1000&order=created_at.desc');
+  }).then(function(rows){
+    if (!rows || !Array.isArray(rows)) return;
+    var changed = false;
+    rows.forEach(function(r){
+      // 转成本地结构
+      var rec = {
+        uuid: r.id, date: r.date, customer: r.customer, customerTel: r.customer_tel,
+        lot: r.lot, plate: r.plate, owner: r.owner_name, tel: r.owner_tel, base: r.base,
+        jian: Number(r.jian), per: Number(r.per), soil: Number(r.soil),
+        price: Number(r.price), fee: Number(r.fee),
+        total: Number(r.total), soilQty: Number(r.soil_qty), net: Number(r.net),
+        amount: Number(r.amount), feeTotal: Number(r.fee_total), actual: Number(r.actual),
+        address: r.address, lat: r.lat, lng: r.lng, accuracy: r.accuracy,
+        contracts: r.contracts || [], operator: r.operator, deviceId: r.device_id,
+        createdAt: Number(r.created_at), updatedAt: Number(r.updated_at),
+        deleted: !!r.deleted, _fromCloud: true
+      };
+      var idx = data.findIndex(function(x){ return x.uuid === rec.uuid; });
+      if (idx < 0) { data.push(rec); changed = true; }
+    });
+    if (changed) {
+      data.sort(function(a,b){ return (b.createdAt||0) - (a.createdAt||0); });
+      render(); renderSum(); renderCus();
+    }
+  }).catch(function(e){ console.log('拉取失败', e); });
+}
+
+/* 保存到云端 */
+function cloudSaveRecord(rec){
+  if (!cloudUser) return;
+  cloudInit().then(function(){
+    var body = {
+      id: rec.uuid, owner_id: cloudUser.id, creator_id: cloudUser.id,
+      customer: rec.customer, customer_tel: rec.customerTel, lot: rec.lot, plate: rec.plate,
+      owner_name: rec.owner, owner_tel: rec.tel, base: rec.base, date: rec.date,
+      jian: rec.jian, per: rec.per, soil: rec.soil, price: rec.price, fee: rec.fee,
+      total: rec.total, soil_qty: rec.soilQty, net: rec.net,
+      amount: rec.amount, fee_total: rec.feeTotal, actual: rec.actual,
+      address: rec.address || '', lat: rec.lat, lng: rec.lng, accuracy: rec.accuracy,
+      contracts: rec.contracts || [], operator: rec.operator || '',
+      device_id: deviceId, created_at: rec.createdAt, updated_at: Date.now(), deleted: false
+    };
+    return cloudReq('/records', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=merge-duplicates' },
+      body: JSON.stringify(body)
+    });
+  }).catch(function(e){ console.log('上传失败', e); });
+}
+
+/* 启动时恢复会话 */
+setTimeout(function(){ cloudRestore(); }, 1200);
+
 </script>
 </body>
 </html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>token 验证</title></head>
+<body>
+<div id="out" style="font:12px monospace;white-space:pre-wrap;padding:10px">loading...</div>
+<script src="cloudbase.bundle.js"></script>
+<script>
+(async function(){
+  const out = document.getElementById('out');
+  const log = [];
+  function p(s){ log.push(typeof s === 'string' ? s : JSON.stringify(s)); out.textContent = log.join('\n'); }
+
+  const BASE = 'https://head-crab-d1g485if3fb037f2a.api.tcloudbasegateway.com/v1/rdb/rest';
+
+  try {
+    const cb = cloudbase.default || cloudbase;
+    const app = cb.init({ env: 'head-crab-d1g485if3fb037f2a' });
+    const auth = app.auth({ persistence: 'local' });
+
+    let res;
+    try {
+      res = await auth.signInAnonymously();
+      p('匿名登录返回: ' + JSON.stringify(res).slice(0, 400));
+    } catch (e) {
+      p('匿名登录失败: ' + (e && (e.message || JSON.stringify(e))).toString().slice(0,300));
+    }
+
+    // 各种方式找 token
+    let token = null;
+    try {
+      if (typeof auth.getAccessToken === 'function') {
+        const t = await auth.getAccessToken();
+        p('getAccessToken: ' + JSON.stringify(t).slice(0,200));
+        token = typeof t === 'string' ? t : (t && (t.accessToken || t.token));
+      }
+    } catch(e) { p('getAccessToken 失败'); }
+
+    if (!token && res) {
+      token = res.accessToken || res.access_token || res.token || (res.data && res.data.access_token);
+    }
+
+    if (!token && typeof auth.getLoginState === 'function') {
+      const st = await auth.getLoginState();
+      p('loginState: ' + JSON.stringify(st).slice(0, 300));
+      token = st && (st.accessToken || st.access_token);
+    }
+
+    p('最终 token: ' + (token ? String(token).slice(0,40) + '...' : 'null'));
+
+    if (token) {
+      const r = await fetch(BASE + '/users', { headers: { 'Accept':'application/json', 'Authorization':'Bearer ' + token } });
+      const txt = await r.text();
+      p('查 users → ' + r.status + ' ' + txt.slice(0, 300));
+    } else {
+      p('没有 token，无法查询');
+    }
+  } catch (e) {
+    p('总错误: ' + (e && (e.message || JSON.stringify(e))));
+  }
+})();
+</script>
+</body>
+</html>
