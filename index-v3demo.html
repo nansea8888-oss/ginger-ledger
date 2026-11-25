@@ -441,12 +441,6 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
         <input id="expNote" placeholder="比如：加油300 过路费120">
       </div>
 
-      <div id="expPendingBox" style="display:none;margin-top:11px;padding:9px 11px;background:#F3F8F5;border:1px solid #E4EEE9;border-radius:9px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <span style="font-size:12px;color:#5A6B65">已暂存 <b id="expPendingCount" style="color:#2F5D50">0</b> 笔，点保存才入库</span>
-        </div>
-        <div id="expPendingList"></div>
-      </div>
 
       <button class="btn" id="expSaveBtn" style="margin-top:9px" onclick="saveExpBatch()">保 存</button>
     </div>
@@ -721,6 +715,39 @@ function cloudSaveExpense(e){
   }).catch(function(e2){ console.log('费用上传失败', errText(e2)); });
 }
 
+/* TEST_MODE 自动验证 */
+setTimeout(function TEST_MODE(){
+  if (location.search.indexOf('test=exp') < 0) return;
+  try {
+    showTab('exp');
+    var log = [];
+    // 1) 填差旅 300
+    document.getElementById('expAmount').value = '300';
+    document.getElementById('expPayer').value = '老板';
+    document.getElementById('expAmount').dispatchEvent(new Event('input'));
+    log.push('step1 填300:' + (expPending.length === 0 ? 'OK(暂存0)' : 'FAIL'));
+    // 2) 点人工（应触发暂存）
+    document.querySelector('#expTypes button[data-t="人工费"]').click();
+    log.push('step2 切人工后暂存数=' + expPending.length);
+    log.push('step2 金额框=' + (document.getElementById('expAmount').value || '空'));
+    // 3) 填人工 800 并保存
+    document.getElementById('expAmount').value = '800';
+    document.getElementById('expAmount').dispatchEvent(new Event('input'));
+    saveExpBatch();
+    log.push('step3 保存后expenses=' + expenses.length);
+    log.push('step3 暂存数=' + expPending.length);
+    // 4) 填一笔不保存，切走再回来
+    document.getElementById('expAmount').value = '500';
+    document.getElementById('expAmount').dispatchEvent(new Event('input'));
+    document.querySelector('#expTypes button[data-t="物料费"]').click();
+    log.push('step4 切物料后暂存=' + expPending.length);
+    showTab('sum');
+    log.push('step4 切汇总后暂存=' + expPending.length);
+    showTab('exp');
+    log.push('step4 回费用后暂存=' + expPending.length + ' 金额=' + (document.getElementById('expAmount').value || '空'));
+    document.title = 'TEST[' + log.join(' | ') + ']';
+  } catch(e) { document.title = 'TESTERR:' + e.message; }
+}, 2500);
 setTimeout(function tabFallback(){
   var tp = (location.search.match(/[?&]tab=([a-z]+)/) || [])[1];
   if (tp && typeof showTab === 'function') { try { showTab(tp); } catch(e){} }
@@ -1746,38 +1773,42 @@ function expClearPending(){
 }
 
 function saveExpBatch(){
-  // 当前输入框里还有东西，先一起收进来
-  if (expDirty) expStash(true);
-  if (!expPending.length) { alert('还没有要保存的费用'); return; }
-
+  var amtEl = document.getElementById('expAmount');
+  var amount = parseFloat(amtEl ? amtEl.value : 0);
+  var payer = ((document.getElementById('expPayer') || {}).value || '').trim();
   var date = (document.getElementById('expDate') || {}).value || localDate();
+  var note = ((document.getElementById('expNote') || {}).value || '').trim();
+
+  if (!amount || amount <= 0) { alert('请填写金额'); return; }
+  if (!payer) { alert('请填写谁付的钱'); return; }
+
   var now = Date.now();
-  var n = 0;
+  var rec = {
+    uuid: uuid(),
+    date: date,
+    type: currentExpType || '其它',
+    amount: Math.round(amount * 100) / 100,
+    payer: payer,
+    note: note,
+    operator: operator || '',
+    deviceId: deviceId,
+    createdAt: now,
+    updatedAt: now,
+    deleted: false
+  };
+  expenses.unshift(rec);
+  DB.expPut(rec).catch(function(){});
+  if (typeof cloudSaveExpense === 'function') { try { cloudSaveExpense(rec); } catch(e) {} }
 
-  expPending.forEach(function(it, i){
-    var rec = {
-      uuid: uuid(),
-      date: date,
-      type: it.type,
-      amount: it.amount,
-      payer: it.payer,
-      note: it.note || '',
-      operator: operator || '',
-      deviceId: deviceId,
-      createdAt: now + i,
-      updatedAt: now + i,
-      deleted: false
-    };
-    expenses.unshift(rec);
-    DB.expPut(rec).catch(function(){});
-    if (typeof cloudSaveExpense === 'function') { try { cloudSaveExpense(rec); } catch(e) {} }
-    n++;
-  });
+  // 只清金额和说明，保留类型和付款人
+  amtEl.value = '';
+  var nt = document.getElementById('expNote');
+  if (nt) nt.value = '';
 
-  expClearPending();
   renderExp();
   if (typeof renderSum === 'function') renderSum();
-  alert('已保存 ' + n + ' 笔费用 ✓');
+  var label = String(rec.type).replace(/费$/, '');
+  alert('已保存：' + label + ' ¥' + rec.amount.toFixed(2) + '（可继续录入）');
 }
 
 
@@ -1997,9 +2028,24 @@ document.querySelectorAll('nav button').forEach(function(b){
 
   document.querySelectorAll('#expTypes button').forEach(function(b){
     b.onclick = function(){
-      // 切类型前，把已填的这笔先暂存（不影响已暂存的）
-      if (typeof expStash === 'function' && typeof expDirty !== 'undefined' && expDirty) {
-        expStash(true);
+      // 切类型前，如果金额框有值，先把这笔存了（不打断）
+      var _amt = document.getElementById('expAmount');
+      if (_amt && parseFloat(_amt.value) > 0) {
+        var _payer = ((document.getElementById('expPayer') || {}).value || '').trim();
+        if (_payer) {
+          var _now = Date.now();
+          var _r = { uuid: uuid(), date: ((document.getElementById('expDate')||{}).value || localDate()),
+                     type: currentExpType || '其它',
+                     amount: Math.round(parseFloat(_amt.value) * 100) / 100,
+                     payer: _payer, note: ((document.getElementById('expNote')||{}).value || '').trim(),
+                     operator: operator || '', deviceId: deviceId,
+                     createdAt: _now, updatedAt: _now, deleted: false };
+          expenses.unshift(_r); DB.expPut(_r).catch(function(){});
+          if (typeof cloudSaveExpense === 'function') { try { cloudSaveExpense(_r); } catch(e) {} }
+          _amt.value = '';
+          var _nt = document.getElementById('expNote'); if (_nt) _nt.value = '';
+          renderExp(); if (typeof renderSum === 'function') renderSum();
+        }
       }
       document.querySelectorAll('#expTypes button').forEach(function(x){ x.classList.remove('on'); });
       b.classList.add('on');
