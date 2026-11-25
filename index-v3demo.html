@@ -296,6 +296,14 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 .pend-a{flex:1;font-weight:600;color:#2F5D50;text-align:right;margin-right:12px}
 .pend-p{width:56px;color:#8A9992;font-size:12px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pend-x{width:20px;text-align:center;color:#C0392B;font-size:18px;cursor:pointer;flex-shrink:0;line-height:1}
+
+/* ===== v3 费用多行 ===== */
+.exp-line{display:flex;align-items:center;padding:8px 0;border-bottom:1px solid #EFF4F1}
+.exp-line:last-child{border-bottom:0}
+.el-t{width:52px;font-size:13.5px;color:#3D514A;font-weight:500;flex-shrink:0}
+.exp-line input{flex:1;border:1px solid #DCE7E2;border-radius:9px;padding:9px 12px;font-size:15px;text-align:right;background:#fff;font-family:inherit}
+.exp-line input:focus{outline:none;border-color:#2F5D50;background:#F8FCFA}
+.exp-line input:not(:placeholder-shown){background:#F8FCFA;border-color:#C9DCD4}
 </style>
 </head>
 <body>
@@ -419,30 +427,34 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
           </div>
         </div>
         <div>
-          <label>金额（元）</label>
-          <input id="expAmount" type="number" inputmode="decimal" placeholder="0.00" oninput="expDirty=true">
+          <label>谁付的钱</label>
+          <input id="expPayer" list="dl-payer" placeholder="打名字，或从历史里选">
+          <datalist id="dl-payer"></datalist>
         </div>
       </div>
-      <label>费用类型</label>
-      <div class="etabs" id="expTypes">
-        <button type="button" class="on" data-t="差旅费">差旅</button>
-        <button type="button" data-t="物料费">物料</button>
-        <button type="button" data-t="人工费">人工</button>
-        <button type="button" data-t="装卸费">装卸</button>
-        <button type="button" data-t="其它">其它</button>
-      </div>
-      <div class="mb">
-        <label>谁付的钱</label>
-        <input id="expPayer" list="dl-payer" placeholder="打名字，或从历史里选" oninput="expDirty=true">
-        <datalist id="dl-payer"></datalist>
-      </div>
-      <div class="mb">
-        <label>说明（可不填）</label>
-        <input id="expNote" placeholder="比如：加油300 过路费120">
+
+      <label style="margin-top:13px;display:block">填金额（同一笔几种费用一起填，空的不存）</label>
+      <div id="expLines">
+        <div class="exp-line" data-t="差旅费"><span class="el-t">差旅</span><input type="number" inputmode="decimal" placeholder="0.00"></div>
+        <div class="exp-line" data-t="物料费"><span class="el-t">物料</span><input type="number" inputmode="decimal" placeholder="0.00"></div>
+        <div class="exp-line" data-t="人工费"><span class="el-t">人工</span><input type="number" inputmode="decimal" placeholder="0.00"></div>
+        <div class="exp-line" data-t="装卸费"><span class="el-t">装卸</span><input type="number" inputmode="decimal" placeholder="0.00"></div>
+        <div class="exp-line" data-t="其它"><span class="el-t">其它</span><input type="number" inputmode="decimal" placeholder="0.00"></div>
       </div>
 
+      <div class="mb">
+        <label>说明（可不填，整笔共用）</label>
+        <input id="expNote" placeholder="比如：今天的收购开销">
+      </div>
 
-      <button class="btn" id="expSaveBtn" style="margin-top:9px" onclick="saveExpBatch()">保 存</button>
+      <div id="expSumBar" style="display:none;padding:11px 13px;background:#F3F8F5;border:1px solid #E4EEE9;border-radius:10px;margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:12.5px;color:#5A6B65">本次合计 <b id="expSumCnt" style="color:#2F5D50">0</b> 笔</span>
+          <b style="font-size:16px;color:#C0392B" id="expSumAmt">¥0.00</b>
+        </div>
+      </div>
+
+      <button class="btn" onclick="saveExpBatch()">保 存</button>
     </div>
 
     </div>
@@ -716,6 +728,9 @@ function cloudSaveExpense(e){
 }
 
 /* TEST_MODE 自动验证 */
+document.addEventListener('input', function(e){
+  if (e.target && e.target.closest && e.target.closest('#expLines')) updateExpSum();
+});
 setTimeout(function TEST_MODE(){
   if (location.search.indexOf('test=exp') < 0) return;
   try {
@@ -1773,42 +1788,72 @@ function expClearPending(){
 }
 
 function saveExpBatch(){
-  var amtEl = document.getElementById('expAmount');
-  var amount = parseFloat(amtEl ? amtEl.value : 0);
   var payer = ((document.getElementById('expPayer') || {}).value || '').trim();
   var date = (document.getElementById('expDate') || {}).value || localDate();
   var note = ((document.getElementById('expNote') || {}).value || '').trim();
 
-  if (!amount || amount <= 0) { alert('请填写金额'); return; }
+  var items = [];
+  document.querySelectorAll('#expLines .exp-line').forEach(function(line){
+    var inp = line.querySelector('input');
+    var amt = parseFloat(inp ? inp.value : 0);
+    if (!amt || amt <= 0) return;
+    items.push({ type: line.getAttribute('data-t'), amount: Math.round(amt * 100) / 100 });
+  });
+
+  if (!items.length) { alert('请至少填一个金额'); return; }
   if (!payer) { alert('请填写谁付的钱'); return; }
 
   var now = Date.now();
-  var rec = {
-    uuid: uuid(),
-    date: date,
-    type: currentExpType || '其它',
-    amount: Math.round(amount * 100) / 100,
-    payer: payer,
-    note: note,
-    operator: operator || '',
-    deviceId: deviceId,
-    createdAt: now,
-    updatedAt: now,
-    deleted: false
-  };
-  expenses.unshift(rec);
-  DB.expPut(rec).catch(function(){});
-  if (typeof cloudSaveExpense === 'function') { try { cloudSaveExpense(rec); } catch(e) {} }
+  var n = 0;
+  items.forEach(function(it, i2){
+    var rec = {
+      uuid: uuid(),
+      date: date,
+      type: it.type,
+      amount: it.amount,
+      payer: payer,
+      note: note,
+      operator: operator || '',
+      deviceId: deviceId,
+      createdAt: now + i2,
+      updatedAt: now + i2,
+      deleted: false
+    };
+    expenses.unshift(rec);
+    DB.expPut(rec).catch(function(){});
+    if (typeof cloudSaveExpense === 'function') { try { cloudSaveExpense(rec); } catch(e) {} }
+    n++;
+  });
 
-  // 只清金额和说明，保留类型和付款人
-  amtEl.value = '';
+  // 清空金额和说明，保留日期和付款人
+  document.querySelectorAll('#expLines input').forEach(function(x){ x.value = ''; });
   var nt = document.getElementById('expNote');
   if (nt) nt.value = '';
+  updateExpSum();
 
   renderExp();
   if (typeof renderSum === 'function') renderSum();
-  var label = String(rec.type).replace(/费$/, '');
-  alert('已保存：' + label + ' ¥' + rec.amount.toFixed(2) + '（可继续录入）');
+  alert('已保存 ' + n + ' 笔费用 ✓（日期和付款人保留，可继续录）');
+}
+
+function updateExpSum(){
+  var total = 0, cnt = 0;
+  document.querySelectorAll('#expLines .exp-line').forEach(function(line){
+    var inp = line.querySelector('input');
+    var amt = parseFloat(inp ? inp.value : 0);
+    if (amt > 0) { total += amt; cnt++; }
+  });
+  var bar = document.getElementById('expSumBar');
+  var c = document.getElementById('expSumCnt');
+  var a = document.getElementById('expSumAmt');
+  if (!bar) return;
+  if (cnt > 0) {
+    bar.style.display = 'block';
+    if (c) c.textContent = String(cnt);
+    if (a) a.textContent = '¥' + total.toFixed(2);
+  } else {
+    bar.style.display = 'none';
+  }
 }
 
 
