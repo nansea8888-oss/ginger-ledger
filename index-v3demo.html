@@ -290,7 +290,8 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 .exp-row.custom .exp-t input{width:76px;text-align:left;font-size:13px;padding:7px 9px}
 
 /* ===== v3 费用暂存 ===== */
-.pend-item{display:flex;align-items:center;padding:9px 11px;background:#F3F8F5;border:1px solid #E4EEE9;border-radius:9px;margin-bottom:6px;font-size:13px}
+.pend-item{display:flex;align-items:center;padding:6px 0;border-bottom:1px solid #E8F0EC;font-size:12.5px}
+.pend-item:last-child{border-bottom:0}
 .pend-t{width:46px;color:#5A6B65;flex-shrink:0}
 .pend-a{flex:1;font-weight:600;color:#2F5D50;text-align:right;margin-right:12px}
 .pend-p{width:56px;color:#8A9992;font-size:12px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -440,13 +441,14 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
         <input id="expNote" placeholder="比如：加油300 过路费120">
       </div>
 
-      <div id="expPendingBox" style="display:none;margin-top:12px">
-        <label style="display:block;margin-bottom:7px">待保存（还没入库） <span class="pill" id="expPendingCount">0</span></label>
+      <div id="expPendingBox" style="display:none;margin-top:11px;padding:9px 11px;background:#F3F8F5;border:1px solid #E4EEE9;border-radius:9px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <span style="font-size:12px;color:#5A6B65">已暂存 <b id="expPendingCount" style="color:#2F5D50">0</b> 笔，点保存才入库</span>
+        </div>
         <div id="expPendingList"></div>
       </div>
 
-      <button class="btn ghost" style="margin-top:11px" onclick="expStash()">暂存这一笔</button>
-      <button class="btn" style="margin-top:9px" onclick="saveExpBatch()">保 存</button>
+      <button class="btn" id="expSaveBtn" style="margin-top:9px" onclick="saveExpBatch()">保 存</button>
     </div>
 
     </div>
@@ -1708,14 +1710,17 @@ function renderExpPending(){
   var list = document.getElementById('expPendingList');
   var cnt = document.getElementById('expPendingCount');
   if (!box || !list) return;
+  var btn = document.getElementById('expSaveBtn');
   if (!expPending.length) {
     box.style.display = 'none';
     list.innerHTML = '';
     if (cnt) cnt.textContent = '0';
+    if (btn) btn.textContent = '保 存';
     return;
   }
   box.style.display = 'block';
   if (cnt) cnt.textContent = String(expPending.length);
+  if (btn) btn.textContent = '保存这 ' + expPending.length + ' 笔';
   list.innerHTML = expPending.map(function(it){
     var label = String(it.type).replace(/费$/, '');
     return '<div class="pend-item"><span class="pend-t">' + label + '</span>' +
