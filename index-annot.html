@@ -1,0 +1,3948 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="生姜台账">
+<meta name="theme-color" content="#2F5D50">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>生姜台账 · 标注版</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{width:100%;overflow-x:hidden}
+body{width:100%;max-width:100vw;overflow-x:hidden;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;background:#F4F6F5;color:#1F2A24;font-size:16px;padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+header,nav,main,section,.card,.row,.calc,.sum,.grp,#listBox,#cusBox{max-width:100%}
+input,select,button{max-width:100%}
+header{background:#2F5D50;color:#fff;padding:calc(14px + env(safe-area-inset-top)) 16px 14px;font-size:18px;font-weight:600;position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:center;overflow:hidden}
+header>span:first-child{white-space:nowrap}
+header .sub{font-size:11.5px;font-weight:400;opacity:.8;flex-shrink:0;margin-left:8px}
+nav{display:flex;background:#fff;border-bottom:1px solid #E3E8E5;position:sticky;top:calc(50px + env(safe-area-inset-top));z-index:9}
+nav button{flex:1 1 0;min-width:0;padding:12px 0;border:0;background:none;font-size:15px;color:#6B7C74;font-family:inherit;border-bottom:3px solid transparent}
+nav button.on{color:#2F5D50;font-weight:600;border-bottom-color:#2F5D50}
+main{padding:12px;max-width:100%;overflow-x:hidden}
+.card{background:#fff;border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.card h3{font-size:14px;color:#5A6B63;font-weight:600;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;align-items:end}
+.row>*{min-width:0}
+.row input{min-width:0;width:100%}
+.dwrap{position:relative}
+.dwrap .dtxt{cursor:pointer;background:#fff}
+.dwrap .dpick{position:absolute;left:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none;border:0;padding:0}
+label{display:block;font-size:12px;color:#7A8A82;margin-bottom:4px}
+input,select{width:100%;min-width:0;max-width:100%;padding:11px 10px;border:1px solid #D8E0DB;border-radius:8px;font-size:16px;font-family:inherit;background:#fff;color:#1F2A24}
+input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
+.calc{background:#F7FAF8;border:1px dashed #C9D8D0;border-radius:10px;padding:10px;margin-bottom:12px}
+.calc .line{display:flex;justify-content:space-between;padding:5px 0;font-size:14px;color:#5A6B63}
+.calc .line b{color:#1F2A24;font-weight:600}
+.calc .line .hint{font-style:normal;font-size:11.5px;color:#9AA8A1;margin-left:5px}
+.calc .big{border-top:1px solid #DCE6E0;margin-top:6px;padding-top:8px;font-size:16px}
+.calc .big b{color:#C0392B;font-size:20px}
+.btn{width:100%;padding:15px;border:0;border-radius:10px;background:#2F5D50;color:#fff;font-size:17px;font-weight:600;font-family:inherit;margin-top:4px}
+.btn:active{background:#24483E}
+.btn.ghost{background:#EAF1ED;color:#2F5D50;font-size:15px;padding:12px;margin-top:8px}
+.grp{background:#fff;border-radius:12px;margin-bottom:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.grp .gh{padding:13px 14px;background:#EAF1ED;display:flex;justify-content:space-between;align-items:center;font-weight:600;color:#2F5D50;font-size:15px;gap:8px}
+.grp .gh .g1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.grp .gh .g2{font-size:12px;font-weight:400;color:#5A6B63;text-align:right;white-space:nowrap;flex-shrink:0}
+.item{border-top:1px solid #F0F4F2}
+.row-main{padding:13px 14px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;cursor:pointer}
+.row-main:active{background:#F5F9F7}
+.li-l{flex:1;min-width:0}
+.li-name{font-size:16.5px;font-weight:600;color:#1F2A24;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li-m1{font-size:12.5px;color:#7A8A82;margin-bottom:3px;line-height:1.5}
+.li-m2{font-size:12.5px;color:#7A8A82;line-height:1.5}
+.li-m2 b{color:#1F2A24;font-weight:600}
+.li-r{flex-shrink:0;text-align:right;display:flex;flex-direction:column;align-items:flex-end}
+.li-r b{font-size:17px;font-weight:700;color:#C0392B;line-height:1.2}
+.li-r small{font-size:11px;color:#9AA8A1;margin-top:2px}
+.li-arrow{font-size:10px;color:#B8C4BE;margin-top:5px;transition:transform .15s;display:inline-block}
+.item.open .li-arrow{transform:rotate(180deg)}
+.expand{display:none;padding:0 14px 14px}
+.item.open .expand{display:block}
+.dl{background:#FAFCFB;border:1px solid #E9F0EC;border-radius:10px;padding:2px 13px;margin-bottom:8px}
+.dl .r{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:8px 0;border-bottom:1px solid #EFF4F1;font-size:13.5px;line-height:1.4}
+.dl .r:last-child{border-bottom:0}
+.dl .r span{color:#7A8A82;flex-shrink:0}
+.dl .r b{font-weight:600;color:#1F2A24;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.dl.amount{background:#FDFCFB;border-color:#F0E6E0}
+.dl.amount .r span{color:#8A7A72}
+.dl.amount .r b{color:#8C4A3C}
+.dl .r.total{padding:12px 0 13px;border-bottom:0;margin-top:1px;border-top:1px solid #E2D5CE}
+.dl .r.total span{color:#1F2A24;font-weight:600;font-size:14.5px}
+.dl .r.total b{color:#C0392B;font-size:21px;letter-spacing:-.3px}
+.del-btn{width:100%;margin-top:2px;padding:11px;border:0;border-radius:9px;background:#FDEDEC;color:#C0392B;font-size:14px;font-weight:600;font-family:inherit}
+.li-m1,.li-m2,.li-r b{font-variant-numeric:tabular-nums}
+.sum{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.sum .box{background:#fff;border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.sum .box .k{font-size:12px;color:#7A8A82;margin-bottom:6px}
+.sum .box .v{font-size:19px;font-weight:700;color:#2F5D50}
+.sum .box .v small{font-size:12px;font-weight:400;color:#7A8A82}
+.sum .box em{font-style:normal;font-size:10.5px;color:#9AA8A1}
+.sum .box.wide{grid-column:1/-1;background:#2F5D50}
+.sum .box.wide .k{color:#AECBBF}
+.sum .box.wide .v{color:#fff;font-size:26px}
+.item .m2{font-size:12px;color:#5A6B63;margin-top:3px}
+.empty{text-align:center;color:#9AA8A1;padding:50px 20px;font-size:14px;line-height:1.8}
+.store-info{background:#FAFCFB;border:1px solid #E9F0EC;border-radius:10px;padding:2px 13px;margin-bottom:12px}
+.si-row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:8px 0;border-bottom:1px solid #EFF4F1;font-size:13.5px}
+.si-row:last-child{border-bottom:0}
+.si-row span{color:#7A8A82}
+.si-row b{color:#1F2A24;font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
+.etabs{display:flex;margin-bottom:12px}.etabs>*+*{margin-left:6px}
+.etabs button{flex:1 1 0;min-width:0;padding:10px 0;border:1px solid #D8E0DB;background:#fff;border-radius:9px;font-size:14px;font-family:inherit;color:#5A6B63}
+.etabs button.on{background:#2F5D50;color:#fff;border-color:#2F5D50;font-weight:600}
+.mb{margin-bottom:10px}
+.sumcard{background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);display:flex;justify-content:space-between;align-items:flex-end}
+.sumcard .k{font-size:12.5px;color:#7A8A82;margin-bottom:4px}
+.sumcard .n{font-size:13px;color:#5A6B63}
+.sumcard .v{font-size:16px;font-size:clamp(22px,6.5vw,26px);font-weight:700;color:#C0392B;font-variant-numeric:tabular-nums;line-height:1}
+.exp{display:flex;align-items:center;padding:13px 14px;border-top:1px solid #F0F4F2}.exp>*+*{margin-left:12px}
+.exp:first-child{border-top:0}
+.exp-body{flex:1;min-width:0}
+.exp-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px}
+.exp-amt{font-size:17.5px;font-weight:700;color:#1F2A24;font-variant-numeric:tabular-nums;white-space:nowrap}
+.etag{display:inline-block;font-size:11.5px;padding:3px 9px;border-radius:6px;font-weight:600;letter-spacing:.2px;white-space:nowrap}
+.t1{background:#E8F0FE;color:#1A56C4}
+.t2{background:#FEF3E2;color:#A96200}
+.t3{background:#E6F4EA;color:#0F7B3F}
+.t4{background:#F0E9FD;color:#6A3AB2}
+.t5{background:#EFF1F3;color:#5F6B66}
+.exp-who{font-size:14px;color:#1F2A24;font-weight:600}
+.exp-date{font-size:12.5px;color:#9AA8A1;font-weight:400;margin-left:8px}
+.exp-note{font-size:12.5px;color:#9AA8A1;margin-top:4px;line-height:1.45;word-break:break-all}
+.exp-del{width:30px;height:30px;border-radius:50%;background:#F4F6F5;color:#AEB9B3;font-size:15px;border:0;flex-shrink:0;line-height:1;font-family:inherit}
+/* ---- 汇总三色卡 ---- */
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+.tc{border-radius:13px;padding:13px 8px 12px;text-align:center}
+.tc .t{font-size:10.5px;font-weight:700;margin-bottom:9px;letter-spacing:.5px}
+.tc .big{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.15;letter-spacing:-.5px}
+.tc .u{font-size:9.5px;font-weight:500;margin-top:2px;margin-bottom:9px;opacity:.7}
+.tc .line{display:flex;justify-content:space-between;align-items:baseline;font-size:9.5px;padding:4px 0;opacity:.92;font-variant-numeric:tabular-nums}
+.tc .line span:first-child{opacity:.72;flex-shrink:0;margin-right:3px}
+.tc .line b{font-weight:700;white-space:nowrap}
+.tc .line b i{font-style:normal;font-size:8px;font-weight:500;opacity:.6;margin-left:1.5px}
+.tc .sep{height:1px;background:currentColor;opacity:.18;margin:6px 0}
+.tc.c1{background:#FFF6EC;color:#8A5A1E}
+.tc.c2{background:#E3F0EA;color:#1E4A3C}
+.tc.c3{background:#2F5D50;color:#fff}
+.tc.c3 .t{opacity:.75}
+.tc.c3 .u{opacity:.6}
+.tc.c3 .line span:first-child{opacity:.6}
+
+.cus-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #F2F5F3;cursor:pointer}
+.cus-row:last-child{border-bottom:0}
+.cus-row:active{background:#F7FAF8}
+.cus-row .cn{font-size:14px;font-weight:600}
+.cus-row .cm{font-size:11.5px;color:#9AA8A1;margin-top:2px}
+.cus-row .cv{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+.cus-row .cv small{display:block;font-size:10.5px;color:#9AA8A1;font-weight:400;margin-top:2px}
+
+.filter-bar{display:flex;align-items:center;background:#EAF1ED;border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:13px;color:#2F5D50;font-weight:600}
+.filter-bar>*+*{margin-left:8px}
+.filter-bar button{margin-left:auto;border:0;background:none;color:#7A8A82;font-size:16px;padding:0 4px;font-family:inherit}
+
+.mini{display:flex}.mini>*+*{margin-left:10px}
+.mini button,.mini .minibtn{flex:1;padding:13px 0;border:1px solid #DCE5E0;background:#fff;border-radius:10px;font-size:14px;font-family:inherit;color:#2F5D50;font-weight:600;text-align:center;display:block;cursor:pointer}
+
+.chart-empty{text-align:center;color:#B9C4BE;font-size:13px;padding:26px 0}
+.h3s{font-size:10.5px;color:#9AA8A1;font-weight:400;margin-left:4px}
+
+/* 合同缩略图 */
+.shots{display:flex;flex-wrap:wrap;margin-top:2px}
+.shots>*+*{margin-left:8px}
+.shot{width:62px;height:62px;border-radius:8px;overflow:hidden;position:relative;background:#F1F5F3}
+.shot img{width:100%;height:100%;object-fit:cover;display:block}
+.shot .x{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-size:11px;line-height:18px;text-align:center;border:0;padding:0;font-family:inherit}
+.addshot{width:62px;height:62px;border-radius:8px;border:1.5px dashed #C8D4CE;background:#fff;color:#8A9992;font-size:12.5px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-right:8px;margin-bottom:8px;font-family:inherit}
+
+/* 定位 */
+.geo-box{display:flex;align-items:center;padding:11px;background:#F1F5F3;border-radius:8px;font-size:12.5px;color:#5A6B63;line-height:1.5}
+.geo-box>*+*{margin-left:8px}
+.geo-dot{width:9px;height:9px;border-radius:50%;background:#C8D4CE;flex-shrink:0}
+.geo-dot.g{background:#2FA84F}
+.geo-dot.y{background:#E8A33D}
+.geo-dot.r{background:#C0392B}
+
+/* 协作 */
+.dot-badge{display:inline-block;min-width:15px;height:15px;line-height:15px;padding:0 4px;border-radius:8px;background:#C0392B;color:#fff;font-size:10px;margin-left:3px}
+.link-card{border:1px solid #E8F0EC;border-radius:10px;padding:11px 12px;margin-bottom:9px}
+.link-card .hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.link-card .nm{font-size:14px;font-weight:600}
+.link-card .st{font-size:10.5px;padding:2px 8px;border-radius:20px}
+.st.on{background:#E3F0EA;color:#1E4A3C}
+.st.off{background:#F5F5F5;color:#9AA8A1}
+.link-card .meta{font-size:11.5px;color:#9AA8A1;line-height:1.7}
+.ap-item{border:1px solid #FFF0D9;background:#FFFCF6;border-radius:10px;padding:11px 12px;margin-bottom:9px}
+.ap-item .hd{display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;font-weight:600}
+.ap-item .bd{font-size:12px;color:#7A6A4A;line-height:1.6;margin-bottom:9px}
+.ap-item .acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ap-item .acts button{padding:8px;border:0;border-radius:8px;font-size:13px;font-family:inherit}
+.ap-item .ok{background:#2F5D50;color:#fff}
+.ap-item .no{background:#fff;color:#C0392B;border:1px solid #F0C9C4}
+.bars{display:flex;align-items:flex-end;height:100px;padding:0 2px;margin-bottom:8px}.bars>*+*{margin-left:7px}
+.bars .b{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%}
+.bars .b i{display:block;width:100%;border-radius:4px 4px 0 0;background:linear-gradient(180deg,#5C8A7B,#2F5D50)}
+.bars .b.today i{background:linear-gradient(180deg,#EDA94B,#D9822B)}
+.bars .b em{font-size:9px;color:#9AA8A1;font-style:normal;margin-top:5px}
+.cap{display:flex;justify-content:space-between;font-size:10px;color:#B9C4BE;padding:0 2px}
+.cmp .r{display:flex;align-items:center;margin-bottom:10px}.cmp .r>*+*{margin-left:9px}
+.cmp .r:last-child{margin-bottom:0}
+.cmp .lb{width:30px;font-size:11.5px;color:#7A8A82;flex-shrink:0}
+.cmp .track{flex:1;height:24px;background:#F2F6F4;border-radius:6px;overflow:hidden}
+.cmp .fill{height:100%;border-radius:6px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;font-size:11px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums}
+.cmp .f1{background:linear-gradient(90deg,#EDA94B,#D9822B)}
+.cmp .f2{background:linear-gradient(90deg,#7FA99B,#5C8A7B)}
+.cmp .delta{text-align:center;font-size:11.5px;color:#0F7B3F;font-weight:600;padding-top:2px}
+.ftype .r{display:flex;align-items:center;margin-bottom:9px}.ftype .r>*+*{margin-left:8px}
+.ftype .r:last-child{margin-bottom:0}
+.ftype .nm{width:38px;font-size:11px;color:#7A8A82;flex-shrink:0}
+.ftype .track{flex:1;height:16px;background:#F2F6F4;border-radius:4px;overflow:hidden}
+.ftype .fill{height:100%;border-radius:4px}
+.ftype .v{width:54px;text-align:right;font-size:11px;font-weight:600;font-variant-numeric:tabular-nums}
+.bars7 .nm{width:42px;font-size:10px;color:#7A8A82}
+.bars7 .track{height:20px;border-radius:5px}
+.bars7 .fill{border-radius:5px}
+.bars7 .v{width:60px;font-size:11.5px}
+.bars7 .r{margin-bottom:7px}
+.tip{font-size:12px;color:#9AA8A1;text-align:center;padding:14px 10px;line-height:1.7}
+.guide{position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(10,20,15,.93);display:flex;align-items:center;justify-content:center;padding:max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));overflow-y:auto;-webkit-overflow-scrolling:touch}
+.gbox{background:#fff;border-radius:20px;width:100%;max-width:min(340px, 88vw);padding:26px 20px 18px;text-align:center;margin:auto;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.gicon{font-size:34px;line-height:1;margin-bottom:12px}
+.gbox h2{font-size:16px;font-size:clamp(17px, 4.6vw, 19px);color:#1F2A24;margin-bottom:8px;line-height:1.35;font-weight:700}
+.gsub{font-size:16px;font-size:clamp(12.5px, 3.4vw, 13.5px);color:#7A8A82;line-height:1.55;margin-bottom:18px}
+.gsteps{list-style:none;text-align:left;margin:0 0 20px;padding:0;counter-reset:s}
+.gsteps li{counter-increment:s;position:relative;padding:8px 0 8px 34px;font-size:14px;font-size:clamp(14px, 3.9vw, 15px);line-height:1.5;color:#1F2A24}
+.gsteps li::before{content:counter(s);position:absolute;left:0;top:8px;width:23px;height:23px;border-radius:50%;background:#2F5D50;color:#fff;font-size:12.5px;display:flex;align-items:center;justify-content:center;font-weight:600}
+.gbtn{display:block;width:100%;padding:14px;border:0;border-radius:11px;background:#2F5D50;color:#fff;font-size:15px;font-size:clamp(15px,4vw,16px);font-weight:600;font-family:inherit;margin-bottom:8px}
+.gbtn:active{background:#24483E}
+.gbtn2{display:block;width:100%;padding:10px;border:0;border-radius:9px;background:none;color:#9AA8A1;font-size:13px;font-family:inherit}
+.ga{position:fixed;font-size:34px;font-size:clamp(34px,9vw,44px);color:#fff;line-height:1;z-index:10000;text-shadow:0 3px 14px rgba(0,0,0,.7);animation:blink 1.1s infinite}
+.ga.tr{top:calc(6px + env(safe-area-inset-top));right:14px}
+.ga.bc{bottom:calc(8px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%)}
+.ga.br{bottom:calc(8px + env(safe-area-inset-bottom));right:20px}
+@keyframes blink{0%,100%{opacity:.35}50%{opacity:1}}
+.hide{display:none}
+
+/* ===== DESKTOP_VIEW: 电脑上居中显示，宽度同手机 ===== */
+@media (min-width: 640px){
+  html{background:#E8EDEA}
+  body{
+    max-width:480px;
+    margin:0 auto;
+    box-shadow:0 0 40px rgba(0,0,0,.12);
+    min-height:100vh;
+  }
+  header,nav{
+    width:100%;
+    max-width:480px;
+    margin-left:auto;
+    margin-right:auto;
+    left:auto;
+    transform:none;
+  }
+  .tabbar{
+    width:480px;
+    max-width:480px;
+    left:50%;
+    right:auto;
+    transform:translateX(-50%);
+  }
+  #loginMask{
+    width:480px;
+    max-width:480px;
+    left:50%;
+    right:auto;
+    transform:translateX(-50%);
+  }
+  #guide{width:480px;max-width:480px;left:50%;right:auto;transform:translateX(-50%)}
+}
+
+/* ===== v3 地址模块 ===== */
+.addr-box{display:flex;justify-content:space-between;align-items:center;padding:14px 15px;background:#F3F7F5;border-radius:11px;margin-top:11px;cursor:pointer;border:1px solid #E2EBE7;-webkit-tap-highlight-color:transparent}
+.addr-box:active{background:#E8F0EC}
+.addr-short{font-size:15px;font-weight:500;color:#22312C;flex:1;word-break:break-all}
+.addr-arrow{font-size:12px;color:#7A8C86;margin-left:10px;white-space:nowrap}
+.addr-full{padding:13px 15px;background:#FAFCFB;border:1px solid #E2EBE7;border-radius:11px;margin-top:8px;font-size:12.5px;color:#546660;line-height:1.9;word-break:break-all}
+
+/* ===== v3 多货主 ===== */
+.ob{border:1px solid #E4ECE8;border-radius:12px;padding:13px 13px 11px;margin-bottom:11px;background:#FCFDFC}
+.ob-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.ob-title{font-size:14px;font-weight:600;color:#2F5D50}
+.ob-del{font-size:12px;color:#C0392B;padding:3px 9px;border-radius:7px;background:#FBEEEC;cursor:pointer}
+.ob-del:active{background:#F5DAD6}
+.ob .row{margin-bottom:0}
+.ob .calc{margin-top:11px;margin-bottom:0;background:#F5F9F7}
+.ob .calc .line{font-size:12.5px}
+.ob .calc .line.big{font-size:13.5px;font-weight:700}
+
+/* ===== v3 费用批量 ===== */
+.exp-row{display:flex;align-items:center;padding:9px 0;border-bottom:1px solid #EFF4F1}
+.exp-row:last-child{border-bottom:0}
+.exp-t{width:52px;font-size:13.5px;color:#3D514A;font-weight:500;flex-shrink:0}
+.exp-row input{flex:1;border:1px solid #DCE7E2;border-radius:9px;padding:9px 11px;font-size:15px;text-align:right;background:#fff;font-family:inherit}
+.exp-row input:focus{outline:none;border-color:#2F5D50;background:#F8FCFA}
+.exp-row.custom .exp-t{width:auto;flex:0 0 auto;margin-right:8px}
+.exp-row.custom .exp-t input{width:76px;text-align:left;font-size:13px;padding:7px 9px}
+
+/* ===== v3 费用暂存 ===== */
+.pend-item{display:flex;align-items:center;padding:6px 0;border-bottom:1px solid #E8F0EC;font-size:12.5px}
+.pend-item:last-child{border-bottom:0}
+.pend-t{width:46px;color:#5A6B65;flex-shrink:0}
+.pend-a{flex:1;font-weight:600;color:#2F5D50;text-align:right;margin-right:12px}
+.pend-p{width:56px;color:#8A9992;font-size:12px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pend-x{width:20px;text-align:center;color:#C0392B;font-size:18px;cursor:pointer;flex-shrink:0;line-height:1}
+
+/* ===== v3 费用多行 ===== */
+.exp-line{display:flex;align-items:center;padding:8px 0;border-bottom:1px solid #EFF4F1}
+.exp-line:last-child{border-bottom:0}
+.el-t{width:52px;font-size:13.5px;color:#3D514A;font-weight:500;flex-shrink:0}
+.exp-line input{flex:1;border:1px solid #DCE7E2;border-radius:9px;padding:9px 12px;font-size:15px;text-align:right;background:#fff;font-family:inherit}
+.exp-line input:focus{outline:none;border-color:#2F5D50;background:#F8FCFA}
+.exp-line input:not(:placeholder-shown){background:#F8FCFA;border-color:#C9DCD4}
+
+/* ===== v3 分项费用 ===== */
+.eb{border:1px solid #E4ECE8;border-radius:11px;margin-top:10px;overflow:hidden;background:#FCFDFC}
+.eb-head{display:flex;align-items:center;padding:12px 13px;cursor:pointer;background:#FAFCFB;-webkit-tap-highlight-color:transparent}
+.eb-head:active{background:#F2F7F4}
+.eb-t{flex:1;font-size:14px;font-weight:600;color:#2F5D50}
+.eb-s{font-size:13px;color:#C0392B;font-weight:600;margin-right:8px}
+.eb-ar{font-size:12px;color:#8A9992;width:12px;text-align:center}
+.eb-body{padding:0 13px 11px}
+.eb-add{width:100%;margin-top:9px;padding:9px;border:1.5px dashed #C8D8D1;border-radius:9px;background:#fff;color:#5A6B65;font-size:13px;font-family:inherit}
+.eb-add:active{background:#F2F7F4}
+.eb-item{display:flex;align-items:center;gap:6px;padding:9px 0;border-bottom:1px solid #EFF4F1}
+.eb-item:last-child{border-bottom:0}
+.eb-item input{border:1px solid #DCE7E2;border-radius:8px;padding:9px 10px;font-size:14px;background:#fff;font-family:inherit;min-width:0;box-sizing:border-box}
+.eb-item input:focus{outline:none;border-color:#2F5D50;background:#F8FCFA}
+.f-sub{width:68px;flex-shrink:0}
+.f-amt{flex:1;text-align:right}
+.f-num{width:64px;flex-shrink:0;text-align:right;padding:9px 6px}
+.f-name{flex:1}
+.f-x{width:20px;text-align:center;color:#C0392B;font-size:18px;line-height:1;cursor:pointer;flex-shrink:0;user-select:none}
+.f-eq{font-size:11.5px;color:#A0AEA8;flex-shrink:0;width:10px;text-align:center}
+.f-res{font-size:12.5px;color:#2F5D50;font-weight:700;width:64px;text-align:right;flex-shrink:0}
+.eb-simple{display:flex;align-items:center;padding:12px 13px;border:1px solid #E4ECE8;border-radius:11px;margin-top:10px;background:#FCFDFC}
+.eb-simple input{flex:1;border:1px solid #DCE7E2;border-radius:9px;padding:9px 12px;font-size:15px;text-align:right;background:#fff;font-family:inherit}
+.eb-simple input:focus{outline:none;border-color:#2F5D50}
+
+/* ===== 标注历史 ===== */
+.mkh-head{display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:700;color:#2F5D50;margin-bottom:10px}
+.mkh-head b{color:#C0392B}
+.mkh-close{font-size:12px;color:#8A9992;font-weight:400;cursor:pointer;padding:4px 8px;background:#F1F5F3;border-radius:7px}
+.mkh-item{display:flex;align-items:flex-start;gap:9px;padding:10px 0;border-bottom:1px solid #EFF4F1}
+.mkh-item:last-child{border-bottom:0}
+.mkh-no{width:20px;height:20px;border-radius:50%;background:#2F5D50;color:#fff;font-size:11px;line-height:20px;text-align:center;flex-shrink:0;margin-top:1px}
+.mkh-body{flex:1;min-width:0}
+.mkh-where{font-size:11.5px;color:#8A9992;margin-bottom:3px;word-break:break-all}
+.mkh-note{font-size:13.5px;color:#22312C;line-height:1.5;word-break:break-word}
+.mkh-x{flex-shrink:0;font-size:12px;color:#C0392B;padding:3px 8px;background:#FBEEEC;border-radius:7px;cursor:pointer;align-self:center}
+
+.eb-block{border-bottom:1px solid #EFF4F1;padding:10px 0}
+.eb-block:last-child{border-bottom:0}
+.eb-row{display:flex;align-items:center;gap:7px;margin-bottom:7px}
+.eb-row:last-child{margin-bottom:0}
+.eb-lb{width:52px;font-size:12.5px;color:#5A6B65;flex-shrink:0}
+.eb-row input,.eb-row select{border:1px solid #DCE7E2;border-radius:8px;padding:9px 10px;font-size:14px;background:#fff;font-family:inherit;min-width:0;box-sizing:border-box}
+.eb-row input:focus,.eb-row select:focus{outline:none;border-color:#2F5D50;background:#F8FCFA}
+.eb-note input{flex:1;text-align:center}
+.eb-tip{font-size:11px;color:#A0AEA8;padding-left:59px;margin-top:2px}
+.f-sub{width:auto;flex:0 0 88px;padding:8px 6px!important;font-size:13px!important}
+
+.ob-collapsed{display:flex;align-items:center;justify-content:space-between;padding:12px 13px;cursor:pointer;background:#F7FAF8}
+.ob-collapsed:active{background:#EFF5F1}
+.obc-left{display:flex;align-items:center;gap:9px}
+.obc-no{width:20px;height:20px;border-radius:50%;background:#2F5D50;color:#fff;font-size:11px;line-height:20px;text-align:center;flex-shrink:0}
+.obc-name{font-size:14px;font-weight:600;color:#22312C}
+.obc-right{display:flex;align-items:center;gap:8px}
+.obc-sum{font-size:12.5px;color:#C0392B;font-weight:600}
+.obc-ar{font-size:12px;color:#8A9992}
+.ob-fold{font-size:12px;color:#5A6B65;padding:3px 9px;border-radius:7px;background:#EEF4F1;cursor:pointer}
+
+.addr-input-row{display:flex;gap:8px;align-items:center;margin-top:5px}
+.addr-input-row input{flex:1;min-width:0}
+.loc-btn{flex-shrink:0;width:42px;height:42px;border:1px solid #DCE7E2;border-radius:11px;background:#F7FAF8;color:#2F5D50;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent}
+.loc-btn:active{background:#2F5D50;color:#fff}
+
+.cg-item.on{border-color:#2F5D50;background:#F5FAF7}
+.cm-row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid #F0F4F2;font-size:13.5px}
+.cm-row:last-child{border-bottom:0}
+.cm-name{color:#22312C;font-weight:500}
+.cm-role{color:#8A9992;font-size:12px}
+
+.inv-chip:active{background:#EEF6F2}
+
+.jr-item{padding:12px 0;border-bottom:1px solid #F0F4F2}
+.jr-item:last-child{border-bottom:0}
+.jr-name{font-size:13.5px;color:#22312C;font-weight:500;line-height:1.5}
+.jr-meta{font-size:11.5px;color:#8A9992;margin-top:4px}
+.jr-acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
+.jr-acts button{padding:9px;border:0;border-radius:9px;font-size:13px;font-family:inherit;font-weight:600;cursor:pointer}
+.jr-no{background:#FBEEEC;color:#C0392B}
+.jr-ok{background:#2F5D50;color:#fff}
+
+.cg-wrap{margin-bottom:9px}
+.cg-item{display:flex;align-items:center;padding:13px;border:1.5px solid #E4ECE8;border-radius:11px;cursor:pointer;background:#fff;transition:.15s}
+.cg-item.on{border-color:#2F5D50;background:#F5FAF7}
+.cg-item.open{border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom:0}
+.cg-sub{font-size:11px;color:#8A9992;margin-top:3px}
+.cg-ar{font-size:12px;color:#8A9992}
+.cg-body{border:1.5px solid #E4ECE8;border-top:0;border-radius:0 0 11px 11px;padding:12px 13px;background:#FBFDFC}
+.cg-name{font-size:14.5px;font-weight:600;color:#22312C}
+.cg-cur{font-size:10px;padding:1px 7px;border-radius:5px;background:#2F5D50;color:#fff;font-weight:500}
+.cg-using{font-size:10.5px;color:#1E8E4A;font-weight:600}
+.cg-use{padding:6px 11px;border:0;border-radius:8px;background:#2F5D50;color:#fff;font-size:11.5px;font-family:inherit;font-weight:600;cursor:pointer}
+.cd-head{display:flex;align-items:center;justify-content:space-between;gap:9px;margin-bottom:7px}
+.inv-chip{display:flex;align-items:center;gap:7px;padding:6px 10px;border:1.5px solid #DCE7E2;border-radius:9px;background:#fff;font-family:inherit;cursor:pointer}
+.inv-chip:active{background:#EEF6F2}
+.inv-label{font-size:10.5px;color:#8A9992}
+.inv-chip b{font-size:15px;color:#C0392B;letter-spacing:1.5px;font-weight:700}
+.inv-copy{font-size:10.5px;color:#2F5D50;background:#E4F0EA;padding:2px 7px;border-radius:5px;font-weight:600}
+.cd-tip{font-size:11px;color:#8A9992;line-height:1.6;margin-bottom:9px}
+
+.cm-del{font-size:11px;color:#C0392B;padding:3px 9px;border-radius:6px;background:#FBEEEC;cursor:pointer}
+</style>
+</head>
+<body>
+
+<div id="loginMask" style="position:fixed;top:0;right:0;bottom:0;left:0;background:linear-gradient(160deg,#2F5D50,#1E4A3C);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px">
+  <div style="color:#fff;font-size:22px;font-weight:600;margin-bottom:6px">生姜收购台账</div>
+  <div style="color:#A8C4BA;font-size:12.5px;margin-bottom:26px">输入 4 位数字进入</div>
+  <input id="lgCode" placeholder="4 位数字" inputmode="numeric" maxlength="8" autocomplete="off"
+    style="width:100%;max-width:300px;padding:15px;border:0;border-radius:12px;font-size:20px;text-align:center;letter-spacing:6px;margin-bottom:12px">
+  <button id="lgBtn" onclick="doLogin()"
+    style="width:100%;max-width:300px;padding:15px;border:0;border-radius:12px;background:#FFC94D;color:#2F5D50;font-size:16px;font-weight:700;font-family:inherit">登 录</button>
+  <div id="lgMsg" style="color:#FFB3A7;font-size:12.5px;margin-top:14px;min-height:18px;text-align:center;line-height:1.6"></div>
+</div>
+
+
+<header>
+  <span>生姜收购台账</span>
+  <span class="sub" style="display:flex;align-items:center;gap:8px">
+    <button id="grpBtn" class="grp-btn" onclick="openGrpPicker()" style="display:none">
+      <span id="grpName">账本</span> <span style="opacity:.6">▾</span>
+    </button>
+    <span id="today"></span>
+  </span>
+</header>
+
+<div id="grpPicker">
+  <div class="gp-box">
+    <div class="gp-title">现在进哪个账本？</div>
+    <div id="grpList"></div>
+    <button class="gp-cancel" onclick="closeGrpPicker()">取消</button>
+  </div>
+</div>
+
+<style>
+.grp-btn{padding:5px 11px;border-radius:9px;background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.3);font-size:12px;font-family:inherit;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px}
+.grp-btn:active{background:rgba(255,255,255,.28)}
+#grpPicker{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9800;display:none;align-items:center;justify-content:center;padding:20px}
+#grpPicker.show{display:flex}
+.gp-box{background:#fff;border-radius:16px;width:100%;max-width:340px;padding:18px}
+.gp-title{font-size:15px;font-weight:700;color:#2F5D50;margin-bottom:13px}
+.gp-item{display:flex;align-items:center;gap:10px;padding:13px;border:1.5px solid #E4ECE8;border-radius:11px;margin-bottom:9px;cursor:pointer;background:#fff}
+.gp-item:active{background:#F5FAF7}
+.gp-item.on{border-color:#2F5D50;background:#F0F8F4}
+.gp-dot{width:18px;height:18px;border-radius:50%;border:2px solid #C8D8D1;flex-shrink:0}
+.gp-item.on .gp-dot{border-color:#2F5D50;background:#2F5D50;box-shadow:inset 0 0 0 3px #fff}
+.gp-info{flex:1;min-width:0}
+.gp-n{font-size:14px;font-weight:600;color:#22312C}
+.gp-m{font-size:11px;color:#8A9992;margin-top:2px}
+.gp-cancel{width:100%;padding:12px;border:0;border-radius:10px;background:#F1F5F3;color:#5A6B63;font-size:14px;font-family:inherit;font-weight:600;margin-top:4px}
+</style>
+
+<nav>
+  <button class="on" data-tab="in">录入</button>
+  <button data-tab="list">明细</button>
+  <button data-tab="exp">费用</button>
+  <button data-tab="sum">汇总</button>
+  <button data-tab="board">看板</button>
+  <button data-tab="coop">协作<span class="dot-badge hide" id="coopBadge"></span></button>
+</nav>
+
+<main>
+  <!-- 录入 -->
+  <section id="tab-in">
+    <div class="card">
+      <h3>客户与批次</h3>
+      <div class="mb">
+        <label>客户（买家）</label>
+        <input id="customer" list="dl-cus" placeholder="选或直接打">
+        <datalist id="dl-cus"></datalist>
+      </div>
+      <div class="row">
+        <div>
+          <label>客户电话</label>
+          <input id="customerTel" type="tel" inputmode="tel" placeholder="手机号">
+        </div>
+        <div>
+          <label>批号</label>
+          <input id="lot" placeholder="20250217-01">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>车牌号</label>
+          <input id="plate" placeholder="鲁A12345">
+        </div>
+        <div>
+          <label>收购日期</label>
+          <div class="dwrap">
+            <input class="dtxt" id="date" type="text" readonly placeholder="2026-11-23" onclick="openPicker('date','datePick')">
+            <input class="dpick" id="datePick" type="date" onchange="document.getElementById('date').value=this.value">
+          </div>
+        </div>
+      </div>
+      <div class="mb">
+        <label>客户合同（最多 5 张）</label>
+        <div class="shots" id="cusShots"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>货主与计价 <span class="pill" id="ownerCount">1 个货主</span></h3>
+      <div id="ownerList"></div>
+      <button class="btn ghost" style="margin-top:4px" onclick="addOwner()">添加货主</button>
+
+      <div class="calc" id="allCalc" style="margin-top:14px;margin-bottom:0;display:none">
+        <div class="line"><span>货主合计总斤数</span><b id="t1">0</b></div>
+        <div class="line"><span>货主合计净重</span><b id="t3">0</b></div>
+        <div class="line big"><span>合计总款 <i class="hint">所有货主</i></span><b id="t6">0</b></div>
+      </div>
+
+      <button class="btn" onclick="saveRec()">保 存</button>
+    </div>
+
+    <div class="card">
+      <h3>收购地点 <span class="pill" id="geoState">未定位</span></h3>
+      <div class="addr-input-row" style="margin-top:2px">
+        <input id="addr" placeholder="村级 + 门牌，例如：王家村 12号">
+        <button class="loc-btn" onclick="locate()" title="定位">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+        </button>
+      </div>
+      <div id="addrFull" style="display:none"></div>
+    </div>
+
+    <div class="card">
+      <h3>录入人</h3>
+      <input id="opName" placeholder="填你的名字，例如：老王" onchange="saveOperator()">
+    </div>
+
+    <p class="tip">数据存在这台手机的浏览器里。换手机或清缓存会丢，建议定期用「导出」。</p>
+  </section>
+
+  <!-- 明细 -->
+  <section id="tab-list" class="hide">
+    <div id="filterBar"></div>
+    <div id="listBox"></div>
+  </section>
+
+  <!-- 费用 -->
+  <section id="tab-exp" class="hide">
+    <div class="card">
+      <h3>记一笔费用</h3>
+      <div class="row">
+        <div>
+          <label>日期</label>
+          <div class="dwrap">
+            <input class="dtxt" id="expDate" type="text" readonly placeholder="2026-11-23" onclick="openPicker('expDate','expDatePick')">
+            <input class="dpick" id="expDatePick" type="date" onchange="document.getElementById('expDate').value=this.value">
+          </div>
+        </div>
+        <div>
+          <label>谁付的钱</label>
+          <input id="expPayer" list="dl-payer" placeholder="打名字，或从历史里选">
+          <datalist id="dl-payer"></datalist>
+        </div>
+      </div>
+
+      <!-- 差旅费 -->
+      <div class="eb">
+        <div class="eb-head" onclick="toggleEB('travel')">
+          <span class="eb-t">差旅费</span>
+          <span class="eb-s" id="sum_travel">¥0.00</span>
+          <span class="eb-ar" id="ar_travel">▸</span>
+        </div>
+        <div class="eb-body" id="body_travel" style="display:none">
+          <div id="travelItems"></div>
+          <button class="eb-add" onclick="addTravel()">＋ 添加一项</button>
+        </div>
+      </div>
+
+      <!-- 人工费 -->
+      <div class="eb">
+        <div class="eb-head" onclick="toggleEB('labor')">
+          <span class="eb-t">人工费</span>
+          <span class="eb-s" id="sum_labor">¥0.00</span>
+          <span class="eb-ar" id="ar_labor">▸</span>
+        </div>
+        <div class="eb-body" id="body_labor" style="display:none">
+          <div id="laborItems"></div>
+          <button class="eb-add" onclick="addLabor()">＋ 添加一组</button>
+        </div>
+      </div>
+
+      <!-- 物料费 -->
+      <div class="eb">
+        <div class="eb-head" onclick="toggleEB('material')">
+          <span class="eb-t">物料费</span>
+          <span class="eb-s" id="sum_material">¥0.00</span>
+          <span class="eb-ar" id="ar_material">▸</span>
+        </div>
+        <div class="eb-body" id="body_material" style="display:none">
+          <div id="materialItems"></div>
+          <button class="eb-add" onclick="addMaterial()">＋ 添加一种</button>
+        </div>
+      </div>
+
+      <!-- 运费 -->
+      <div class="eb">
+        <div class="eb-head" onclick="toggleEB('freight')">
+          <span class="eb-t">运费</span>
+          <span class="eb-s" id="sum_freight">¥0.00</span>
+          <span class="eb-ar" id="ar_freight">▸</span>
+        </div>
+        <div class="eb-body" id="body_freight" style="display:none">
+          <div id="freightItems"></div>
+          <button class="eb-add" onclick="addFreight()">＋ 添加一笔运费</button>
+        </div>
+      </div>
+
+      <!-- 装卸费 -->
+      <div class="eb-simple">
+        <span class="eb-t">装卸费</span>
+        <input id="expLoad" type="number" inputmode="decimal" placeholder="0.00">
+      </div>
+
+      <!-- 其它 -->
+      <div class="eb-simple" style="align-items:flex-start;flex-direction:column;gap:8px;padding-top:11px">
+        <div style="display:flex;align-items:center;width:100%">
+          <span class="eb-t">其它</span>
+          <input id="expOther" type="number" inputmode="decimal" placeholder="0.00">
+        </div>
+        <input id="expOtherNote" placeholder="说明是什么（必填）" style="width:100%;border:1px solid #DCE7E2;border-radius:9px;padding:9px 12px;font-size:14px">
+      </div>
+
+      <div id="expSumBar" style="display:none;padding:12px 14px;background:#F3F8F5;border:1px solid #E4EEE9;border-radius:10px;margin-top:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:12.5px;color:#5A6B65">本次合计 <b id="expSumCnt" style="color:#2F5D50">0</b> 项</span>
+          <b style="font-size:17px;color:#C0392B" id="expSumAmt">¥0.00</b>
+        </div>
+      </div>
+
+      <button class="btn" style="margin-top:12px" onclick="saveExpBatch()">保 存</button>
+    </div>
+
+    </div>
+
+    <div class="sumcard">
+      <div>
+        <div class="k">本月费用</div>
+        <div class="n" id="expCount">0 笔</div>
+      </div>
+      <div class="v" id="expTotal">¥0.00</div>
+    </div>
+
+    <div class="card" style="padding:0" id="expList"></div>
+  </section>
+
+  <!-- 汇总 -->
+  <section id="tab-sum" class="hide">
+    <div class="card" style="padding:14px">
+      <div class="three" id="sumBox"></div>
+    </div>
+
+    <div class="card">
+      <h3>按客户（本月）</h3>
+      <div id="cusBox"></div>
+    </div>
+
+    <div class="card">
+      <div class="mini">
+        <button onclick="exportJSON()">导出备份</button>
+        <label class="minibtn">导入备份<input type="file" accept=".json,application/json" onchange="importJSON(this.files[0]); this.value='';" style="display:none"></label>
+      </div>
+      <button class="btn ghost" onclick="exportCSV()" style="margin-top:8px">导出 Excel（给会计）</button>
+    </div>
+
+    <button class="btn ghost" onclick="clearAll()" style="color:#C0392B">清空全部数据</button>
+  </section>
+
+  <!-- 看板 -->
+  <section id="tab-board" class="hide">
+    <div class="card">
+      <h3>今日 vs 昨日 <span class="h3s">总支出（收购款 + 费用）</span></h3>
+      <div id="chartCmp"></div>
+    </div>
+    <div class="card">
+      <h3>近 7 天总支出 <span class="h3s">单位：元</span></h3>
+      <div id="chartBars"></div>
+    </div>
+    <div class="card">
+      <h3>本月费用构成 <span class="h3s">单位：元</span></h3>
+      <div id="chartTypes"></div>
+    </div>
+  </section>
+
+  <!-- 协作 -->
+  <section id="tab-coop" class="hide">
+    <div class="card">
+      <h3>我的账本 <span class="h3s" id="coopCount"></span></h3>
+      <div id="coopGroupList"></div>
+      <button class="btn ghost" style="margin-top:11px" onclick="openCreateGroup()">＋ 新建一个账本</button>
+    </div>
+
+    <div class="card" id="coopJoin" style="padding:14px">
+      <button class="btn ghost" onclick="askJoinGroup()">🔑 我有邀请码，申请加入别人的账本</button>
+    </div>
+
+    <div class="card" id="coopPending" style="display:none">
+      <h3>待我审批 <span class="pill" id="pendCount">0</span></h3>
+      <div id="pendList"></div>
+    </div>
+
+    <div class="card" id="coopMyReq" style="display:none">
+      <h3>我发出的申请</h3>
+      <div id="myReqList"></div>
+    </div>
+
+<script>
+window.onerror=function(m,s,l,c,e){try{document.title='ERR:'+m+' @'+l;}catch(_){}};
+const KEY = 'ginger_ledger_annot_v1';   // 旧键，仅用于一次性迁移
+const APP_VERSION = '4.0-annot';
+let data = [];
+let expenses = [];
+let customers = [];
+let ownerList = [];
+let linkList = [];
+let apList = [];
+var currentExpType = '差旅费';
+var shotStore = {cus:[], own:[]};
+var geoInfo = {lat:null, lng:null, acc:null, parts:null};
+var TYPE_CLASS = {'差旅费':'t1','物料费':'t2','人工费':'t3','装卸费':'t4','其它':'t5'};
+
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){
+    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c];
+  });
+}
+
+/* 设备标识 & 录入人（为将来上云和权限预留） */
+var deviceId = localStorage.getItem('gl_device') || '';
+if(!deviceId){
+  deviceId = 'D' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  localStorage.setItem('gl_device', deviceId);
+}
+var operator = localStorage.getItem('gl_operator') || '';
+
+function uuid(){
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c){
+    var r = Math.random() * 16 | 0;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+}
+
+/* ---------- IndexedDB 本地库（主存储） ---------- */
+var DB = (function(){
+  var NAME = 'ginger_ledger_annot', VER = 1, p = null;
+  function open(){
+    if(p) return p;
+    p = new Promise(function(res, rej){
+      var req = indexedDB.open(NAME, VER);
+      req.onupgradeneeded = function(e){
+        var db = e.target.result;
+        ['records','expenses','customers','owners','links','approvals'].forEach(function(n){
+          if(!db.objectStoreNames.contains(n)) db.createObjectStore(n, {keyPath: 'uuid'});
+        });
+      };
+      req.onsuccess = function(e){ res(e.target.result); };
+      req.onerror = function(e){ rej(e.target.error); };
+    });
+    return p;
+  }
+  function tx(store, mode, fn){
+    return open().then(function(db){
+      return new Promise(function(res, rej){
+        var t = db.transaction(store, mode);
+        var req = fn(t.objectStore(store));
+        t.oncomplete = function(){ res(req ? req.result : undefined); };
+        t.onerror = function(){ rej(t.error); };
+        t.onabort = function(){ rej(t.error); };
+      });
+    });
+  }
+  var api = {
+    all: function(){ return tx('records', 'readonly', function(st){ return st.getAll(); }); },
+    put: function(r){ return tx('records', 'readwrite', function(st){ return st.put(r); }); },
+    putMany: function(list){ return tx('records', 'readwrite', function(st){ list.forEach(function(r){ st.put(r); }); }); },
+    del: function(k){ return tx('records', 'readwrite', function(st){ return st.delete(k); }); },
+    clear: function(){ return tx('records', 'readwrite', function(st){ return st.clear(); }); },
+    expAll: function(){ return tx('expenses', 'readonly', function(st){ return st.getAll(); }); },
+    expPut: function(r){ return tx('expenses', 'readwrite', function(st){ return st.put(r); }); },
+    expPutMany: function(list){ return tx('expenses', 'readwrite', function(st){ list.forEach(function(r){ st.put(r); }); }); },
+    expDel: function(k){ return tx('expenses', 'readwrite', function(st){ return st.delete(k); }); },
+    expClear: function(){ return tx('expenses', 'readwrite', function(st){ return st.clear(); }); }
+  };
+  ['cus','own','link','ap'].forEach(function(pre){
+    var store = pre === 'cus' ? 'customers' : pre === 'own' ? 'owners' : pre === 'link' ? 'links' : 'approvals';
+    api[pre + 'All'] = function(){ return tx(store, 'readonly', function(st){ return st.getAll(); }); };
+    api[pre + 'Put'] = function(r){ return tx(store, 'readwrite', function(st){ return st.put(r); }); };
+    api[pre + 'Del'] = function(k){ return tx(store, 'readwrite', function(st){ return st.delete(k); }); };
+  });
+  return api;
+})();
+
+/* 把老版本存在 localStorage 的数据搬进来（只搬一次） */
+function migrate(){
+  var raw = null;
+  try{ raw = localStorage.getItem(KEY); }catch(e){ return Promise.resolve(0); }
+  if(!raw) return Promise.resolve(0);
+  var arr = [];
+  try{ arr = JSON.parse(raw) || []; }catch(e){ arr = []; }
+  if(!arr.length){ try{ localStorage.removeItem(KEY); }catch(e){} return Promise.resolve(0); }
+  var now = Date.now();
+  arr.forEach(function(r, i){
+    if(!r.uuid) r.uuid = 'legacy-' + (r.id || (now + i)) + '-' + i;
+    r.createdAt = r.createdAt || r.id || (now + i);
+    r.updatedAt = r.updatedAt || now;
+    r.deviceId = r.deviceId || deviceId;
+    r.operator = r.operator || '';
+    r.deleted = false;
+    if(typeof r.amount === 'number' && typeof r.feeTotal === 'number'){
+      r.actual = r.amount + r.feeTotal;
+    }
+  });
+  return DB.putMany(arr).then(function(){
+    try{ localStorage.removeItem(KEY); }catch(e){}
+    return arr.length;
+  });
+}
+
+function n(id){ const v = parseFloat(document.getElementById(id).value); return isNaN(v) ? 0 : v; }
+function s(id){ return (document.getElementById(id).value || '').trim(); }
+function fmt(x, d){
+  if(d === undefined) d = 2;
+  var f = Math.pow(10, d);
+  var s = (Math.round(x * f) / f).toFixed(d);
+  var p = s.split('.');
+  p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return p.join('.');
+}
+
+function normalizeData(){
+  data = (data || []).filter(function(r){ return !r.deleted; });
+  data.forEach(function(r){
+    if(typeof r.amount === 'number' && typeof r.feeTotal === 'number'){
+      r.actual = r.amount + r.feeTotal;
+    }
+    if(typeof r.customerTel !== 'string') r.customerTel = '';
+  });
+  data.sort(function(a, b){ return (b.createdAt || 0) - (a.createdAt || 0); });
+}
+
+function load(cb){
+  var done = false;
+  function finish(){
+    if(done) return;
+    done = true;
+    if(cb) cb();
+  }
+  function fallback(){
+    try{ data = JSON.parse(localStorage.getItem(KEY) || '[]'); }catch(e){ data = []; }
+    normalizeData();
+    finish();
+  }
+  // 浏览器不支持 IndexedDB：直接走老路
+  if(!window.indexedDB){ fallback(); return; }
+
+  // 兜底：3 秒内无论如何都要渲染，绝不白屏
+  var timer = 
+function cloudSaveExpense(e){
+  if (!cloudUser) return;
+  cloudInit().then(function(){
+    var body = {
+      id: e.uuid, owner_id: cloudUser.id, creator_id: cloudUser.id,
+      date: e.date, type: e.type, amount: e.amount,
+      payer: e.payer, note: e.note || '', operator: e.operator || '',
+      group_id: (curGroup ? curGroup.id : null),
+      created_at: e.createdAt, updated_at: Date.now(), deleted: false
+    };
+    return cloudReq('/expenses', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=merge-duplicates' },
+      body: JSON.stringify(body)
+    });
+  }).catch(function(e2){ console.log('费用上传失败', errText(e2)); });
+}
+
+/* TEST_MODE 自动验证 */
+document.addEventListener('input', function(e){
+  if (e.target && e.target.closest && e.target.closest('#expLines')) updateExpSum();
+});
+setTimeout(function TEST_MODE(){
+  if (location.search.indexOf('test=exp') < 0) return;
+  try {
+    showTab('exp');
+    var log = [];
+    // 1) 填差旅 300
+    document.getElementById('expAmount').value = '300';
+    document.getElementById('expPayer').value = '老板';
+    document.getElementById('expAmount').dispatchEvent(new Event('input'));
+    log.push('step1 填300:' + (expPending.length === 0 ? 'OK(暂存0)' : 'FAIL'));
+    // 2) 点人工（应触发暂存）
+    document.querySelector('#expTypes button[data-t="人工费"]').click();
+    log.push('step2 切人工后暂存数=' + expPending.length);
+    log.push('step2 金额框=' + (document.getElementById('expAmount').value || '空'));
+    // 3) 填人工 800 并保存
+    document.getElementById('expAmount').value = '800';
+    document.getElementById('expAmount').dispatchEvent(new Event('input'));
+    saveExpBatch();
+    log.push('step3 保存后expenses=' + expenses.length);
+    log.push('step3 暂存数=' + expPending.length);
+    // 4) 填一笔不保存，切走再回来
+    document.getElementById('expAmount').value = '500';
+    document.getElementById('expAmount').dispatchEvent(new Event('input'));
+    document.querySelector('#expTypes button[data-t="物料费"]').click();
+    log.push('step4 切物料后暂存=' + expPending.length);
+    showTab('sum');
+    log.push('step4 切汇总后暂存=' + expPending.length);
+    showTab('exp');
+    log.push('step4 回费用后暂存=' + expPending.length + ' 金额=' + (document.getElementById('expAmount').value || '空'));
+    document.title = 'TEST[' + log.join(' | ') + ']';
+  } catch(e) { document.title = 'TESTERR:' + e.message; }
+}, 2500);
+
+/* ===== CALC SELFTEST ===== */
+setTimeout(function calcSelftest(){
+  if (location.search.indexOf('selftest=1') < 0) return;
+  var out = [];
+  function eq(name, got, want, tol){
+    tol = tol || 0.005;
+    var ok = Math.abs(got - want) <= tol;
+    out.push((ok ? 'PASS ' : 'FAIL ') + name + ' got=' + got.toFixed(2) + ' want=' + want.toFixed(2));
+  }
+
+  // 1) 单个货主计算
+  var o1 = { jian: '100', per: '50', soil: '10', price: '2', fee: '0.1' };
+  var c1 = calcOne(o1);
+  eq('货主1 总斤数', c1.total, 5000);
+  eq('货主1 扣土量', c1.soilQty, 500);
+  eq('货主1 净重', c1.net, 4500);
+  eq('货主1 总价', c1.amount, 9000);
+  eq('货主1 代办总价', c1.feeTotal, 450);
+  eq('货主1 实际总价', c1.actual, 9450);
+
+  // 2) 第二个货主
+  var o2 = { jian: '50', per: '40', soil: '5', price: '2.5', fee: '0.1' };
+  var c2 = calcOne(o2);
+  eq('货主2 总斤数', c2.total, 2000);
+  eq('货主2 扣土量', c2.soilQty, 100);
+  eq('货主2 净重', c2.net, 1900);
+  eq('货主2 总价', c2.amount, 4750);
+  eq('货主2 实际总价', c2.actual, 4940);
+
+  // 3) 多货主合计
+  eq('两货主 实际合计', c1.actual + c2.actual, 14390);
+
+  // 4) 费用各项
+  expData.travel = [{ sub: '加油', amt: '200' }, { sub: '过路费', amt: '100' }];
+  expData.labor = [{ total: '800', people: '4', rate: '200', other: '工头多30' }];
+  expData.material = [{ total: '150', name: '编织袋', qty: '100', unit: '1.5', freight: '' }];
+  expData.freight = [{ amount: '', customer: '', owners: [''] }];
+  var el = document.getElementById('expLoad'); if (el) el.value = '200';
+  var eo = document.getElementById('expOther'); if (eo) eo.value = '50';
+  var eon = document.getElementById('expOtherNote'); if (eon) eon.value = '买绳子';
+
+  eq('差旅小计', sumTravel(), 300);
+  eq('人工小计', sumLabor(), 800);
+  eq('物料小计', sumMaterial(), 150);
+  eq('运费小计', sumFreight(), 200);
+
+  var feeTotal = sumTravel() + sumLabor() + sumMaterial() + sumFreight() + 200 + 50;
+  eq('费用合计', feeTotal, 1700);
+
+  // 5) 总支出 = 收购实际总价 + 费用
+  eq('总支出', 14390 + feeTotal, 16090);
+
+  document.title = 'CALC[' + out.join(' ; ') + ']';
+}, 2600);
+
+setTimeout(function autoOpenEB(){
+  if (location.search.indexOf('open=1') < 0) return;
+  try { ['travel','labor','material','freight'].forEach(function(k){ toggleEB(k); }); } catch(e){}
+}, 1600);
+setTimeout(function bindNoteModal(){
+  var ok = document.getElementById('nmOk');
+  var cc = document.getElementById('nmCancel');
+  var mm = document.getElementById('noteModal');
+  if (ok) ok.onclick = saveNote;
+  if (cc) cc.onclick = closeNote;
+  if (mm) mm.onclick = function(e){ if (e.target === mm) closeNote(); };
+}, 1200);
+setTimeout(function expInit(){
+  try { initExpForm(); } catch(e) { console.log('exp init', e); }
+  var ids = ['expLoad','expOther'];
+  for (var i2 = 0; i2 < ids.length; i2++) {
+    var el = document.getElementById(ids[i2]);
+    if (el) el.addEventListener('input', updSums);
+  }
+}, 1300);
+setTimeout(function tabFallback(){
+  var tp = (location.search.match(/[?&]tab=([a-z]+)/) || [])[1];
+  if (tp && typeof showTab === 'function') { try { showTab(tp); } catch(e){} }
+}, 1200);
+setTimeout(function forceRenderShots(){
+  try {
+    if (typeof renderShots === 'function') {
+      renderShots('cusShots', []);
+    }
+  } catch(e) { console.log('shots render', e); }
+}, 1500);
+setTimeout(function(){ normalizeData(); finish(); }, 3000);
+
+  migrate().catch(function(){}).then(function(){
+    return DB.all();
+  }).then(function(list){
+    clearTimeout(timer);
+    data = list || [];
+    normalizeData();
+    finish();
+  }).catch(function(){
+    clearTimeout(timer);
+    fallback();
+  });
+}
+
+function recalc(){
+  // v3：计量已移入各货主块，这里只做兼容
+  if (typeof calcAll === 'function') calcAll();
+}
+
+['jian','per','soil','price','fee'].forEach(function(id){
+  var el = document.getElementById(id);
+  if (el) el.addEventListener('input', recalc);
+});
+
+
+/* ========== v3 多货主 ========== */
+var owners = [];
+var ownerSeq = 0;
+
+function newOwner(){
+  ownerSeq++;
+  return {
+    id: 'ow' + ownerSeq + '_' + Date.now(),
+    name: '', tel: '', base: '', contracts: [],
+    jian: '', per: '', soil: '', price: '', fee: '',
+    collapsed: false
+  };
+}
+
+function renderOwners(){
+  var list = document.getElementById('ownerList');
+  if (!list) return;
+  if (!owners.length) owners.push(newOwner());
+
+  var html = owners.map(function(o, i){
+    var isCollapsed = !!o.collapsed;
+    var c = calcOne(o);
+    var summary = [];
+    if (o.name) summary.push(o.name);
+    if (num(o.jian) > 0 && num(o.per) > 0) summary.push(num(o.jian) + '件×' + num(o.per) + '斤');
+    summary.push('¥' + c.actual.toFixed(2));
+
+    if (isCollapsed) {
+      return '<div class="ob ob-collapsed" data-oid="' + o.id + '" onclick="expandOwner(\'' + o.id + '\')">' +
+        '<div class="obc-left">' +
+          '<span class="obc-no">' + (i+1) + '</span>' +
+          '<span class="obc-name">' + escHtml(o.name || '未填货主') + '</span>' +
+        '</div>' +
+        '<div class="obc-right">' +
+          '<span class="obc-sum">' + summary.slice(1).join(' · ') + '</span>' +
+          '<span class="obc-ar">▸</span>' +
+        '</div>' +
+      '</div>';
+    }
+
+    return '<div class="ob" data-oid="' + o.id + '">' +
+      '<div class="ob-head">' +
+        '<span class="ob-title">货主 ' + (i+1) + (o.name ? '（' + escHtml(o.name) + '）' : '') + '</span>' +
+        '<span style="display:flex;gap:8px;align-items:center">' +
+          (owners.length > 1 ? '<span class="ob-fold" onclick="collapseOwner(\'' + o.id + '\')">收起</span>' : '') +
+          (owners.length > 1 ? '<span class="ob-del" onclick="removeOwner(\'' + o.id + '\')">删除</span>' : '') +
+        '</span>' +
+      '</div>' +
+      '<div class="row">' +
+        '<div><label>货主</label><input value="' + escHtml(o.name) + '" placeholder="选或直接打" oninput="setOwner(\'' + o.id + '\',\'name\',this.value)"></div>' +
+        '<div><label>电话</label><input type="tel" inputmode="tel" value="' + escHtml(o.tel) + '" placeholder="手机号" oninput="setOwner(\'' + o.id + '\',\'tel\',this.value)"></div>' +
+      '</div>' +
+      '<div><label>基地</label>' +
+        '<div class="addr-input-row">' +
+          '<input value="' + escHtml(o.base) + '" placeholder="王家村基地" oninput="setOwner(\'' + o.id + '\',\'base\',this.value)">' +
+          '<button class="loc-btn" onclick="locOwner(\'' + o.id + '\')" title="定位">' +
+            '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
+          '</button>' +
+        '</div>' +
+      '</div>' +
+      '<div style="margin-top:10px"><label>货主合同（最多 5 张）</label>' +
+        '<div class="shots" id="shots_' + o.id + '"></div>' +
+      '</div>' +
+      '<div class="row">' +
+        '<div><label>件数</label><input type="number" inputmode="decimal" value="' + o.jian + '" placeholder="0" oninput="setOwner(\'' + o.id + '\',\'jian\',this.value)"></div>' +
+        '<div><label>单件斤数</label><input type="number" inputmode="decimal" value="' + o.per + '" placeholder="0" oninput="setOwner(\'' + o.id + '\',\'per\',this.value)"></div>' +
+      '</div>' +
+      '<div class="row">' +
+        '<div><label>扣土率（%）</label><input type="number" inputmode="decimal" value="' + o.soil + '" placeholder="10" oninput="setOwner(\'' + o.id + '\',\'soil\',this.value)"></div>' +
+        '<div><label>单价（元/斤）</label><input type="number" inputmode="decimal" value="' + o.price + '" placeholder="0.00" oninput="setOwner(\'' + o.id + '\',\'price\',this.value)"></div>' +
+      '</div>' +
+      '<div><label>代办费（元/斤）</label><input type="number" inputmode="decimal" value="' + o.fee + '" placeholder="0.05" oninput="setOwner(\'' + o.id + '\',\'fee\',this.value)"></div>' +
+      '<div class="calc">' +
+        '<div class="line"><span>总斤数</span><b data-c="1">0</b></div>' +
+        '<div class="line"><span>扣土量</span><b data-c="2">0</b></div>' +
+        '<div class="line"><span>净总斤数</span><b data-c="3">0</b></div>' +
+        '<div class="line"><span>总价</span><b data-c="4">0</b></div>' +
+        '<div class="line"><span>代办总价</span><b data-c="5">0</b></div>' +
+        '<div class="line big"><span>实际总价</span><b data-c="6">0</b></div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  list.innerHTML = html;
+  document.getElementById('ownerCount').textContent = owners.length + ' 个货主';
+  owners.forEach(function(o){ if (!o.collapsed) renderOwnerShots(o); });
+  calcAll();
+}
+
+
+function locOwner(id){
+  var o = owners.filter(function(x){ return x.id === id; })[0];
+  if (!o) return;
+  if (!navigator.geolocation) { alert('此浏览器不支持定位'); return; }
+  var btn = document.querySelector('.ob[data-oid="' + id + '"] .loc-btn');
+  if (btn) btn.style.opacity = '.5';
+  navigator.geolocation.getCurrentPosition(function(pos){
+    if (btn) btn.style.opacity = '1';
+    var la = +pos.coords.latitude.toFixed(6), ln = +pos.coords.longitude.toFixed(6);
+    if (ln < 73 || ln > 136 || la < 3 || la > 54) {
+      alert('当前定位点在中国境外（经度 ' + ln + ' / 纬度 ' + la + '）\n\n' +
+        '电脑没有 GPS，靠网络 IP 定位，开 VPN 会定到国外。\n' +
+        '请用手机定位，或手动填写基地名。');
+      return;
+    }
+    reverseGeo(pos.coords.latitude, pos.coords.longitude, function(res){
+      var name = '';
+      if (res && res.foreign) { alert('定位在境外（' + res.country + '），请手动填写基地'); return; }
+      if (res && res.parts) {
+        if (res.landmark) res.parts.__landmark = res.landmark;
+        var p2 = addrParts(res.parts);
+        name = (p2.village || '') + (p2.detail ? ' ' + p2.detail : '');
+        if (!name) name = p2.county || p2.city || '';
+      }
+      if (!name) { alert('地址解析失败，请手动填写'); return; }
+      o.base = name.trim();
+      renderOwners();
+    });
+  }, function(){
+    if (btn) btn.style.opacity = '1';
+    alert('定位失败，请检查权限');
+  }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+}
+
+function collapseOwner(id){
+  var o = owners.filter(function(x){ return x.id === id; })[0];
+  if (!o) return;
+  o.collapsed = true;
+  renderOwners();
+}
+
+function expandOwner(id){
+  var o = owners.filter(function(x){ return x.id === id; })[0];
+  if (!o) return;
+  o.collapsed = false;
+  renderOwners();
+  var box = document.querySelector('.ob[data-oid="' + id + '"]');
+  if (box) box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function escHtml(v){ return String(v == null ? '' : v).replace(/"/g, '&quot;'); }
+
+function setOwner(id, field, val){
+  var o = owners.filter(function(x){ return x.id === id; })[0];
+  if (!o) return;
+  o[field] = val;
+  calcAll();
+}
+
+function addOwner(){
+  owners.forEach(function(o){ o.collapsed = true; });
+  owners.push(newOwner());
+  renderOwners();
+  var list = document.getElementById('ownerList');
+  if (list && list.lastElementChild) list.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function removeOwner(id){
+  if (owners.length <= 1) return;
+  owners = owners.filter(function(x){ return x.id !== id; });
+  renderOwners();
+}
+
+function calcOne(o){
+  var jian = num(o.jian), per = num(o.per), soil = num(o.soil), price = num(o.price), fee = num(o.fee);
+  var total = jian * per;
+  var soilQty = total * soil / 100;
+  var net = total - soilQty;
+  var amount = net * price;
+  var feeTotal = net * fee;
+  var actual = amount + feeTotal;
+  return { total: total, soilQty: soilQty, net: net, amount: amount, feeTotal: feeTotal, actual: actual };
+}
+
+function num(v){ var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+
+function calcAll(){
+  var sum = { total: 0, net: 0, actual: 0 };
+  owners.forEach(function(o){
+    var c = calcOne(o);
+    var box = document.querySelector('.ob[data-oid="' + o.id + '"]');
+    if (box) {
+      box.querySelectorAll('[data-c]').forEach(function(el){
+        var k = el.getAttribute('data-c');
+        if (k === '1') el.textContent = c.total.toFixed(2);
+        if (k === '2') el.textContent = c.soilQty.toFixed(2);
+        if (k === '3') el.textContent = c.net.toFixed(2);
+        if (k === '4') el.textContent = c.amount.toFixed(2);
+        if (k === '5') el.textContent = c.feeTotal.toFixed(2);
+        if (k === '6') el.textContent = c.actual.toFixed(2);
+      });
+    }
+    sum.total += c.total;
+    sum.net += c.net;
+    sum.actual += c.actual;
+  });
+
+  var allCalc = document.getElementById('allCalc');
+  if (allCalc) {
+    if (owners.length > 1) {
+      allCalc.style.display = 'block';
+      document.getElementById('t1').textContent = sum.total.toFixed(2);
+      document.getElementById('t3').textContent = sum.net.toFixed(2);
+      document.getElementById('t6').textContent = sum.actual.toFixed(2);
+    } else {
+      allCalc.style.display = 'none';
+    }
+  }
+}
+
+function renderOwnerShots(o){
+  var box = document.getElementById('shots_' + o.id);
+  if (!box) return;
+  var html = o.contracts.map(function(src, i){
+    return '<div class="shot"><img src="' + src + '"><span class="x" onclick="delOwnerShot(\'' + o.id + '\',' + i + ')">×</span></div>';
+  }).join('');
+  if (o.contracts.length < 5) {
+    html += '<label class="addshot"><span style="font-size:12.5px">拍照</span><input type="file" accept="image/*" capture="environment" style="display:none" onchange="addOwnerShot(\'' + o.id + '\',this)"></label>';
+    html += '<label class="addshot"><span style="font-size:12.5px">相册</span><input type="file" accept="image/*" style="display:none" onchange="addOwnerShot(\'' + o.id + '\',this)"></label>';
+  }
+  box.innerHTML = html;
+}
+
+function addOwnerShot(id, input){
+  var o = owners.filter(function(x){ return x.id === id; })[0];
+  if (!o || !input.files || !input.files[0]) return;
+  if (o.contracts.length >= 5) { alert('最多 5 张'); return; }
+  var f = input.files[0];
+  shrink(f, function(dataUrl){
+    o.contracts.push(dataUrl);
+    renderOwnerShots(o);
+  });
+}
+
+function delOwnerShot(id, i){
+  var o = owners.filter(function(x){ return x.id === id; })[0];
+  if (!o) return;
+  o.contracts.splice(i, 1);
+  renderOwnerShots(o);
+}
+
+/* 首次渲染 */
+if (document.getElementById('ownerList')) {
+  owners = [newOwner()];
+  renderOwners();
+}
+
+function saveRec(){
+  const customer = s('customer');
+  if(!customer){ alert('请填写客户（买家）'); return; }
+
+  // 校验每个货主
+  var valid = owners.filter(function(o){ return (o.name || '').trim() && num(o.jian) > 0 && num(o.per) > 0; });
+  if(!valid.length){ alert('至少填一个货主，且件数和单件斤数要大于 0'); return; }
+
+  var now = Date.now();
+  var batch = uuid().slice(0, 8);
+  var commonDate = s('date') || localDate();
+  var saved = [];
+
+  valid.forEach(function(o, idx){
+    var c = calcOne(o);
+    var rec = {
+      uuid: uuid(),
+      batch: batch,
+      date: commonDate,
+      customer: customer, customerTel: s('customerTel'), lot: s('lot'), plate: s('plate'),
+      owner: (o.name || '').trim(), tel: o.tel, base: o.base,
+      contracts: shotStore.cus.slice(),
+      ownerContracts: o.contracts.slice(),
+      address: (document.getElementById('addr') || {}).value || '',
+      addrFull: (document.getElementById('addrFull') || {}).textContent || '',
+      lat: geoInfo.lat, lng: geoInfo.lng, accuracy: geoInfo.acc,
+      jian: num(o.jian), per: num(o.per), soil: num(o.soil)/100,
+      price: num(o.price), fee: num(o.fee),
+      total: c.total, soilQty: c.soilQty, net: c.net,
+      amount: c.amount, feeTotal: c.feeTotal, actual: c.actual,
+      operator: operator || '',
+      deviceId: deviceId,
+      createdAt: now + idx,
+      updatedAt: now + idx,
+      deleted: false
+    };
+    ensureOwner(rec.owner, rec.tel, rec.base);
+    data.unshift(rec);
+    DB.put(rec).catch(function(){});
+    if (typeof cloudSaveRecord === 'function') { try { cloudSaveRecord(rec); } catch(e) {} }
+    saved.push(rec);
+  });
+
+  ensureCustomer(customer, s('customerTel'));
+
+  // 清空
+  ['lot','plate'].forEach(function(id){
+    var el = document.getElementById(id); if(el) el.value = '';
+  });
+  var addrEl = document.getElementById('addr');
+  if(addrEl) addrEl.value = '';
+  var addrFull = document.getElementById('addrFull');
+  if(addrFull) { addrFull.textContent = ''; addrFull.style.display='none'; }
+  shotStore = {cus:[], own:[]};
+  renderShots('cusShots', []);
+  geoInfo = {lat:null, lng:null, acc:null, parts:null};
+  var gs = document.getElementById('geoState');
+  if(gs) gs.textContent = '未定位';
+  renderAddr();
+
+  owners = [newOwner()];
+  renderOwners();
+
+  render();
+  if (typeof renderSum === 'function') renderSum();
+  if (typeof renderCus === 'function') renderCus();
+  alert('已保存 ' + saved.length + ' 条 ✓');
+  showTab('list');
+}
+
+function render(){
+  // 客户 / 货主联想
+  const cusSet = {}, ownSet = {};
+  data.forEach(function(r){ cusSet[r.customer]=1; ownSet[r.owner]=1; });
+  var dlCus = document.getElementById('dl-cus');
+  if (dlCus) dlCus.innerHTML = Object.keys(cusSet).map(function(k){ return '<option value="'+k+'">'; }).join('');
+  var dlOwn = document.getElementById('dl-own');
+  if (dlOwn) dlOwn.innerHTML = Object.keys(ownSet).map(function(k){ return '<option value="'+k+'">'; }).join('');
+
+  // 筛选条
+  var fb = document.getElementById('filterBar');
+  if(fb){
+    fb.innerHTML = customerFilter
+      ? '<div class="filter-bar"><span>✓ ' + esc(customerFilter) + '</span><button onclick="clearFilter()">×</button></div>'
+      : '';
+  }
+  var src = customerFilter ? data.filter(function(r){ return r.customer === customerFilter; }) : data;
+
+  // 明细（按客户分组）
+  const box = document.getElementById('listBox');
+  if(!box) return;
+  if(!src.length){
+    box.innerHTML = '<div class="empty">' + (customerFilter ? '这个客户本月没有记录' : '还没有记录<br>去「录入」填第一笔吧') + '</div>';
+  }else{
+    const groups = {};
+    const gKey = customerFilter ? 'owner' : 'customer';
+    src.forEach(function(r){ var k = r[gKey] || '未命名'; (groups[k] = groups[k] || []).push(r); });
+    let html = '';
+    Object.keys(groups).forEach(function(cus){
+      const arr = groups[cus];
+      const net = arr.reduce(function(a,b){ return a+b.net; }, 0);
+      const act = arr.reduce(function(a,b){ return a+b.actual; }, 0);
+      html += '<div class="grp"><div class="gh"><span class="g1">'+cus+'</span>'+
+              '<span class="g2">'+arr.length+' 笔 · '+fmt(net,0)+' 斤 · 总款 ¥'+fmt(act,0)+'</span></div>';
+      arr.forEach(function(r){
+        var total = (typeof r.total === 'number') ? r.total : (r.jian * r.per);
+        var soilQty = (typeof r.soilQty === 'number') ? r.soilQty : (total * (r.soil || 0));
+        var opened = (openId === r.uuid);
+        html += '<div class="item' + (opened ? ' open' : '') + '" data-id="' + r.uuid + '">' +
+          '<div class="row-main" onclick="toggleItem(this)">' +
+            '<div class="li-l">' +
+              '<div class="li-name">'+r.owner+'</div>' +
+              '<div class="li-m1">'+(r.date||'—')+'　'+fmt(total,0)+' 斤　单价 '+fmt(r.price,2)+'</div>' +
+              '<div class="li-m2">总价 <b>'+fmt(r.amount,0)+'</b>　代办 <b>'+fmt(r.feeTotal,0)+'</b></div>' +
+            '</div>' +
+            '<div class="li-r">' +
+              '<b>¥'+fmt(r.actual,0)+'</b>' +
+              '<small>总款</small>' +
+              '<span class="li-arrow">▼</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="expand">' +
+            '<div class="dl">' +
+              (r.customerTel ? '<div class="r"><span>客户电话</span><b>'+esc(r.customerTel)+'</b></div>' : '') +
+              '<div class="r"><span>批号</span><b>'+esc(r.lot || '—')+'</b></div>' +
+              '<div class="r"><span>车牌号</span><b>'+esc(r.plate || '—')+'</b></div>' +
+            '</div>' +
+            '<div class="dl">' +
+              '<div class="r"><span>件数</span><b>'+fmt(r.jian,0)+' 件</b></div>' +
+              '<div class="r"><span>单件斤数</span><b>'+fmt(r.per,2)+' 斤</b></div>' +
+              '<div class="r"><span>总斤数</span><b>'+fmt(total,2)+' 斤</b></div>' +
+              '<div class="r"><span>扣土率</span><b>'+((r.soil||0)*100).toFixed(1)+' %</b></div>' +
+              '<div class="r"><span>扣土量</span><b>'+fmt(soilQty,2)+' 斤</b></div>' +
+              '<div class="r"><span>净总斤数</span><b>'+fmt(r.net,2)+' 斤</b></div>' +
+            '</div>' +
+            '<div class="dl amount">' +
+              '<div class="r"><span>单价（元/斤）</span><b>'+fmt(r.price,2)+'</b></div>' +
+              '<div class="r"><span>总价 · 付货主</span><b>¥ '+fmt(r.amount,2)+'</b></div>' +
+              '<div class="r"><span>代办总价 · 付代办</span><b>¥ '+fmt(r.feeTotal,2)+'</b></div>' +
+              '<div class="r total"><span>实际总价 · 总款</span><b>¥ '+fmt(r.actual,2)+'</b></div>' +
+            '</div>' +
+            '<button class="del-btn" onclick="delRec(\''+r.uuid+'\')">删除这笔</button>' +
+          '</div>' +
+        '</div>';
+      });
+      html += '</div>';
+    });
+    box.innerHTML = html;
+  }
+
+  // 汇总
+  renderSum();
+  renderCus();
+}
+
+/* ---------- 汇总 / 看板 ---------- */
+var customerFilter = null;
+
+function periodOf(list, key){
+  var today = new Date().toISOString().slice(0, 10);
+  var ym = today.slice(0, 7);
+  return list.filter(function(r){
+    var d = String(r.date || '');
+    if(key === 'today') return d === today;
+    if(key === 'month') return d.slice(0, 7) === ym;
+    return true;
+  });
+}
+
+function statOf(key){
+  var rs = periodOf(data, key);
+  var es = periodOf(expenses, key);
+  return {
+    cost: rs.reduce(function(a, b){ return a + (b.actual || 0); }, 0),
+    net: rs.reduce(function(a, b){ return a + (b.net || 0); }, 0),
+    fee: es.reduce(function(a, b){ return a + (b.amount || 0); }, 0)
+  };
+}
+
+function renderSum(){
+  var box = document.getElementById('sumBox');
+  if(!box) return;
+  var arr = [
+    {k: '今日', c: 'c1', d: statOf('today')},
+    {k: '本月', c: 'c2', d: statOf('month')},
+    {k: '累计', c: 'c3', d: statOf('all')}
+  ];
+  box.innerHTML = arr.map(function(p){
+    var total = p.d.cost + p.d.fee;
+    return '<div class="tc ' + p.c + '">' +
+      '<div class="t">' + p.k + '</div>' +
+      '<div class="big">' + fmt(total, 0) + '</div>' +
+      '<div class="u">总支出</div>' +
+      '<div class="sep"></div>' +
+      '<div class="line"><span>收购(元)</span><b>' + fmt(p.d.cost, 0) + '</b></div>' +
+      '<div class="line"><span>费用(元)</span><b>' + fmt(p.d.fee, 0) + '</b></div>' +
+      '<div class="line"><span>斤数(斤)</span><b>' + fmt(p.d.net, 0) + '</b></div>' +
+    '</div>';
+  }).join('');
+}
+
+function renderCus(){
+  var box = document.getElementById('cusBox');
+  if(!box) return;
+  var m = periodOf(data, 'month');
+  var cus = {};
+  m.forEach(function(r){
+    var k = r.customer || '未命名';
+    if(!cus[k]) cus[k] = {n: 0, net: 0, cost: 0, ownSet: {}};
+    cus[k].n++;
+    cus[k].net += (r.net || 0);
+    cus[k].cost += (r.actual || 0);
+    if(r.owner) cus[k].ownSet[r.owner] = 1;
+  });
+  var keys = Object.keys(cus).sort(function(a, b){ return cus[b].cost - cus[a].cost; });
+  if(!keys.length){ box.innerHTML = '<div class="chart-empty">本月暂无数据</div>'; return; }
+  box.innerHTML = keys.map(function(k){
+    var ownN = Object.keys(cus[k].ownSet).length;
+    return '<div class="cus-row" onclick="drillCustomer(\'' + esc(k) + '\')">' +
+      '<div><div class="cn">' + esc(k) + '</div>' +
+      '<div class="cm">' + cus[k].n + ' 笔 · ' + ownN + ' 个货主 · ' + fmt(cus[k].net, 0) + ' 斤</div></div>' +
+      '<div class="cv">' + fmt(cus[k].cost, 0) + '<small>总款</small></div>' +
+    '</div>';
+  }).join('');
+}
+
+function drillCustomer(name){
+  customerFilter = name;
+  showTab('list');
+  render();
+  window.scrollTo(0, 0);
+}
+
+function clearFilter(){
+  customerFilter = null;
+  render();
+}
+
+function renderBoard(){
+  var today = new Date().toISOString().slice(0, 10);
+  var yest = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+
+  function dayTotal(ds){
+    var rc = data.filter(function(r){ return String(r.date || '') === ds; })
+                 .reduce(function(a, b){ return a + (b.actual || 0); }, 0);
+    var ex = expenses.filter(function(e){ return String(e.date || '') === ds; })
+                 .reduce(function(a, b){ return a + (b.amount || 0); }, 0);
+    return rc + ex;
+  }
+
+  var t1 = dayTotal(today), t0 = dayTotal(yest);
+  var mx = Math.max(t1, t0, 1);
+  var w1 = Math.max(Math.round(t1 / mx * 100), t1 > 0 ? 10 : 0);
+  var w0 = Math.max(Math.round(t0 / mx * 100), t0 > 0 ? 10 : 0);
+  var diff = t1 - t0;
+  var delta = (t1 === 0 && t0 === 0) ? '<span style="color:#B9C4BE">这两天都还没记</span>'
+    : (diff > 0 ? '<span style="color:#C0392B">↑ 比昨天多花 ¥' + fmt(diff, 0) + '</span>'
+      : (diff < 0 ? '<span style="color:#0F7B3F">↓ 比昨天少花 ¥' + fmt(-diff, 0) + '</span>'
+        : '和昨天一样'));
+  document.getElementById('chartCmp').innerHTML =
+    '<div class="cmp">' +
+      '<div class="r"><div class="lb">今日</div><div class="track">' +
+        (t1 > 0 ? '<div class="fill f1" style="width:' + w1 + '%">¥' + fmt(t1, 0) + '</div>' : '') +
+      '</div></div>' +
+      '<div class="r"><div class="lb">昨日</div><div class="track">' +
+        (t0 > 0 ? '<div class="fill f2" style="width:' + w0 + '%">¥' + fmt(t0, 0) + '</div>' : '') +
+      '</div></div>' +
+      '<div class="delta">' + (t1 > 0 || t0 > 0 ? delta : '<span style="color:#B9C4BE">今天和昨天都还没有记录</span>') + '</div>' +
+    '</div>';
+
+  var days = [];
+  for(var i = 6; i >= 0; i--){
+    var dt = new Date(Date.now() - i * 86400000);
+    var ds = dt.toISOString().slice(0, 10);
+    days.push({label: ds.slice(5), v: dayTotal(ds), today: i === 0});
+  }
+  var mxd = Math.max.apply(null, days.map(function(x){ return x.v; })) || 1;
+  var sum = days.reduce(function(a, b){ return a + b.v; }, 0);
+  document.getElementById('chartBars').innerHTML =
+    '<div class="ftype bars7">' +
+      days.slice().reverse().map(function(x){
+        var w = Math.round(x.v / mxd * 100);
+        return '<div class="r">' +
+          '<span class="nm">' + x.label + '</span>' +
+          '<div class="track"><div class="fill" style="width:' + Math.max(w, x.v > 0 ? 4 : 0) + '%;background:' + (x.today ? 'linear-gradient(90deg,#EDA94B,#D9822B)' : '#2F5D50') + '"></div></div>' +
+          '<span class="v">' + fmt(x.v, 0) + '</span>' +
+        '</div>';
+      }).join('') +
+    '</div>' +
+    '<div class="cap" style="padding-top:8px"><span>最高 ¥' + fmt(mxd, 0) + '</span><span>日均 ¥' + fmt(sum / 7, 0) + '</span></div>';
+
+  var ym = today.slice(0, 7);
+  var types = ['差旅费', '物料费', '人工费', '装卸费', '其它'];
+  var cls = {'差旅费': '#5B8DEF', '物料费': '#E8A33D', '人工费': '#43A06A', '装卸费': '#8B6DD6', '其它': '#A8B4AE'};
+  var agg = {};
+  types.forEach(function(t){ agg[t] = 0; });
+  expenses.filter(function(e){ return String(e.date || '').slice(0, 7) === ym; })
+    .forEach(function(e){ if(agg[e.type] !== undefined) agg[e.type] += (e.amount || 0); });
+  var hasFee = types.some(function(t){ return agg[t] > 0; });
+  if(!hasFee){
+    document.getElementById('chartTypes').innerHTML = '<div class="chart-empty">本月还没有费用记录</div>';
+  }else{
+    var mt = Math.max.apply(null, types.map(function(t){ return agg[t]; })) || 1;
+    document.getElementById('chartTypes').innerHTML = '<div class="ftype">' + types.map(function(t){
+      var w = Math.round(agg[t] / mt * 100);
+      return '<div class="r"><span class="nm">' + t.replace('费', '') + '</span>' +
+        '<div class="track"><div class="fill" style="width:' + Math.max(w, 2) + '%;background:' + cls[t] + '"></div></div>' +
+        '<span class="v">' + fmt(agg[t], 2) + '</span></div>';
+    }).join('') + '</div>';
+  }
+}
+
+/* ---------- 单笔原地展开（一次只开一条） ---------- */
+var openId = null;
+
+function toggleItem(el){
+  var item = el.parentNode;
+  var id = item.getAttribute('data-id');
+  var wasOpen = item.classList.contains('open');
+  var opened = document.querySelectorAll('.item.open');
+  for(var i = 0; i < opened.length; i++){ opened[i].classList.remove('open'); }
+  if(!wasOpen){
+    item.classList.add('open');
+    openId = id;
+  }else{
+    openId = null;
+  }
+}
+
+function delRec(id){
+  if(!confirm('删掉这笔记录？删了找不回来。')) return;
+  data = data.filter(function(x){ return x.uuid !== id; });
+  if(openId === id) openId = null;
+  DB.del(id).catch(function(){});
+  render();
+  renderSum();
+  renderCus();
+  updateStoreInfo();
+}
+
+/* ---------- 费用 ---------- */
+function openPicker(textId, pickId){
+  var p = document.getElementById(pickId || 'expDatePick');
+  if(!p) return;
+  if(p.showPicker){ try{ p.showPicker(); return; }catch(e){} }
+  p.focus();
+  p.click();
+}
+
+/* ---------- 档案 / 关联 / 审批 ---------- */
+function loadExtras(cb){
+  if(!window.indexedDB){ if(cb) cb(); return; }
+  Promise.all([DB.cusAll(), DB.ownAll(), DB.linkAll(), DB.apAll()]).then(function(r){
+    customers = r[0] || []; ownerList = r[1] || []; linkList = r[2] || []; apList = r[3] || [];
+    if(cb) cb();
+  }).catch(function(){ if(cb) cb(); });
+}
+
+function renderShots(boxId, list){
+  const key = boxId === 'cusShots' ? 'cus' : 'own';
+  shotStore[key] = (list || []).slice();
+  const box = document.getElementById(boxId);
+  if(!box) return;
+  box.innerHTML = '';
+  shotStore[key].forEach(function(src, i){
+    const d = document.createElement('div');
+    d.className = 'shot';
+    const im = document.createElement('img');
+    im.src = src;
+    const x = document.createElement('button');
+    x.className = 'x'; x.textContent = '×';
+    x.onclick = function(){ delShot(key, i); };
+    d.appendChild(im); d.appendChild(x);
+    box.appendChild(d);
+  });
+  if(shotStore[key].length < 5){
+    box.appendChild(makePicker(key, true, false, '拍照'));
+    box.appendChild(makePicker(key, false, true, '相册'));
+  }
+}
+
+function makePicker(key, camera, multiple, label){
+  const a = document.createElement('label');
+  a.className = 'addshot';
+  a.textContent = label;
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/*';
+  if(camera) inp.setAttribute('capture', 'environment');
+  if(multiple) inp.multiple = true;
+  inp.style.display = 'none';
+  inp.onchange = function(ev){ addShot(ev, key); };
+  a.appendChild(inp);
+  return a;
+}
+
+function addShot(ev, key){
+  const files = Array.prototype.slice.call(ev.target.files || []);
+  if(!files.length) return;
+  const room = 5 - shotStore[key].length;
+  if(room <= 0){ alert('最多 5 张'); return; }
+  let take = files;
+  if(files.length > room){
+    take = files.slice(0, room);
+    alert('最多 5 张，只保留前 ' + room + ' 张');
+  }
+  let left = take.length;
+  take.forEach(function(file){
+    const before = file.size;
+    compressImg(file, function(dataUrl, size){
+      if(shotStore[key].length < 5) shotStore[key].push(dataUrl);
+      left--;
+      if(left <= 0){
+        renderShots(key === 'cus' ? 'cusShots' : 'ownShots', shotStore[key]);
+        if(take.length === 1) alert('已压缩 ' + Math.round(before/1024) + 'KB → ' + Math.round(size/1024) + 'KB');
+      }
+    });
+  });
+  ev.target.value = '';
+}
+
+function delShot(key, i){
+  shotStore[key].splice(i, 1);
+  renderShots(key === 'cus' ? 'cusShots' : 'ownShots', shotStore[key]);
+}
+
+function compressImg(file, cb){
+  const img = new Image();
+  const url = URL.createObjectURL(file);
+  img.onload = function(){
+    const MAX = 1600;
+    let w = img.width, h = img.height;
+    if(w > h && w > MAX){ h = h * MAX / w; w = MAX; }
+    else if(h >= w && h > MAX){ w = w * MAX / h; h = MAX; }
+    const cv = document.createElement('canvas');
+    cv.width = w; cv.height = h;
+    cv.getContext('2d').drawImage(img, 0, 0, w, h);
+    const out = cv.toDataURL('image/jpeg', 0.75);
+    URL.revokeObjectURL(url);
+    cb(out, Math.round(out.length * 0.75));
+  };
+  img.src = url;
+}
+
+var AMAP_KEY = 'c2167d58b855ecdd32303723f4bc4b32';
+
+var AMAP_KEY = 'c2167d58b855ecdd32303723f4bc4b32';
+
+function reverseGeo(lat, lng, cb){
+  var base = 'https://restapi.amap.com/v3';
+  var regeoUrl = base + '/geocode/regeo?key=' + AMAP_KEY +
+    '&location=' + lng + ',' + lat + '&extensions=base&coordsys=gps';
+  // 找附近最近的住宅区（120000 = 商务住宅）
+  var poiUrl = base + '/place/around?key=' + AMAP_KEY +
+    '&location=' + lng + ',' + lat + '&radius=500&types=120000&offset=3&page=1';
+
+  var done = false;
+  var timer = setTimeout(function(){
+    if (!done) { done = true; cb(null); }
+  }, 9000);
+
+  Promise.all([
+    fetch(regeoUrl).then(function(r){ return r.json(); }).catch(function(){ return null; }),
+    fetch(poiUrl).then(function(r){ return r.json(); }).catch(function(){ return null; })
+  ]).then(function(res){
+    if (done) return;
+    done = true; clearTimeout(timer);
+
+    var rg = res[0];
+    var poi = res[1];
+
+    var parts = {};
+    var formatted = '';
+    if (rg && rg.status === '1' && rg.regeocode) {
+      parts = rg.regeocode.addressComponent || {};
+      formatted = rg.regeocode.formatted_address || '';
+    }
+
+    // 最近的小区/楼宇名
+    var landmark = '';
+    if (poi && poi.status === '1' && poi.pois && poi.pois.length) {
+      landmark = poi.pois[0].name || '';
+    }
+
+    if (!parts || (!parts.province && !formatted && !landmark)) { cb(null); return; }
+
+    cb({ parts: parts, formatted: formatted, landmark: landmark });
+  });
+}
+
+/* 把 Nominatim 的 address 拆成用户要的格式 */
+function addrParts(p){
+  p = p || {};
+  var province = p.province || '';
+  var city = p.city || '';
+  var district = p.district || '';
+  var township = p.township || '';
+  var nb = (p.neighborhood && p.neighborhood.name) || '';
+  var bd = (p.building && p.building.name) || '';
+  var street = (p.streetNumber && p.streetNumber.street) || '';
+  var num = (p.streetNumber && p.streetNumber.number) || '';
+
+  // 地标优先：小区/楼宇名 > neighborhood > building
+  var landmark = p.__landmark || bd || nb || '';
+
+  var detail = '';
+  if (street && num) detail = street + ' ' + num;
+  else if (num) detail = num;
+  else if (street) detail = street;
+
+  if (city === province) city = '';
+  if (district === city) district = '';
+
+  return {
+    village: landmark || township,   // 有小区名就显示小区名
+    township: township,
+    detail: detail,
+    country: '中国',
+    state: province,
+    city: city,
+    county: district
+  };
+}
+
+function renderAddr(){ /* 已移除地址条 */ }
+
+function toggleAddr(){
+  var f = document.getElementById('addrFull');
+  var a = document.getElementById('addrArrow');
+  if (!f) return;
+  if (f.style.display === 'none' || !f.style.display) {
+    if (!f.textContent) return;
+    f.style.display = 'block';
+    if (a) a.textContent = '收起 ▴';
+  } else {
+    f.style.display = 'none';
+    if (a) a.textContent = '展开 ▾';
+  }
+}
+
+function manualAddr(v){
+  /* 已合并到输入框本身，无需额外处理 */
+}
+
+function locate(){
+  var st = document.getElementById('geoState');
+  if(!navigator.geolocation){ alert('此浏览器不支持定位'); return; }
+  st.textContent = '定位中…';
+  navigator.geolocation.getCurrentPosition(function(pos){
+    geoInfo.lat = +pos.coords.latitude.toFixed(6);
+    geoInfo.lng = +pos.coords.longitude.toFixed(6);
+    geoInfo.acc = Math.round(pos.coords.accuracy);
+
+    // 校验是否在中国境内（经度 73-136，纬度 3-54）
+    if (geoInfo.lng < 73 || geoInfo.lng > 136 || geoInfo.lat < 3 || geoInfo.lat > 54) {
+      st.textContent = '定位在境外';
+      alert('当前定位点在中国境外\n' +
+        '经度 ' + geoInfo.lng + ' / 纬度 ' + geoInfo.lat + '\n\n' +
+        '可能的原因：\n' +
+        '① 电脑没有 GPS，靠网络 IP 定位，开了 VPN 就会定到国外\n' +
+        '② 手机开了 VPN 且定位权限受限\n\n' +
+        '建议：用手机（有 GPS）定位，或手动填写地址。');
+      return;
+    }
+
+    st.textContent = '解析地址中…';
+    reverseGeo(geoInfo.lat, geoInfo.lng, function(res){
+      if (res && res.foreign) {
+        geoInfo.parts = null;
+        st.textContent = '定位在境外';
+        alert('定位到的是境外位置（' + res.country + '），请手动填写地址。');
+        return;
+      }
+      if (res && res.parts) {
+        if (res.landmark) res.parts.__landmark = res.landmark;
+        geoInfo.parts = res.parts;
+        st.textContent = '已定位';
+        var pg = addrParts(res.parts);
+        var shortName = ((pg.village || '') + ' ' + (pg.detail || '')).trim();
+        var addrEl = document.getElementById('addr');
+        if (addrEl && shortName) addrEl.value = shortName;
+        var fullEl = document.getElementById('addrFull');
+        if (fullEl) fullEl.textContent = [pg.country, pg.state, pg.city, pg.county, pg.village, pg.detail].filter(Boolean).join(' · ');
+      } else {
+        geoInfo.parts = null;
+        st.textContent = '已定位（地址解析失败，请手填）';
+      }
+    });
+  }, function(err){
+    st.textContent = '定位失败';
+    var m = (err && err.code === 1) ? '请允许定位权限' : '定位失败，请手动填写';
+    alert(m);
+  }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+}
+
+function matchCustomerTel(){
+  const v = (document.getElementById('customer').value || '').trim();
+  if(!v) return;
+  const hit = customers.find(function(c){ return c.name === v; });
+  if(hit){
+    if(hit.tel && !document.getElementById('customerTel').value) document.getElementById('customerTel').value = hit.tel;
+    renderShots('cusShots', hit.contracts || []);
+  }
+}
+
+function matchOwnerTel(){
+  const v = (document.getElementById('owner').value || '').trim();
+  if(!v) return;
+  const hit = ownerList.find(function(o){ return o.name === v; });
+  if(hit){
+    if(hit.tel && !document.getElementById('tel').value) document.getElementById('tel').value = hit.tel;
+    if(hit.base && !document.getElementById('base').value) document.getElementById('base').value = hit.base;
+    renderShots('ownShots', hit.contracts || []);
+  }
+}
+
+function ensureCustomer(name, tel){
+  let hit = customers.find(function(c){ return c.name === name; });
+  if(hit){ hit.tel = tel || hit.tel; hit.contracts = shotStore.cus.slice(); DB.cusPut(hit).catch(function(){}); return hit; }
+  const rec = {uuid: uuid(), name: name, tel: tel, contracts: shotStore.cus.slice(), createdAt: Date.now()};
+  customers.push(rec);
+  DB.cusPut(rec).catch(function(){});
+  return rec;
+}
+
+function ensureOwner(name, tel, base){
+  let hit = ownerList.find(function(o){ return o.name === name; });
+  if(hit){ hit.tel = tel || hit.tel; hit.base = base || hit.base; hit.contracts = shotStore.own.slice(); DB.ownPut(hit).catch(function(){}); return hit; }
+  const rec = {uuid: uuid(), name: name, tel: tel, base: base, contracts: shotStore.own.slice(), createdAt: Date.now()};
+  ownerList.push(rec);
+  DB.ownPut(rec).catch(function(){});
+  return rec;
+}
+
+/* 关联线 */
+function renderLinks(){
+  const box = document.getElementById('linkBox');
+  const cnt = document.getElementById('linkCount');
+  if(!box) return;
+  const active = linkList.filter(function(l){ return l.status === 'active'; });
+  if(cnt) cnt.textContent = active.length ? '已关联 ' + active.length + ' 个' : '';
+  if(!linkList.length){ box.innerHTML = '<div class="chart-empty">还没有关联线</div>'; return; }
+  box.innerHTML = linkList.map(function(l){
+    const dir = l.direction === 'a2b' ? '我看他的账' : l.direction === 'b2a' ? '他看我的账' : '互相看';
+    const hide = (l.scope && l.scope.hideFields && l.scope.hideFields.length) ? '（隐藏金额）' : '';
+    return '<div class="link-card">' +
+      '<div class="hd"><span class="nm">' + esc(l.name) + '</span>' +
+      '<span class="st ' + (l.status === 'active' ? 'on' : 'off') + '">' + (l.status === 'active' ? '生效中' : '已解除') + '</span></div>' +
+      '<div class="meta">方向：' + dir + '<br>范围：全部数据' + hide + '</div>' +
+      (l.status === 'active' ? '<button class="btn ghost" style="margin-top:8px;padding:8px;font-size:13px" onclick="revokeLink(\'' + l.uuid + '\')">解除关联</button>' : '') +
+    '</div>';
+  }).join('');
+}
+
+function addLink(){
+  const name = (document.getElementById('linkName').value || '').trim();
+  if(!name){ alert('请填对方姓名'); return; }
+  const dir = document.getElementById('linkDir').value;
+  const scope = document.getElementById('linkScope').value;
+  if(linkList.some(function(l){ return l.name === name && l.status === 'active'; })){
+    alert('已经和「' + name + '」有关联了');
+    return;
+  }
+  const rec = {
+    uuid: uuid(), name: name, direction: dir,
+    scope: {hideFields: scope === 'hide' ? ['price','amount','feeTotal','actual'] : []},
+    status: 'active', createdAt: Date.now()
+  };
+  linkList.push(rec);
+  DB.linkPut(rec).catch(function(){});
+  document.getElementById('linkName').value = '';
+  renderLinks(); render();
+  alert('已添加「' + name + '」\n\n这是第 ' + linkList.filter(function(l){ return l.status === 'active'; }).length + ' 条关联\n可以继续填下一个人，重复添加即可');
+}
+
+function revokeLink(id){
+  const l = linkList.find(function(x){ return x.uuid === id; });
+  if(!l) return;
+  if(!confirm('解除后，' + l.name + ' 将看不到你的新数据（历史保留只读）。确定？')) return;
+  l.status = 'revoked';
+  DB.linkPut(l).catch(function(){});
+  renderLinks(); render();
+}
+
+/* 审批 */
+function renderApprovals(){
+  const box = document.getElementById('apBox');
+  const cnt = document.getElementById('apCount');
+  const badge = document.getElementById('coopBadge');
+  if(!box) return;
+  const pending = apList.filter(function(a){ return a.status === 'pending'; });
+  if(cnt) cnt.textContent = pending.length;
+  if(badge){
+    if(pending.length){ badge.textContent = pending.length; badge.classList.remove('hide'); }
+    else badge.classList.add('hide');
+  }
+  if(!apList.length){ box.innerHTML = '<div class="chart-empty">没有待审批</div>'; return; }
+  box.innerHTML = apList.slice().reverse().map(function(a){
+    const st = a.status === 'pending' ? '待审批' : a.status === 'approved' ? '已同意' : '已拒绝';
+    return '<div class="ap-item">' +
+      '<div class="hd"><span>' + esc(a.applicant || '对方') + ' 申请修改</span><span style="font-size:11px;color:#9AA8A1">' + st + '</span></div>' +
+      '<div class="bd">' + esc(a.desc || '') + '<br>理由：' + esc(a.reason || '') + '</div>' +
+      (a.status === 'pending'
+        ? '<div class="acts"><button class="ok" onclick="decideAp(\'' + a.uuid + '\',\'approved\')">同意</button>' +
+          '<button class="no" onclick="decideAp(\'' + a.uuid + '\',\'rejected\')">拒绝</button></div>'
+        : '') +
+    '</div>';
+  }).join('');
+}
+
+function decideAp(id, st){
+  const a = apList.find(function(x){ return x.uuid === id; });
+  if(!a) return;
+  a.status = st;
+  DB.apPut(a).catch(function(){});
+  renderApprovals();
+  alert(st === 'approved' ? '已同意' : '已拒绝');
+}
+
+function loadExp(cb){
+  if(!window.indexedDB){ if(cb) cb(); return; }
+  var done = false;
+  function fin(){ if(done) return; done = true; if(cb) cb(); }
+  var timer = setTimeout(fin, 2500);
+  DB.expAll().then(function(list){
+    clearTimeout(timer);
+    expenses = list || [];
+    expenses.sort(function(a, b){ return (b.createdAt || 0) - (a.createdAt || 0); });
+    fin();
+  }).catch(function(){
+    clearTimeout(timer);
+    fin();
+  });
+}
+
+function renderExp(){
+  var box = document.getElementById('expList');
+  if(!box) return;
+
+  var set = {};
+  expenses.forEach(function(e){ if(e.payer) set[e.payer] = 1; });
+  var dl = document.getElementById('dl-payer');
+  if(dl) dl.innerHTML = Object.keys(set).map(function(k){ return '<option value="'+esc(k)+'">'; }).join('');
+
+  if(!expenses.length){
+    box.innerHTML = '<div class="empty">还没有费用记录</div>';
+  }else{
+    var html = '';
+    expenses.forEach(function(e){
+      var cls = TYPE_CLASS[e.type] || 't5';
+      html += '<div class="exp">' +
+        '<div class="exp-body">' +
+          '<div class="exp-top">' +
+            '<span class="etag '+cls+'">'+esc(e.type)+'</span>' +
+            '<span class="exp-amt">¥'+fmt(e.amount || 0, 2)+'</span>' +
+          '</div>' +
+          '<div><span class="exp-who">'+esc(e.payer || '—')+'</span>' +
+          '<span class="exp-date">'+esc(e.date || '')+'</span></div>' +
+          (e.note ? '<div class="exp-note">'+esc(e.note)+'</div>' : '') +
+        '</div>' +
+        '<button class="exp-del" onclick="delExp(\''+e.uuid+'\')">×</button>' +
+      '</div>';
+    });
+    box.innerHTML = html;
+  }
+
+  var ym = new Date().toISOString().slice(0, 7);
+  var month = expenses.filter(function(e){ return String(e.date || '').slice(0, 7) === ym; });
+  var total = month.reduce(function(a, b){ return a + (b.amount || 0); }, 0);
+  var c = document.getElementById('expCount');
+  var t = document.getElementById('expTotal');
+  if(c) c.textContent = month.length + ' 笔';
+  if(t) t.textContent = '¥' + fmt(total, 2);
+}
+
+
+/* ========== v3 费用批量 ========== */
+var expExtraSeq = 0;
+
+function addExpRow(){
+  expExtraSeq++;
+  var wrap = document.getElementById('expExtra');
+  if (!wrap) return;
+  var div = document.createElement('div');
+  div.className = 'exp-row custom';
+  div.innerHTML = '<span class="exp-t"><input type="text" placeholder="类型" data-custom="1"></span>' +
+                  '<input type="number" inputmode="decimal" data-type="" placeholder="0.00">';
+  wrap.appendChild(div);
+  var ti = div.querySelector('[data-custom]');
+  if (ti) ti.focus();
+}
+
+
+/* ========== v3 费用暂存 ========== */
+var expPending = [];
+var expDirty = false;
+var expPendingSeq = 0;
+
+function expStash(silent){
+  var amtEl = document.getElementById('expAmount');
+  if (!amtEl) return false;
+  var amt = parseFloat(amtEl.value);
+  if (!amt || amt <= 0) {
+    if (!silent) alert('请先填金额');
+    return false;
+  }
+  var payerEl = document.getElementById('expPayer');
+  var payer = (payerEl && payerEl.value || '').trim();
+  if (!payer) {
+    if (!silent) alert('请填写谁付的钱');
+    return false;
+  }
+  var type = currentExpType || '其它';
+  var note = (document.getElementById('expNote') || {}).value || '';
+  expPendingSeq++;
+  expPending.push({
+    key: 'ep' + expPendingSeq,
+    type: type,
+    amount: Math.round(amt * 100) / 100,
+    payer: payer,
+    note: note.trim()
+  });
+  amtEl.value = '';
+  var nt = document.getElementById('expNote');
+  if (nt) nt.value = '';
+  expDirty = false;
+  renderExpPending();
+  return true;
+}
+
+function renderExpPending(){
+  var box = document.getElementById('expPendingBox');
+  var list = document.getElementById('expPendingList');
+  var cnt = document.getElementById('expPendingCount');
+  if (!box || !list) return;
+  var btn = document.getElementById('expSaveBtn');
+  if (!expPending.length) {
+    box.style.display = 'none';
+    list.innerHTML = '';
+    if (cnt) cnt.textContent = '0';
+    if (btn) btn.textContent = '保 存';
+    return;
+  }
+  box.style.display = 'block';
+  if (cnt) cnt.textContent = String(expPending.length);
+  if (btn) btn.textContent = '保存这 ' + expPending.length + ' 笔';
+  list.innerHTML = expPending.map(function(it){
+    var label = String(it.type).replace(/费$/, '');
+    return '<div class="pend-item"><span class="pend-t">' + label + '</span>' +
+      '<span class="pend-a">¥' + it.amount.toFixed(2) + '</span>' +
+      '<span class="pend-p">' + (it.payer || '') + '</span>' +
+      '<span class="pend-x" onclick="expRemovePending(\'' + it.key + '\')">×</span></div>';
+  }).join('');
+}
+
+function expRemovePending(key){
+  expPending = expPending.filter(function(x){ return x.key !== key; });
+  renderExpPending();
+}
+
+function expClearPending(){
+  expPending = [];
+  expDirty = false;
+  renderExpPending();
+  var amtEl = document.getElementById('expAmount');
+  if (amtEl) amtEl.value = '';
+  var nt = document.getElementById('expNote');
+  if (nt) nt.value = '';
+}
+
+
+/* ========== v3 分项费用 ========== */
+var expData = {
+  travel:   [{ sub: '加油',   amt: '' }, { sub: '过路费', amt: '' }],
+  labor:    [{ total: '', people: '', rate: '', other: '' }],
+  material: [{ total: '', name: '', qty: '', unit: '', freight: '' }]
+};
+var TRAVEL_PRESETS = ['加油', '过路费', '住宿', '宴请', '停车费', '修车', '吃饭'];
+
+function toggleEB(key){
+  var body = document.getElementById('body_' + key);
+  var ar = document.getElementById('ar_' + key);
+  if (!body) return;
+  var open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if (ar) ar.textContent = open ? '▸' : '▾';
+}
+
+function renderTravel(){
+  var box = document.getElementById('travelItems');
+  if (!box) return;
+  box.innerHTML = expData.travel.map(function(it, i){
+    var amt = parseFloat(it.amt) || 0;
+    return '<div class="eb-item">' +
+      '<select class="f-sub" onchange="expData.travel[' + i + '].sub=this.value;renderTravel()">' +
+        TRAVEL_PRESETS.map(function(x){ return '<option value="' + x + '"' + (it.sub === x ? ' selected' : '') + '>' + x + '</option>'; }).join('') +
+        '<option value="__custom"' + (TRAVEL_PRESETS.indexOf(it.sub) < 0 ? ' selected' : '') + '>其他…</option>' +
+      '</select>' +
+      (TRAVEL_PRESETS.indexOf(it.sub) < 0 ? '<input class="f-sub" style="width:64px" value="' + escHtml(it.sub === '__custom' ? '' : it.sub) + '" placeholder="名称" oninput="expData.travel[' + i + '].sub=this.value">' : '') +
+      '<input class="f-amt" type="number" inputmode="decimal" value="' + it.amt + '" placeholder="0.00" oninput="expData.travel[' + i + '].amt=this.value;updSums()">' +
+      '<span class="f-x" onclick="delTravel(' + i + ')">×</span>' +
+    '</div>';
+  }).join('') + '<datalist id="dl-travel">' + TRAVEL_PRESETS.map(function(x){ return '<option value="' + x + '">'; }).join('') + '</datalist>';
+}
+
+function addTravel(){
+  expData.travel.push({ sub: '', amt: '' });
+  renderTravel();
+}
+
+function delTravel(i){
+  if (expData.travel.length <= 1) { expData.travel[0] = { sub: '', amt: '' }; }
+  else { expData.travel.splice(i, 1); }
+  renderTravel(); updSums();
+}
+
+function renderLabor(){
+  var box = document.getElementById('laborItems');
+  if (!box) return;
+  box.innerHTML = expData.labor.map(function(it, i){
+    return '<div class="eb-block">' +
+      '<div class="eb-row">' +
+        '<span class="eb-lb">总金额</span>' +
+        '<input class="f-amt" type="number" inputmode="decimal" value="' + (it.total||'') + '" placeholder="0.00" oninput="expData.labor[' + i + '].total=this.value;updSums()">' +
+        (expData.labor.length > 1 ? '<span class="f-x" onclick="delLabor(' + i + ')">×</span>' : '') +
+      '</div>' +
+      '<div class="eb-row eb-note">' +
+        '<input class="f-num" type="number" inputmode="decimal" value="' + (it.people||'') + '" placeholder="人数/工时" oninput="expData.labor[' + i + '].people=this.value">' +
+        '<input class="f-num" type="number" inputmode="decimal" value="' + (it.rate||'') + '" placeholder="工价" oninput="expData.labor[' + i + '].rate=this.value">' +
+        '<span class="note-btn" onclick="editNote(\'labor\',' + i + ')">' + (it.other ? '备注 ✓' : '备注') + '</span>' +
+      '</div>' +
+      
+    '</div>';
+  }).join('');
+}
+
+function addLabor(){
+  expData.labor.push({ total: '', people: '', rate: '', other: '' });
+  renderLabor();
+}
+
+function delLabor(i){
+  if (expData.labor.length <= 1) { expData.labor[0] = { total: '', people: '', rate: '', other: '' }; }
+  else { expData.labor.splice(i, 1); }
+  renderLabor(); updSums();
+}
+
+function renderMaterial(){
+  var box = document.getElementById('materialItems');
+  if (!box) return;
+  box.innerHTML = expData.material.map(function(it, i){
+    return '<div class="eb-block">' +
+      '<div class="eb-row">' +
+        '<span class="eb-lb">总金额</span>' +
+        '<input class="f-amt" type="number" inputmode="decimal" value="' + (it.total||'') + '" placeholder="0.00" oninput="expData.material[' + i + '].total=this.value;updSums()">' +
+        (expData.material.length > 1 ? '<span class="f-x" onclick="delMaterial(' + i + ')">×</span>' : '') +
+      '</div>' +
+      '<div class="eb-row">' +
+        '<input class="f-name" type="text" value="' + escHtml(it.name||'') + '" placeholder="名称（如编织袋）" oninput="expData.material[' + i + '].name=this.value">' +
+      '</div>' +
+      '<div class="eb-row eb-note">' +
+        '<input class="f-num" type="number" inputmode="decimal" value="' + (it.qty||'') + '" placeholder="数量" oninput="expData.material[' + i + '].qty=this.value">' +
+        '<input class="f-num" type="number" inputmode="decimal" value="' + (it.unit||'') + '" placeholder="单价" oninput="expData.material[' + i + '].unit=this.value">' +
+        '<span class="note-btn" onclick="editNote(\'material\',' + i + ')">' + ((it.freight || it.memo) ? '备注 ✓' : '备注') + '</span>' +
+      '</div>' +
+      
+    '</div>';
+  }).join('');
+}
+
+function addMaterial(){
+  expData.material.push({ total: '', name: '', qty: '', unit: '', freight: '' });
+  renderMaterial();
+}
+
+function delMaterial(i){
+  if (expData.material.length <= 1) { expData.material[0] = { total: '', name: '', qty: '', unit: '', freight: '' }; }
+  else { expData.material.splice(i, 1); }
+  renderMaterial(); updSums();
+}
+
+
+
+/* ===== 备注弹窗 ===== */
+var _noteTarget = null;
+function editNote(kind, idx){
+  _noteTarget = { kind: kind, idx: idx };
+  var cur = (kind === 'labor') ? (expData.labor[idx].other || '') : (expData.material[idx].freight || expData.material[idx].memo || '');
+  var ta = document.getElementById('nmText');
+  if (ta) ta.value = cur;
+  var m = document.getElementById('noteModal');
+  if (m) m.classList.add('show');
+  setTimeout(function(){ if (ta) ta.focus(); }, 100);
+}
+function closeNote(){
+  var m = document.getElementById('noteModal');
+  if (m) m.classList.remove('show');
+  _noteTarget = null;
+}
+function saveNote(){
+  if (!_noteTarget) return closeNote();
+  var v = (document.getElementById('nmText') || {}).value || '';
+  var k = _noteTarget.kind, i = _noteTarget.idx;
+  if (k === 'labor') expData.labor[i].other = v.trim();
+  else expData.material[i].freight = v.trim();
+  closeNote();
+  if (k === 'labor') renderLabor(); else renderMaterial();
+}
+
+/* ===== 运费 ===== */
+expData.freight = expData.freight || [{ amount: '', customer: '', owners: [''] }];
+
+function renderFreight(){
+  var box = document.getElementById('freightItems');
+  if (!box) return;
+  box.innerHTML = expData.freight.map(function(it, i){
+    return '<div class="eb-block">' +
+      '<div class="eb-row">' +
+        '<span class="eb-lb">金额</span>' +
+        '<input class="f-amt" type="number" inputmode="decimal" value="' + (it.amount||'') + '" placeholder="0.00" oninput="expData.freight[' + i + '].amount=this.value;updSums()">' +
+        (expData.freight.length > 1 ? '<span class="f-x" onclick="delFreight(' + i + ')">×</span>' : '') +
+      '</div>' +
+      '<div class="eb-row">' +
+        '<span class="eb-lb">给谁拉</span>' +
+        '<input style="flex:1" value="' + escHtml(it.customer||'') + '" placeholder="客户名，选或直接打" list="dl-freight-cus" oninput="expData.freight[' + i + '].customer=this.value">' +
+      '</div>' +
+      '<div class="eb-row" style="align-items:flex-start">' +
+        '<span class="eb-lb" style="padding-top:9px">货主</span>' +
+        '<div style="flex:1">' +
+          (it.owners || ['']).map(function(o, oi){
+            return '<div style="display:flex;gap:6px;margin-bottom:6px">' +
+              '<input style="flex:1" value="' + escHtml(o||'') + '" placeholder="货主名，选或直接打" list="dl-freight-own" oninput="expData.freight[' + i + '].owners[' + oi + ']=this.value">' +
+              ((it.owners || []).length > 1 ? '<span class="f-x" onclick="delFreightOwner(' + i + ',' + oi + ')">×</span>' : '') +
+            '</div>';
+          }).join('') +
+          '<button class="eb-add" style="margin-top:2px" onclick="addFreightOwner(' + i + ')">＋ 添加货主</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  // datalist：从已有记录里提取
+  var cusSet = {}, ownSet = {};
+  try {
+    (data || []).slice(0, 300).forEach(function(r){
+      if (r.customer) cusSet[r.customer] = 1;
+      if (r.owner) ownSet[r.owner] = 1;
+    });
+  } catch(e) {}
+  var cusDl = document.getElementById('dl-freight-cus-holder');
+  if (!cusDl) {
+    cusDl = document.createElement('span');
+    cusDl.id = 'dl-freight-cus-holder';
+    cusDl.innerHTML = '<datalist id="dl-freight-cus"></datalist><datalist id="dl-freight-own"></datalist>';
+    document.body.appendChild(cusDl);
+  }
+  document.getElementById('dl-freight-cus').innerHTML = Object.keys(cusSet).map(function(k){ return '<option value="' + escHtml(k) + '">'; }).join('');
+  document.getElementById('dl-freight-own').innerHTML = Object.keys(ownSet).map(function(k){ return '<option value="' + escHtml(k) + '">'; }).join('');
+}
+
+
+function addFreightOwner(i){
+  if (!expData.freight[i].owners) expData.freight[i].owners = [''];
+  expData.freight[i].owners.push('');
+  renderFreight();
+}
+function delFreightOwner(i, oi){
+  var arr = expData.freight[i].owners || [];
+  if (arr.length <= 1) { arr[0] = ''; }
+  else { arr.splice(oi, 1); }
+  renderFreight();
+}
+
+function addFreight(){
+  expData.freight.push({ amount: '', customer: '', owners: [''] });
+  renderFreight();
+}
+
+function delFreight(i){
+  if (expData.freight.length <= 1) { expData.freight[0] = { amount: '', customer: '', owners: [''] }; }
+  else { expData.freight.splice(i, 1); }
+  renderFreight(); updSums();
+}
+
+function sumFreight(){
+  return expData.freight.reduce(function(s, it){ return s + (parseFloat(it.amount) || 0); }, 0);
+}
+
+function sumTravel(){
+  return expData.travel.reduce(function(s, it){ return s + (parseFloat(it.amt) || 0); }, 0);
+}
+function sumLabor(){
+  return expData.labor.reduce(function(s, it){ return s + (parseFloat(it.total) || 0); }, 0);
+}
+function sumMaterial(){
+  return expData.material.reduce(function(s, it){ return s + (parseFloat(it.total) || 0); }, 0);
+}
+
+function updSums(){
+  var st = sumTravel(), sl = sumLabor(), sm = sumMaterial(), sf = (typeof sumFreight === 'function' ? sumFreight() : 0);
+  var load = parseFloat((document.getElementById('expLoad') || {}).value) || 0;
+  var other = parseFloat((document.getElementById('expOther') || {}).value) || 0;
+
+  var e1 = document.getElementById('sum_travel'); if (e1) e1.textContent = '¥' + st.toFixed(2);
+  var e2 = document.getElementById('sum_labor');  if (e2) e2.textContent = '¥' + sl.toFixed(2);
+  var e3 = document.getElementById('sum_material'); if (e3) e3.textContent = '¥' + sm.toFixed(2);
+  var e4 = document.getElementById('sum_freight'); if (e4) e4.textContent = '¥' + sf.toFixed(2);
+
+  var cnt = 0;
+  expData.travel.forEach(function(x){ if ((parseFloat(x.amt)||0) > 0) cnt++; });
+  expData.labor.forEach(function(x){ if ((parseFloat(x.total)||0) > 0) cnt++; });
+  expData.material.forEach(function(x){ if ((parseFloat(x.total)||0) > 0) cnt++; });
+  if (sf > 0) cnt++;
+  if (load > 0) cnt++;
+  if (other > 0) cnt++;
+
+  var total = st + sl + sm + sf + load + other;
+  var bar = document.getElementById('expSumBar');
+  var bc = document.getElementById('expSumCnt');
+  var ba = document.getElementById('expSumAmt');
+  if (bar) {
+    if (cnt > 0) { bar.style.display = 'block'; if (bc) bc.textContent = cnt; if (ba) ba.textContent = '¥' + total.toFixed(2); }
+    else bar.style.display = 'none';
+  }
+}
+
+function initExpForm(){
+  renderTravel(); renderLabor(); renderMaterial(); renderFreight(); updSums();
+}
+
+function saveExpBatch(){
+  var payer = ((document.getElementById('expPayer') || {}).value || '').trim();
+  var date = (document.getElementById('expDate') || {}).value || localDate();
+  if (!payer) { alert('请填写谁付的钱'); return; }
+
+  var rows = [];
+  expData.travel.forEach(function(it){
+    var a = parseFloat(it.amt) || 0;
+    if (a > 0) rows.push({ type: '差旅费', subtype: (it.sub || '').trim(), amount: a, qty: null, unit_price: null });
+  });
+  expData.labor.forEach(function(it){
+    var p2 = parseFloat(it.people) || 0, r2 = parseFloat(it.rate) || 0;
+    if (p2 > 0 && r2 > 0) rows.push({ type: '人工费', subtype: '', amount: p2 * r2, qty: p2, unit_price: r2 });
+  });
+  expData.material.forEach(function(it){
+    var q = parseFloat(it.qty) || 0, u = parseFloat(it.unit) || 0;
+    if (q > 0 && u > 0) rows.push({ type: '物料费', subtype: (it.name || '').trim(), amount: q * u, qty: q, unit_price: u });
+  });
+  // 运费
+  expData.freight.forEach(function(it){
+    var a = parseFloat(it.amount) || 0;
+    if (a > 0) rows.push({
+      type: '运费', subtype: ('给' + (it.customer || '?') + '拉·货主' + ((it.owners || []).filter(function(x){ return x && x.trim(); }).join('、') || '?')),
+      amount: a, qty: null, unit_price: null
+    });
+  });
+  var load = parseFloat((document.getElementById('expLoad') || {}).value) || 0;
+  if (load > 0) rows.push({ type: '装卸费', subtype: '', amount: load, qty: null, unit_price: null });
+  var other = parseFloat((document.getElementById('expOther') || {}).value) || 0;
+  var otherNote = ((document.getElementById('expOtherNote') || {}).value || '').trim();
+  if (other > 0) {
+    if (!otherNote) { alert('「其它」填了金额，请写一句说明是什么'); return; }
+    rows.push({ type: '其它', subtype: otherNote, amount: other, qty: null, unit_price: null });
+  }
+
+  if (!rows.length) { alert('请至少填一个金额'); return; }
+
+  var now = Date.now();
+  var n = 0;
+  rows.forEach(function(r, i2){
+    var rec = {
+      uuid: uuid(), date: date, type: r.type, subtype: r.subtype || '',
+      amount: Math.round(r.amount * 100) / 100,
+      qty: r.qty, unit_price: r.unit_price,
+      payer: payer, note: r.subtype || '',
+      operator: operator || '', deviceId: deviceId,
+      createdAt: now + i2, updatedAt: now + i2, deleted: false
+    };
+    expenses.unshift(rec);
+    DB.expPut(rec).catch(function(){});
+    if (typeof cloudSaveExpense === 'function') { try { cloudSaveExpense(rec); } catch(e) {} }
+    n++;
+  });
+
+  expData.travel = [{ sub: '加油', amt: '' }, { sub: '过路费', amt: '' }];
+  expData.labor = [{ total: '', people: '', rate: '', other: '' }];
+  expData.material = [{ total: '', name: '', qty: '', unit: '', freight: '' }];
+  expData.freight = [{ amount: '', customer: '', owners: [''] }];
+  var le = document.getElementById('expLoad'); if (le) le.value = '';
+  var oe = document.getElementById('expOther'); if (oe) oe.value = '';
+  var on = document.getElementById('expOtherNote'); if (on) on.value = '';
+  initExpForm();
+
+  renderExp();
+  if (typeof renderSum === 'function') renderSum();
+  alert('已保存 ' + n + ' 项费用');
+}
+
+function updateExpSum(){
+  var total = 0, cnt = 0;
+  document.querySelectorAll('#expLines .exp-line').forEach(function(line){
+    var inp = line.querySelector('input');
+    var amt = parseFloat(inp ? inp.value : 0);
+    if (amt > 0) { total += amt; cnt++; }
+  });
+  var bar = document.getElementById('expSumBar');
+  var c = document.getElementById('expSumCnt');
+  var a = document.getElementById('expSumAmt');
+  if (!bar) return;
+  if (cnt > 0) {
+    bar.style.display = 'block';
+    if (c) c.textContent = String(cnt);
+    if (a) a.textContent = '¥' + total.toFixed(2);
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+
+
+function saveExp(){
+  var amount = parseFloat(document.getElementById('expAmount').value);
+  var payer = (document.getElementById('expPayer').value || '').trim();
+  var date = document.getElementById('expDate').value || new Date().toISOString().slice(0, 10);
+  var note = (document.getElementById('expNote').value || '').trim();
+
+  if(!amount || amount <= 0){ alert('请填写金额'); return; }
+  if(!payer){ alert('请填写谁付的钱'); return; }
+
+  var now = Date.now();
+  var rec = {
+    uuid: uuid(),
+    date: date,
+    type: currentExpType,
+    amount: Math.round(amount * 100) / 100,
+    payer: payer,
+    note: note,
+    operator: operator || '',
+    deviceId: deviceId,
+    createdAt: now,
+    updatedAt: now,
+    deleted: false
+  };
+  expenses.unshift(rec);
+  DB.expPut(rec).catch(function(){});
+
+  document.getElementById('expAmount').value = '';
+  document.getElementById('expNote').value = '';
+  renderExp();
+  renderSum();
+  renderCus();
+  alert('已保存 ✓');
+}
+
+function delExp(id){
+  if(!confirm('删掉这笔费用？')) return;
+  expenses = expenses.filter(function(e){ return e.uuid !== id; });
+  DB.expDel(id).catch(function(){});
+  renderExp();
+  renderSum();
+  renderCus();
+}
+
+function clearAll(){
+  if(!confirm('会清空全部记录（含费用），确定吗？')) return;
+  if(!confirm('再确认一次：删了就找不回来了')) return;
+  data = [];
+  expenses = [];
+  DB.clear().catch(function(){});
+  DB.expClear().catch(function(){});
+  render(); renderExp(); renderSum(); renderCus(); updateStoreInfo();
+}
+
+function exportCSV(){
+  if(!data.length){ alert('没有数据'); return; }
+  const head = ['收购日期','客户','客户电话','批号','车牌号','货主','电话','基地','件数','单件斤数','总斤数','扣土率','扣土量','净总斤数','单价','总价','代办费','代办总价','实际总价'];
+  let csv = '\ufeff' + head.join(',') + '\n';
+  data.forEach(function(r){
+    csv += [r.date,r.customer,r.customerTel||'',r.lot,r.plate,r.owner,r.tel,r.base,r.jian,r.per,
+      r.total,(r.soil*100)+'%',r.soilQty,r.net,r.price,r.amount,r.fee,r.feeTotal,r.actual].join(',') + '\n';
+  });
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '生姜收购台账_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+}
+
+/* ---------- 数据存储：备份 / 恢复 / 录入人 ---------- */
+function saveOperator(){
+  var el = document.getElementById('opName');
+  var v = ((el && el.value) || '').trim();
+  operator = v;
+  try{ localStorage.setItem('gl_operator', v); }catch(e){}
+  updateStoreInfo();
+  alert(v ? '已设置录入人：' + v : '已清空录入人');
+}
+
+function updateStoreInfo(){
+  var el = document.getElementById('storeInfo');
+  if(!el) return;
+  el.innerHTML =
+    '<div class="si-row"><span>记录条数</span><b>' + data.length + ' 条</b></div>' +
+    '<div class="si-row"><span>存储位置</span><b>本机数据库</b></div>' +
+    '<div class="si-row"><span>设备编号</span><b>' + deviceId + '</b></div>' +
+    '<div class="si-row"><span>录入人</span><b>' + (operator || '未设置') + '</b></div>' +
+    '<div class="si-row"><span>版本</span><b>v' + APP_VERSION + '</b></div>';
+}
+
+function exportJSON(){
+  if(!data.length && !expenses.length){ alert('没有数据可导出'); return; }
+  var payload = {
+    app: 'ginger-ledger',
+    version: 3,
+    exportedAt: new Date().toISOString(),
+    deviceId: deviceId,
+    operator: operator,
+    count: data.length,
+    expenseCount: expenses.length,
+    records: data,
+    expenses: expenses
+  };
+  var blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '生姜台账备份_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+}
+
+function importJSON(file){
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(){
+    try{
+      var obj = JSON.parse(reader.result);
+      var list = (obj && obj.records) ? obj.records : (Array.isArray(obj) ? obj : []);
+      var exps = (obj && obj.expenses) ? obj.expenses : [];
+      if(!Array.isArray(list) && !Array.isArray(exps)) throw new Error('文件格式不对');
+
+      var map = {};
+      data.forEach(function(r){ map[r.uuid] = r; });
+      var added = 0, updated = 0;
+      list.forEach(function(r){
+        if(!r.uuid) r.uuid = uuid();
+        r.deleted = !!r.deleted;
+        var old = map[r.uuid];
+        if(!old){ map[r.uuid] = r; added++; }
+        else if((r.updatedAt || 0) > (old.updatedAt || 0)){ map[r.uuid] = r; updated++; }
+      });
+      var merged = Object.keys(map).map(function(k){ return map[k]; })
+        .filter(function(r){ return !r.deleted; })
+        .sort(function(a, b){ return (b.createdAt || 0) - (a.createdAt || 0); });
+
+      var emap = {};
+      expenses.forEach(function(r){ emap[r.uuid] = r; });
+      var eAdded = 0;
+      exps.forEach(function(r){
+        if(!r.uuid) r.uuid = uuid();
+        r.deleted = !!r.deleted;
+        var old = emap[r.uuid];
+        if(!old){ emap[r.uuid] = r; eAdded++; }
+        else if((r.updatedAt || 0) > (old.updatedAt || 0)){ emap[r.uuid] = r; }
+      });
+      var emerg = Object.keys(emap).map(function(k){ return emap[k]; })
+        .filter(function(r){ return !r.deleted; })
+        .sort(function(a, b){ return (b.createdAt || 0) - (a.createdAt || 0); });
+
+      data = merged;
+      expenses = emerg;
+      Promise.all([DB.putMany(merged), DB.expPutMany(emerg)]).then(function(){
+        render(); renderExp(); renderSum(); renderCus(); updateStoreInfo();
+        alert('导入完成：\n收购 新增 ' + added + ' 条，更新 ' + updated + ' 条\n费用 新增 ' + eAdded + ' 条\n现有收购 ' + merged.length + ' 条、费用 ' + emerg.length + ' 条');
+      }).catch(function(){
+        alert('写入失败，请重试');
+      });
+    }catch(e){
+      alert('导入失败：' + e.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function showTab(name){
+  if (typeof currentTab !== 'undefined' && currentTab === 'exp' && name !== 'exp') { if (typeof expClearPending === 'function') expClearPending(); }
+  document.querySelectorAll('nav button').forEach(function(b){
+    b.classList.toggle('on', b.dataset.tab === name);
+  });
+  ['in','list','exp','sum','board','coop'].forEach(function(k){
+    document.getElementById('tab-'+k).classList.toggle('hide', k !== name);
+  });
+  if(name === 'board'){ renderBoard(); }
+  if(name === 'sum'){ renderSum(); renderCus(); }
+  if(name === 'exp'){ renderExp(); }
+  if(name === 'coop'){ renderCoop(); }
+  window.scrollTo(0,0);
+}
+
+document.querySelectorAll('nav button').forEach(function(b){
+  b.onclick = function(){ showTab(b.dataset.tab); };
+});
+
+// 初始化
+(function(){
+  const d = new Date();
+  var todayStr = d.toISOString().slice(0,10);
+  document.getElementById('date').value = todayStr;
+  var dpi = document.getElementById('datePick');
+  if(dpi) dpi.value = todayStr;
+  document.getElementById('today').textContent = d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日';
+  recalc();
+
+  // 选到老客户时，自动带出上次填的电话
+  var cusEl = document.getElementById('customer');
+  if(cusEl){
+    cusEl.addEventListener('change', function(){
+      var name = this.value.trim();
+      if(!name) return;
+      var telEl = document.getElementById('customerTel');
+      if(!telEl || telEl.value) return;
+      for(var i = 0; i < data.length; i++){
+        if(data[i].customer === name && data[i].customerTel){ telEl.value = data[i].customerTel; break; }
+      }
+    });
+  }
+
+  var opEl = document.getElementById('opName');
+  if(opEl) opEl.value = operator;
+
+  var ed = document.getElementById('expDate');
+  var ep = document.getElementById('expDatePick');
+  if(ed){ ed.value = d.toISOString().slice(0,10); }
+  if(ep){ ep.value = d.toISOString().slice(0,10); }
+
+  document.querySelectorAll('#expTypes button').forEach(function(b){
+    b.onclick = function(){
+      // 切类型前，如果金额框有值，先把这笔存了（不打断）
+      var _amt = document.getElementById('expAmount');
+      if (_amt && parseFloat(_amt.value) > 0) {
+        var _payer = ((document.getElementById('expPayer') || {}).value || '').trim();
+        if (_payer) {
+          var _now = Date.now();
+          var _r = { uuid: uuid(), date: ((document.getElementById('expDate')||{}).value || localDate()),
+                     type: currentExpType || '其它',
+                     amount: Math.round(parseFloat(_amt.value) * 100) / 100,
+                     payer: _payer, note: ((document.getElementById('expNote')||{}).value || '').trim(),
+                     operator: operator || '', deviceId: deviceId,
+                     createdAt: _now, updatedAt: _now, deleted: false };
+          expenses.unshift(_r); DB.expPut(_r).catch(function(){});
+          if (typeof cloudSaveExpense === 'function') { try { cloudSaveExpense(_r); } catch(e) {} }
+          _amt.value = '';
+          var _nt = document.getElementById('expNote'); if (_nt) _nt.value = '';
+          renderExp(); if (typeof renderSum === 'function') renderSum();
+        }
+      }
+      document.querySelectorAll('#expTypes button').forEach(function(x){ x.classList.remove('on'); });
+      b.classList.add('on');
+      currentExpType = b.getAttribute('data-t');
+    };
+  });
+
+  load(function(){
+    render();
+    updateStoreInfo();
+
+    /* Demo 首次打开塞两条样例，方便体验 */
+    if(!data.length && !cloudUser && !localStorage.getItem('gl_demo_seeded')){
+      var d0 = new Date().toISOString().slice(0,10);
+      var t0 = Date.now();
+      var s1 = {uuid:uuid(), date:d0, customer:'山东姜业公司', customerTel:'13500001111',
+        lot:'20250217-01', plate:'鲁A12345', owner:'张建国', tel:'13900001111', base:'王家村基地',
+        jian:120, per:50, soil:0.10, price:1.20, fee:0.05,
+        total:6000, soilQty:600, net:5400, amount:6480, feeTotal:270, actual:6750,
+        contracts:[], ownerContracts:[], address:'山东省潍坊市安丘市王家村', lat:36.48, lng:119.12, accuracy:18,
+        operator:'老王', deviceId:deviceId, createdAt:t0, updatedAt:t0, deleted:false};
+      var s2 = {uuid:uuid(), date:d0, customer:'江苏调味品厂', customerTel:'13600002222',
+        lot:'20250217-02', plate:'鲁B88888', owner:'李秀兰', tel:'13800002222', base:'河西基地',
+        jian:80, per:50, soil:0.08, price:1.15, fee:0.05,
+        total:4000, soilQty:320, net:3680, amount:4232, feeTotal:184, actual:4416,
+        contracts:[], ownerContracts:[], address:'', lat:null, lng:null, accuracy:null,
+        operator:'老王', deviceId:deviceId, createdAt:t0-1000, updatedAt:t0-1000, deleted:false};
+      data = [s1, s2];
+      DB.putMany(data).catch(function(){});
+      customers = [
+        {uuid:uuid(), name:'山东姜业公司', tel:'13500001111', contracts:[], createdAt:t0},
+        {uuid:uuid(), name:'江苏调味品厂', tel:'13600002222', contracts:[], createdAt:t0}
+      ];
+      ownerList = [
+        {uuid:uuid(), name:'张建国', tel:'13900001111', base:'王家村基地', contracts:[], createdAt:t0},
+        {uuid:uuid(), name:'李秀兰', tel:'13800002222', base:'河西基地', contracts:[], createdAt:t0}
+      ];
+      DB.cusPut(customers[0]).catch(function(){}); DB.cusPut(customers[1]).catch(function(){});
+      DB.ownPut(ownerList[0]).catch(function(){}); DB.ownPut(ownerList[1]).catch(function(){});
+      localStorage.setItem('gl_demo_seeded', '1');
+      render();
+    }
+
+    /* 演示数据：#demo 打开一次即可看到样例 */
+    if(location.hash.indexOf('#demo') === 0 && !data.length){
+      var d0 = new Date().toISOString().slice(0,10);
+      var now = Date.now();
+      var src = [
+        {customer:'山东姜业公司',lot:'20250217-01',plate:'鲁A12345',owner:'张建国',tel:'13900001111',base:'王家村基地',jian:120,per:50,soil:0.10,price:1.20,fee:0.05},
+        {customer:'山东姜业公司',lot:'20250217-01',plate:'鲁A12345',owner:'赵国强',tel:'13600004444',base:'南山基地',jian:200,per:50,soil:0.12,price:1.10,fee:0.05},
+        {customer:'江苏调味品厂',lot:'20250217-02',plate:'鲁B88888',owner:'李秀兰',tel:'13800002222',base:'河西基地',jian:80,per:50,soil:0.08,price:1.15,fee:0.05}
+      ];
+      var demo = src.map(function(x, i){
+        var total = x.jian * x.per;
+        var soilQty = total * x.soil;
+        var net = total - soilQty;
+        x.uuid = uuid();
+        x.date = d0;
+        x.total = total; x.soilQty = soilQty; x.net = net;
+        x.amount = net * x.price;
+        x.feeTotal = net * x.fee;
+        x.actual = x.amount + x.feeTotal;
+        x.createdAt = now - i;
+        x.updatedAt = now - i;
+        x.deviceId = deviceId;
+        x.operator = operator || '';
+        x.deleted = false;
+        return x;
+      });
+      data = demo;
+      DB.putMany(demo).catch(function(){});
+      render(); renderSum(); renderCus(); updateStoreInfo(); showTab('list');
+      if(location.hash === '#demo-detail'){ setTimeout(function(){ openId = demo[0].uuid; render(); }, 400); }
+    }
+
+    /* 费用：统一在这里读一次 */
+    loadExp(function(){
+      if(location.hash.indexOf('demo') >= 0 && !expenses.length){
+        var t0 = Date.now();
+        var d1 = new Date().toISOString().slice(0,10);
+        var d2 = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+        expenses = [
+          {uuid:uuid(),date:d1,type:'差旅费',amount:420,payer:'张三',note:'加油300 过路费120',operator:operator||'',deviceId:deviceId,createdAt:t0,updatedAt:t0,deleted:false},
+          {uuid:uuid(),date:d1,type:'物料费',amount:320,payer:'李四',note:'编织袋 4 捆',operator:operator||'',deviceId:deviceId,createdAt:t0-1000,updatedAt:t0-1000,deleted:false},
+          {uuid:uuid(),date:d2,type:'人工费',amount:600,payer:'老板',note:'临时工 3 人 × 200',operator:operator||'',deviceId:deviceId,createdAt:t0-2000,updatedAt:t0-2000,deleted:false},
+          {uuid:uuid(),date:d2,type:'装卸费',amount:180,payer:'王五',note:'卸车费',operator:operator||'',deviceId:deviceId,createdAt:t0-3000,updatedAt:t0-3000,deleted:false},
+          {uuid:uuid(),date:d2,type:'其它',amount:120,payer:'张三',note:'',operator:operator||'',deviceId:deviceId,createdAt:t0-4000,updatedAt:t0-4000,deleted:false}
+        ];
+        DB.expPutMany(expenses).catch(function(){});
+      }
+      renderExp();
+      renderSum();
+      renderCus();
+      renderShots('cusShots', []);
+      renderShots('ownShots', []);
+      loadExtras(function(){
+        renderLinks();
+        renderApprovals();
+      });
+      var cusI = document.getElementById('customer');
+      if(cusI) cusI.addEventListener('change', matchCustomerTel);
+      var ownI = document.getElementById('owner');
+      if(ownI) ownI.addEventListener('change', matchOwnerTel);
+      if(location.hash.indexOf('#exp') >= 0 || location.hash === '#demo-exp'){
+        showTab('exp');
+      }
+      if(location.hash.indexOf('board') >= 0){ renderBoard(); showTab('board'); }
+      var _tabParam = (location.search.match(/[?&]tab=([a-z]+)/) || [])[1];
+  if(_tabParam){ showTab(_tabParam); }
+  else if(location.hash.indexOf('sum') >= 0){ showTab('sum'); }
+      if(location.hash.indexOf('coop') >= 0){ showTab('coop'); }
+    });
+  });
+})();
+
+/* ---------- 强制安装引导 ---------- */
+var ua = navigator.userAgent;
+var isWeChat = /MicroMessenger/i.test(ua);
+var isIOS = /iPhone|iPad|iPod/i.test(ua);
+var deferredPrompt = null;
+var standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+var installedFlag = localStorage.getItem('gl_installed') === '1';
+
+var elGuide = document.getElementById('guide');
+var elGa = document.getElementById('ga');
+var elGt = document.getElementById('gt');
+var elGsub = document.getElementById('gsub');
+var elGs = document.getElementById('gs');
+var elGmain = document.getElementById('gmain');
+var elGdone = document.getElementById('gdone');
+
+function hideGuide(){
+  elGuide.classList.add('hide');
+  elGa.style.display = 'none';
+}
+function markInstalled(){
+  localStorage.setItem('gl_installed', '1');
+  hideGuide();
+}
+function showGuide(cfg){
+  elGt.textContent = cfg.title || '';
+  elGsub.textContent = cfg.sub || '';
+  elGs.innerHTML = (cfg.steps || []).map(function(s){ return '<li>' + s + '</li>'; }).join('');
+  var hasMain = !!cfg.onMain;
+  if(hasMain){
+    elGmain.textContent = cfg.btn || '立即安装';
+    elGmain.classList.remove('hide');
+    elGmain.onclick = cfg.onMain;
+  }else{
+    elGmain.classList.add('hide');
+    elGmain.onclick = null;
+  }
+  elGdone.classList.toggle('hide', hasMain || cfg.done === false);
+  elGa.textContent = cfg.arrow === 'tr' ? '↗' : (cfg.arrow === 'br' ? '↘' : '↑');
+  elGa.className = 'ga' + (cfg.arrow ? ' ' + cfg.arrow : '');
+  elGa.style.display = cfg.arrow ? 'block' : 'none';
+  elGuide.classList.remove('hide');
+}
+
+if (elGdone) elGdone.onclick = markInstalled;
+
+function guideWeChat(){
+  showGuide({
+    title: '微信里装不了，先换到浏览器',
+    sub: '按下面两步操作，换到浏览器后会自动出现安装步骤',
+    steps: ['点右上角的「···」', '选「在浏览器打开」'],
+    arrow: 'tr',
+    done: false
+  });
+}
+function guideIOS(){
+  showGuide({
+    title: '把台账装到手机桌面',
+    sub: '装好后点桌面图标直接进，不用再找链接',
+    steps: ['点底部中间的「分享」按钮', '往下滑，选「添加到主屏幕」', '点右上角「添加」'],
+    arrow: 'bc',
+    btn: '我已经装好了，进入台账',
+    onMain: markInstalled
+  });
+}
+function guideAndroid(){
+  showGuide({
+    title: '把台账装到手机桌面',
+    sub: '装完后点桌面图标直接进，不用再找链接',
+    steps: [
+      '点浏览器底部最右边的菜单按钮（≡ 或 ⋮）',
+      '在菜单里找「添加到桌面」或「添加到主屏幕」',
+      '确认添加，桌面上会出现绿色「姜」字图标'
+    ],
+    arrow: 'br',
+    btn: '已添加到桌面，进入台账',
+    onMain: markInstalled
+  });
+}
+
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault();
+  deferredPrompt = e;
+  // 微信/QQ 内置浏览器会伪触发这个事件，但点了装不上，一律不认
+  if(isWeChat || /QQ\//i.test(ua)) return;
+  if(!/Android|iPhone|iPad|iPod|Mobile/i.test(ua) && window.innerWidth > 640) return;
+  if(standalone || installedFlag || location.hash.indexOf('#demo') === 0) return;
+  showGuide({
+    title: '一步装到桌面',
+    sub: '点下面的按钮，系统会弹确认框，选「安装」即可',
+    steps: [],
+    arrow: '',
+    btn: '立即安装',
+    onMain: function(){
+      var dp = deferredPrompt;
+      if(!dp) return;
+      deferredPrompt = null;
+      var ok = false;
+      try{ dp.prompt(); ok = true; }catch(err){ ok = false; }
+      if(dp.userChoice && dp.userChoice.then){
+        dp.userChoice.then(function(choice){
+          if(choice && choice.outcome === 'dismissed'){ setTimeout(guideAndroid, 200); }
+        }).catch(function(){ setTimeout(guideAndroid, 200); });
+      }else if(!ok){
+        // 华为等浏览器调不出系统安装框，直接退回手动添加
+        setTimeout(guideAndroid, 200);
+      }
+    }
+  });
+});
+
+window.addEventListener('appinstalled', function(){
+  localStorage.setItem('gl_installed', '1');
+  hideGuide();
+});
+
+var isDesktopBrowser = !/Android|iPhone|iPad|iPod|Mobile/i.test(ua) && window.innerWidth > 640;
+if(standalone || installedFlag || isDesktopBrowser || location.hash.indexOf('#demo') === 0){
+  hideGuide();
+}else if(isWeChat){
+  guideWeChat();
+}else if(isIOS){
+  guideIOS();
+}else{
+  guideAndroid();
+}
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+</script>
+
+
+<div id="noteModal">
+  <div class="nm-box">
+    <div class="nm-title">备注</div>
+    <textarea id="nmText" placeholder="比如：工头多30 / 编织袋涨到1.6了"></textarea>
+    <div class="nm-acts">
+      <button id="nmCancel">取消</button>
+      <button id="nmOk">确定</button>
+    </div>
+  </div>
+</div>
+<style>
+#noteModal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9800;display:none;align-items:center;justify-content:center;padding:20px}
+#noteModal.show{display:flex}
+.nm-box{background:#fff;border-radius:16px;width:100%;max-width:360px;padding:18px}
+.nm-title{font-size:15px;font-weight:700;color:#2F5D50;margin-bottom:11px}
+#nmText{width:100%;min-height:110px;padding:12px;border:1px solid #D8E0DB;border-radius:10px;font-size:15px;font-family:inherit;resize:vertical;box-sizing:border-box;line-height:1.6}
+.nm-acts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:11px}
+.nm-acts button{padding:12px;border:0;border-radius:10px;font-size:14px;font-weight:600;font-family:inherit}
+#nmCancel{background:#F1F5F3;color:#5A6B63}
+#nmOk{background:#2F5D50;color:#fff}
+.note-btn{padding:8px 12px;border:1px solid #DCE7E2;border-radius:8px;background:#fff;color:#5A6B65;font-size:12.5px;flex-shrink:0;font-family:inherit;white-space:nowrap}
+.note-btn:active{background:#F2F7F4}
+</style>
+
+<script>
+
+</script>
+<script src="cloudbase.bundle.js"></script>
+
+<script>
+/* ========== 云同步 ========== */
+function errText(e){
+  if (!e) return '未知错误';
+  if (typeof e === 'string') return e;
+  if (e.message) return e.message;
+  if (e.errMsg) return e.errMsg;
+  if (e.error_description) return e.error_description;
+  if (e.name && e.code) return e.name + ' / ' + e.code;
+  if (e.code) return String(e.code);
+  try { var s = JSON.stringify(e); if (s && s !== '{}') return s; } catch(_) {}
+  return String(e);
+}
+
+var CLOUD_API = 'https://head-crab-d1g485if3fb037f2a.api.tcloudbasegateway.com/v1/rdb/rest';
+var cloudApp = null, cloudToken = null, cloudUser = null;
+
+function cloudInit(){
+  return new Promise(function(res, rej){
+    if (cloudToken) { res(); return; }
+    try {
+      var cb = window.cloudbase && (window.cloudbase.default || window.cloudbase);
+      if (!cb) { rej(new Error('SDK 未加载，请刷新')); return; }
+      cloudApp = cb.init({ env: 'head-crab-d1g485if3fb037f2a' });
+      var auth = cloudApp.auth({ persistence: 'local' });
+      auth.signInAnonymously().then(function(r){
+        var s = r && r.data && r.data.session;
+        if (s && s.access_token) cloudToken = s.access_token;
+        if (!cloudToken && r && r.accessToken) cloudToken = r.accessToken;
+        if (cloudToken) return null;
+        return auth.getAccessToken().then(function(t){
+          cloudToken = (typeof t === 'string') ? t : (t && t.accessToken);
+        });
+      }).then(function(){
+        if (!cloudToken) throw new Error('未拿到 token');
+        res();
+      }).catch(rej);
+    } catch(e) { rej(e); }
+  });
+}
+
+function cloudReq(path, opt){
+  opt = opt || {};
+  var url = CLOUD_API + path;
+
+  function run(){
+    var h = {};
+    h['Accept'] = 'application/json';
+    h['Content-Type'] = 'application/json';
+    h['Authorization'] = 'Bearer ' + cloudToken;
+    if (opt.headers) { for (var k in opt.headers) { if (opt.headers.hasOwnProperty(k)) h[k] = opt.headers[k]; } }
+
+    var init = { method: opt.method || 'GET', headers: h };
+    if (opt.body != null) init.body = opt.body;
+
+    return fetch(url, init).then(function(r){
+      return r.text().then(function(txt){
+        if (r.status >= 200 && r.status < 300) {
+          return txt ? JSON.parse(txt) : null;
+        }
+        var err = new Error('HTTP ' + r.status + ' ' + txt.slice(0, 120));
+        err.status = r.status;
+        err.body = txt;
+        throw err;
+      });
+    });
+  }
+
+  return run().catch(function(e){
+    var authFail = (e.status === 401) ||
+      (e.body && (e.body.indexOf('ACCESS_TOKEN_EXPIRED') >= 0 || e.body.indexOf('MISSING_CREDENTIALS') >= 0));
+    if (!authFail) throw e;
+    cloudToken = null;
+    return cloudInit().then(run);
+  });
+}
+
+function doLogin(){
+  var code = (document.getElementById('lgCode').value || '').trim();
+  var msg = document.getElementById('lgMsg');
+  var btn = document.getElementById('lgBtn');
+  if (!code) { msg.textContent = '请输入邀请码'; return; }
+  btn.textContent = '登录中…'; btn.disabled = true; msg.textContent = '';
+  cloudInit().then(function(){
+    msg.textContent = '正在验证…';
+    return cloudReq('/users?invite_code=eq.' + encodeURIComponent(code) + '&limit=1');
+  }).then(function(rows){
+    if (!rows || !rows.length) throw new Error('邀请码无效');
+    var u = rows[0];
+    if (u.status !== 'active') throw new Error('账号已停用');
+    cloudUser = u;
+    try { localStorage.setItem('gl_cloud_user', JSON.stringify(u)); } catch(e) {}
+    document.getElementById('loginMask').style.display = 'none';
+    loadMyGroups().then(function(){ cloudPull(); }).catch(function(e){
+      console.log('账本加载失败', e); cloudPull();
+    });
+  }).catch(function(e){
+    msg.textContent = '失败: ' + errText(e);
+  }).then(function(){
+    btn.textContent = '登 录'; btn.disabled = false;
+  });
+}
+
+
+/* ========== 账本（群） ========== */
+var myGroups = [];
+var curGroup = null;
+
+function loadMyGroups(){
+  if (!cloudUser) return Promise.resolve();
+  return cloudReq('/group_members?user_id=eq.' + encodeURIComponent(cloudUser.id) + '&select=group_id,role')
+    .then(function(rows){
+      var gids = (rows || []).map(function(r){ return r.group_id; });
+      if (!gids.length) { myGroups = []; curGroup = null; renderGrpBtn(); return; }
+      return cloudReq('/groups?id=in.(' + gids.join(',') + ')').then(function(gs){
+        myGroups = gs || [];
+        // 恢复上次选择
+        var lastId = null;
+        try { lastId = localStorage.getItem('gl_cur_group_' + cloudUser.id); } catch(e) {}
+        var found = lastId && myGroups.filter(function(g){ return g.id === lastId; })[0];
+        curGroup = found || myGroups[0];
+        renderGrpBtn();
+      });
+    });
+}
+
+function renderGrpBtn(){
+  var btn = document.getElementById('grpBtn');
+  var nm = document.getElementById('grpName');
+  if (!btn) return;
+  if (myGroups.length <= 1) {
+    btn.style.display = 'none';   // 只有一个账本，不显示选择器
+  } else {
+    btn.style.display = 'flex';
+    if (nm && curGroup) nm.textContent = curGroup.name;
+  }
+}
+
+function openGrpPicker(){
+  var box = document.getElementById('grpPicker');
+  var list = document.getElementById('grpList');
+  if (!box || !list) return;
+  list.innerHTML = myGroups.map(function(g){
+    return '<div class="gp-item' + (curGroup && curGroup.id === g.id ? ' on' : '') + '" onclick="pickGroup(\'' + g.id + '\')">' +
+      '<span class="gp-dot"></span>' +
+      '<div class="gp-info"><div class="gp-n">' + escHtml(g.name) + '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+  box.classList.add('show');
+}
+
+function closeGrpPicker(){
+  var box = document.getElementById('grpPicker');
+  if (box) box.classList.remove('show');
+}
+
+function pickGroup(gid){
+  var g = myGroups.filter(function(x){ return x.id === gid; })[0];
+  if (!g) return;
+  curGroup = g;
+  try { localStorage.setItem('gl_cur_group_' + cloudUser.id, gid); } catch(e) {}
+  closeGrpPicker();
+  renderGrpBtn();
+  // 清空本地数据，重新拉这个账本的
+  data = [];
+  expenses = [];
+  try {
+    if (typeof DB !== 'undefined') {
+      if (DB.clear) DB.clear().catch(function(){});
+      if (DB.expClear) DB.expClear().catch(function(){});
+    }
+  } catch(e) {}
+  render();
+  if (typeof renderSum === 'function') renderSum();
+  if (typeof renderExp === 'function') renderExp();
+  cloudPull();
+  alert('已切换到「' + g.name + '」');
+}
+
+function grpCond(){
+  // 没有账本时返回一个不可能匹配的条件，绝不返回空字符串
+  if (!curGroup) return '&group_id=eq.__NO_GROUP__';
+  return '&group_id=eq.' + encodeURIComponent(curGroup.id);
+}
+
+
+/* ========== 协作页 · 账本管理 ========== */
+
+/* ========== 加入账本 · 全员审批 ========== */
+
+function askJoinGroup(){
+  var code = prompt('输入账本邀请码\n（6 位数字，向账本里的人要）');
+  if (!code || !code.trim()) return;
+  code = code.trim();
+
+  cloudReq('/groups?invite_code=eq.' + encodeURIComponent(code) + '&limit=1').then(function(gs){
+    if (!gs || !gs.length) throw new Error('邀请码不存在');
+    var g = gs[0];
+
+    // 已经在里面了？
+    return cloudReq('/group_members?group_id=eq.' + encodeURIComponent(g.id) + '&user_id=eq.' + encodeURIComponent(cloudUser.id)).then(function(m){
+      if (m && m.length) throw new Error('你已经在「' + g.name + '」里了');
+
+      // 取当前成员作为审批人
+      return cloudReq('/group_members?group_id=eq.' + encodeURIComponent(g.id) + '&select=user_id').then(function(mem){
+        var required = (mem || []).map(function(x){ return x.user_id; });
+        if (!required.length) throw new Error('账本没有成员，无法审批');
+
+        var reqId = 'jr_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+        return cloudReq('/join_requests', {
+          method: 'POST',
+          headers: { 'Prefer': 'resolution=merge-duplicates' },
+          body: JSON.stringify({
+            id: reqId, group_id: g.id, user_id: cloudUser.id, user_name: cloudUser.name,
+            status: 'pending', required: JSON.stringify(required), approved: JSON.stringify([]),
+            created_at: Date.now()
+          })
+        }).then(function(){
+          alert('已提交申请\n\n「' + g.name + '」里有 ' + required.length + ' 个人，都要同意才能加入。\n等他们审批后你就能进来。');
+          loadMyRequests();
+        });
+      });
+    });
+  }).catch(function(e){
+    alert('申请失败：' + (e.message || e));
+  });
+}
+
+/* 我发的申请 */
+function loadMyRequests(){
+  if (!cloudUser) return;
+  cloudReq('/join_requests?user_id=eq.' + encodeURIComponent(cloudUser.id) + '&status=eq.pending&order=created_at.desc')
+    .then(function(rows){
+      var card = document.getElementById('coopMyReq');
+      var list = document.getElementById('myReqList');
+      if (!card || !list) return;
+      if (!rows || !rows.length) { card.style.display = 'none'; return; }
+      card.style.display = 'block';
+      list.innerHTML = rows.map(function(r){
+        var req = JSON.parse(r.required || '[]');
+        var app = JSON.parse(r.approved || '[]');
+        return '<div class="jr-item">' +
+          '<div class="jr-name">账本 ID：' + escHtml(r.group_id) + '</div>' +
+          '<div class="jr-meta">已同意 ' + app.length + ' / ' + req.length + ' 人</div>' +
+        '</div>';
+      }).join('');
+    }).catch(function(){});
+}
+
+/* 待我审批 */
+function loadPendingApprovals(){
+  if (!cloudUser || !myGroups.length) return;
+  var gids = myGroups.map(function(g){ return g.id; });
+  cloudReq('/join_requests?status=eq.pending&group_id=in.(' + gids.join(',') + ')&order=created_at.desc')
+    .then(function(rows){
+      var card = document.getElementById('coopPending');
+      var list = document.getElementById('pendList');
+      var cnt = document.getElementById('pendCount');
+      if (!card || !list) return;
+
+      // 只显示我还没同意的
+      var mine = (rows || []).filter(function(r){
+        var app = JSON.parse(r.approved || '[]');
+        return app.indexOf(cloudUser.id) < 0;
+      });
+      if (!mine.length) { card.style.display = 'none'; return; }
+      card.style.display = 'block';
+      if (cnt) cnt.textContent = mine.length;
+
+      var gmap = {};
+      myGroups.forEach(function(g){ gmap[g.id] = g.name; });
+
+      list.innerHTML = mine.map(function(r){
+        var req = JSON.parse(r.required || '[]');
+        var app = JSON.parse(r.approved || '[]');
+        return '<div class="jr-item">' +
+          '<div class="jr-name">' + escHtml(r.user_name || r.user_id) + ' 申请加入「' + escHtml(gmap[r.group_id] || r.group_id) + '」</div>' +
+          '<div class="jr-meta">已同意 ' + app.length + ' / ' + req.length + ' 人</div>' +
+          '<div class="jr-acts">' +
+            '<button class="jr-no" onclick="rejectJoin(\'' + r.id + '\')">拒绝</button>' +
+            '<button class="jr-ok" onclick="approveJoin(\'' + r.id + '\')">同意</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }).catch(function(){});
+}
+
+function approveJoin(reqId){
+  cloudReq('/join_requests?id=eq.' + encodeURIComponent(reqId) + '&select=*').then(function(rows){
+    if (!rows || !rows.length) throw new Error('申请不存在');
+    var r = rows[0];
+    var req = JSON.parse(r.required || '[]');
+    var app = JSON.parse(r.approved || '[]');
+    if (app.indexOf(cloudUser.id) < 0) app.push(cloudUser.id);
+
+    var allAgreed = req.every(function(uid){ return app.indexOf(uid) >= 0; });
+
+    return cloudReq('/join_requests?id=eq.' + encodeURIComponent(reqId), {
+      method: 'PATCH',
+      body: JSON.stringify({
+        approved: JSON.stringify(app),
+        status: allAgreed ? 'approved' : 'pending'
+      })
+    }).then(function(){
+      if (!allAgreed) {
+        alert('你已同意\n\n还差 ' + (req.length - app.length) + ' 人同意');
+        return;
+      }
+      // 全员同意 → 加进成员
+      return cloudReq('/group_members', {
+        method: 'POST',
+        headers: { 'Prefer': 'resolution=merge-duplicates' },
+        body: JSON.stringify({ group_id: r.group_id, user_id: r.user_id, role: 'member', joined_at: Date.now() })
+      }).then(function(){
+        alert('全员已同意，' + (r.user_name || '对方') + ' 已加入账本');
+      });
+    });
+  }).catch(function(e){
+    alert('操作失败：' + (e.message || e));
+  }).then(function(){
+    loadPendingApprovals();
+    renderCoop();
+  });
+}
+
+function rejectJoin(reqId){
+  if (!confirm('确定拒绝这个申请？')) return;
+  cloudReq('/join_requests?id=eq.' + encodeURIComponent(reqId), {
+    method: 'PATCH',
+    body: JSON.stringify({ status: 'rejected' })
+  }).then(function(){
+    loadPendingApprovals();
+  }).catch(function(e){ alert('失败：' + (e.message || e)); });
+}
+
+function renderCoop(){
+  var list = document.getElementById('coopGroupList');
+  var cnt = document.getElementById('coopCount');
+  if (!list) return;
+
+  if (!cloudUser) {
+    list.innerHTML = '<div class="hint" style="text-align:center;padding:18px 0">加载中…</div>';
+    setTimeout(renderCoop, 900);
+    return;
+  }
+  if (!myGroups.length && cloudToken) {
+    list.innerHTML = '<div class="hint" style="text-align:center;padding:18px 0">加载中…</div>';
+    loadMyGroups().then(function(){ setTimeout(renderCoop, 60); }).catch(function(){
+      list.innerHTML = '<div class="hint" style="text-align:center;padding:18px 0">加载失败，请刷新</div>';
+    });
+    return;
+  }
+  if (!myGroups.length) {
+    list.innerHTML = '<div class="hint" style="text-align:center;padding:20px 0">还没有账本</div>';
+    if (cnt) cnt.textContent = '';
+    return;
+  }
+  if (cnt) cnt.textContent = myGroups.length + ' 个';
+
+  list.innerHTML = myGroups.map(function(g){
+    var isCur = curGroup && curGroup.id === g.id;
+    var isOpen = window.__openGroupId === g.id;
+    var code = g.invite_code || '------';
+    return '<div class="cg-wrap">' +
+      '<div class="cg-item' + (isCur ? ' on' : '') + (isOpen ? ' open' : '') + '" onclick="toggleGroupDetail(\'' + g.id + '\')">' +
+        '<div style="flex:1;min-width:0">' +
+          '<div class="cg-name">' + escHtml(g.name) + (isCur ? ' <span class="cg-cur">当前</span>' : '') + '</div>' +
+
+        '</div>' +
+        '<span class="cg-ar">' + (isOpen ? '▾' : '▸') + '</span>' +
+      '</div>' +
+      (isOpen ? (
+        '<div class="cg-body">' +
+          '<div class="cd-head">' +
+            '<button class="inv-chip" onclick="event.stopPropagation();copyInvite(\'' + code + '\')">' +
+              '<span class="inv-label">邀请码</span>' +
+              '<b>' + code + '</b>' +
+              '<span class="inv-copy">复制</span>' +
+            '</button>' +
+            (curGroup && curGroup.id === g.id ? '<span class="cg-using">正在使用</span>' : '<button class="cg-use" onclick="event.stopPropagation();switchTo(\'' + g.id + '\')">切到这个账本</button>') +
+          '</div>' +
+
+          '<div id="mem_' + g.id + '"><div class="hint" style="padding:8px 0">加载成员…</div></div>' +
+        '</div>'
+      ) : '') +
+    '</div>';
+  }).join('');
+
+  // 加载展开项里的成员
+  if (window.__openGroupId) loadGroupMembers(window.__openGroupId);
+}
+
+function toggleGroupDetail(gid){
+  window.__openGroupId = (window.__openGroupId === gid) ? null : gid;
+  renderCoop();
+}
+
+function loadGroupMembers(gid){
+  var box = document.getElementById('mem_' + gid);
+  if (!box) return;
+  cloudReq('/group_members?group_id=eq.' + encodeURIComponent(gid) + '&select=user_id,role')
+    .then(function(rows){
+      var ids = (rows || []).map(function(r){ return r.user_id; });
+      if (!ids.length) { box.innerHTML = '<div class="hint">没有成员</div>'; return null; }
+      return cloudReq('/users?id=in.(' + ids.join(',') + ')&select=id,name').then(function(us){
+        var nm = {};
+        (us || []).forEach(function(u){ nm[u.id] = u.name; });
+        box.innerHTML = (rows || []).map(function(r){
+          var isMe = cloudUser && r.user_id === cloudUser.id;
+          return '<div class="cm-row">' +
+            '<span class="cm-name">' + escHtml(nm[r.user_id] || r.user_id) + (isMe ? '（我）' : '') + '</span>' +
+            '<span style="display:flex;gap:9px;align-items:center">' +
+              '<span class="cm-role">成员</span>' +
+              (isMe ? '' : '<span class="cm-del" onclick="removeMember(\'' + gid + '\',\'' + r.user_id + '\')">移除</span>') +
+            '</span>' +
+          '</div>';
+        }).join('');
+      });
+    }).catch(function(e){
+      box.innerHTML = '<div class="hint">加载失败</div>';
+    });
+}
+
+
+function removeMember(gid, uid){
+  if (!confirm('确定把这个人移出账本？\n移除后他就看不到这个账本的数据了。')) return;
+  cloudReq('/group_members?group_id=eq.' + encodeURIComponent(gid) + '&user_id=eq.' + encodeURIComponent(uid), {
+    method: 'DELETE'
+  }).then(function(){
+    alert('已移除');
+    loadGroupMembers(gid);
+  }).catch(function(e){
+    alert('移除失败：' + (e.message || e));
+  });
+}
+
+function switchTo(gid){
+  var g = myGroups.filter(function(x){ return x.id === gid; })[0];
+  if (!g) return;
+  curGroup = g;
+  try { localStorage.setItem('gl_cur_group_' + cloudUser.id, gid); } catch(e) {}
+  data = []; expenses = [];
+  try {
+    if (typeof DB !== 'undefined') {
+      if (DB.clear) DB.clear().catch(function(){});
+      if (DB.expClear) DB.expClear().catch(function(){});
+    }
+  } catch(e) {}
+  renderGrpBtn();
+  try { if (typeof render === 'function') render(); } catch(e) {}
+  try { if (typeof renderExp === 'function') renderExp(); } catch(e) {}
+  try { if (typeof renderSum === 'function') renderSum(); } catch(e) {}
+  cloudPull();
+  renderCoop();
+}
+
+/* 复制邀请码（新版带参数） */
+function copyInvite(code){
+  if (!code || code === '------') { alert('这个账本还没有邀请码'); return; }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(code).then(function(){
+      var chips = document.querySelectorAll('.inv-copy');
+      for (var i = 0; i < chips.length; i++) {
+        chips[i].textContent = '已复制';
+        setTimeout((function(el){ return function(){ el.textContent = '复制'; }; })(chips[i]), 1500);
+      }
+    }).catch(function(){ prompt('复制这个邀请码：', code); });
+  } else {
+    prompt('复制这个邀请码：', code);
+  }
+}
+
+
+
+
+/* 复制邀请码 */
+
+
+function genInvite(){
+  var g = myGroups.filter(function(x){ return curGroup && x.id === curGroup.id; })[0];
+  if (!g) return;
+  if (!g.invite_code) {
+    var code = String(Math.floor(100000 + Math.random() * 900000));
+    cloudReq('/groups?id=eq.' + encodeURIComponent(g.id), {
+      method: 'PATCH',
+      body: JSON.stringify({ invite_code: code })
+    }).then(function(){
+      g.invite_code = code;
+      showInviteCode(code);
+    }).catch(function(e){ alert('生成失败：' + (e.message || e)); });
+  } else {
+    showInviteCode(g.invite_code);
+  }
+}
+
+function showInviteCode(code){
+  var hint = document.getElementById('coopInviteHint');
+  if (hint) hint.innerHTML = '把 <b style="font-size:17px;color:#C0392B;letter-spacing:2px">' + code + '</b> 发给对方，他在登录页输入就能进这个账本';
+  alert('邀请码：' + code + '\\n\\n发给对方，他在登录页输入就能进这个账本。');
+}
+
+function openCreateGroup(){
+  var name = prompt('给新账本起个名字（比如：李家生意）');
+  if (!name || !name.trim()) return;
+  var gid = 'g_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
+  var code = String(Math.floor(100000 + Math.random() * 900000));
+  cloudReq('/groups', {
+    method: 'POST',
+    headers: { 'Prefer': 'resolution=merge-duplicates' },
+    body: JSON.stringify({ id: gid, name: name.trim(), owner_id: cloudUser.id, invite_code: code, created_at: Date.now() })
+  }).then(function(){
+    return cloudReq('/group_members', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=merge-duplicates' },
+      body: JSON.stringify({ group_id: gid, user_id: cloudUser.id, role: 'owner', joined_at: Date.now() })
+    });
+  }).then(function(){
+    return loadMyGroups();
+  }).then(function(){
+    renderCoop();
+    alert('账本「' + name.trim() + '」建好了\\n邀请码：' + code);
+  }).catch(function(e){ alert('创建失败：' + (e.message || e)); });
+}
+
+function cloudRestore(){
+  try {
+    var s = localStorage.getItem('gl_cloud_user');
+    if (s) {
+      cloudUser = JSON.parse(s);
+      document.getElementById('loginMask').style.display = 'none';
+      cloudInit().then(function(){
+        return loadMyGroups();
+      }).then(function(){ cloudPull(); }).catch(function(){});
+      return true;
+    }
+  } catch(e) {}
+  return false;
+}
+
+function cloudPull(){
+  if (!cloudUser || !cloudToken) return;
+  if (!curGroup) {
+    // 账本还没确定，先不拉，等确定后再拉
+    data = []; expenses = [];
+    if (typeof render === 'function') render();
+    if (typeof renderExp === 'function') renderExp();
+    return;
+  }
+
+  // 关键：先清空本地缓存，避免上个账本的数据残留
+  data = [];
+  expenses = [];
+  try {
+    if (typeof DB !== 'undefined') {
+      if (DB.clear) DB.clear().catch(function(){});
+      if (DB.expClear) DB.expClear().catch(function(){});
+    }
+  } catch(e) {}
+  // 立刻清屏，避免旧数据残留（包 try，防止渲染错误中断拉取）
+  try { if (typeof render === 'function') render(); } catch(e) { console.log('render', e); }
+  try { if (typeof renderExp === 'function') renderExp(); } catch(e) {}
+  try { if (typeof renderSum === 'function') renderSum(); } catch(e) {}
+
+  cloudReq('/records?select=*&limit=500&order=created_at.desc' + grpCond()).then(function(rows){
+    if (!rows || !Array.isArray(rows)) return;
+    data = [];   // 云端返回后重建，避免任何残留
+    var changed = false;
+    rows.forEach(function(r){
+      var rec = {
+        uuid: r.id, date: r.date, customer: r.customer, customerTel: r.customer_tel,
+        lot: r.lot, plate: r.plate, owner: r.owner_name, tel: r.owner_tel, base: r.base,
+        jian: Number(r.jian), per: Number(r.per), soil: Number(r.soil),
+        price: Number(r.price), fee: Number(r.fee),
+        total: Number(r.total), soilQty: Number(r.soil_qty), net: Number(r.net),
+        amount: Number(r.amount), feeTotal: Number(r.fee_total), actual: Number(r.actual),
+        address: r.address || '', lat: r.lat, lng: r.lng, accuracy: r.accuracy,
+        contracts: r.contracts || [], operator: r.operator || '', deviceId: r.device_id,
+        createdAt: Number(r.created_at), updatedAt: Number(r.updated_at),
+        deleted: !!r.deleted
+      };
+      var idx = data.findIndex(function(x){ return x.uuid === rec.uuid; });
+      if (idx < 0) { data.push(rec); changed = true; }
+      else if ((rec.updatedAt||0) > (data[idx].updatedAt||0)) { data[idx] = rec; changed = true; }
+    });
+    if (changed) {
+      data.sort(function(a,b){ return (b.createdAt||0) - (a.createdAt||0); });
+      if (typeof render === 'function') render();
+      if (typeof renderSum === 'function') renderSum();
+      if (typeof renderCus === 'function') renderCus();
+    }
+  }).catch(function(e){ console.log('记录拉取失败', errText(e)); });
+
+  // 同时拉费用
+  cloudReq('/expenses?select=*&limit=500&order=created_at.desc' + grpCond()).then(function(rows){
+    if (!rows || !Array.isArray(rows)) return;
+    expenses = [];
+    var changed = false;
+    rows.forEach(function(e){
+      var ex = {
+        uuid: e.id, date: e.date, type: e.type, subtype: e.subtype || '',
+        amount: Number(e.amount) || 0,
+        qty: e.qty != null ? Number(e.qty) : null,
+        unitPrice: e.unit_price != null ? Number(e.unit_price) : null,
+        payer: e.payer, note: e.note || '',
+        operator: e.operator || '',
+        createdAt: Number(e.created_at), updatedAt: Number(e.updated_at),
+        deleted: !!e.deleted
+      };
+      var idx = expenses.findIndex(function(x){ return x.uuid === ex.uuid; });
+      if (idx < 0) { expenses.push(ex); changed = true; }
+      else if ((ex.updatedAt||0) > (expenses[idx].updatedAt||0)) { expenses[idx] = ex; changed = true; }
+    });
+    if (changed) {
+      expenses.sort(function(a,b){ return (b.createdAt||0) - (a.createdAt||0); });
+      if (typeof renderExp === 'function') renderExp();
+      if (typeof renderSum === 'function') renderSum();
+    }
+  }).catch(function(e){ console.log('费用拉取失败', errText(e)); });
+}
+
+function cloudSaveRecord(rec){
+  if (!cloudUser) return;
+  cloudInit().then(function(){
+    var body = {
+      id: rec.uuid, owner_id: cloudUser.id, creator_id: cloudUser.id,
+      customer: rec.customer, customer_tel: rec.customerTel, lot: rec.lot, plate: rec.plate,
+      owner_name: rec.owner, owner_tel: rec.tel, base: rec.base, date: rec.date,
+      jian: rec.jian, per: rec.per, soil: rec.soil, price: rec.price, fee: rec.fee,
+      total: rec.total, soil_qty: rec.soilQty, net: rec.net,
+      amount: rec.amount, fee_total: rec.feeTotal, actual: rec.actual,
+      address: rec.address || '', lat: rec.lat, lng: rec.lng, accuracy: rec.accuracy,
+      contracts: rec.contracts || [], operator: rec.operator || '',
+      device_id: rec.deviceId || '', group_id: (curGroup ? curGroup.id : null),
+      created_at: rec.createdAt, updated_at: Date.now(), deleted: false
+    };
+    return cloudReq('/records', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=merge-duplicates' },
+      body: JSON.stringify(body)
+    });
+  }).catch(function(e){ console.log('上传失败', errText(e)); });
+}
+
+setTimeout(function(){
+  var m = location.search.match(/[?&]code=([^&]+)/);
+  if (m) {
+    // 带 code 参数 = 强制切到这个账号，清掉缓存身份
+    try { localStorage.removeItem('gl_cloud_user'); } catch(e) {}
+    cloudUser = null;
+    curGroup = null;
+    myGroups = [];
+    var c = document.getElementById('lgCode');
+    if (c) c.value = decodeURIComponent(m[1]);
+    setTimeout(function(){ try { doLogin(); } catch(e) { console.log(e); } }, 400);
+  } else if (!cloudRestore()) {
+    // 没登录态就停在登录页
+  }
+}, 1500);
+</script>
+
+
+<!-- ===== 标注工具 ===== -->
+<button id="markBtn">✏️ 标注</button>
+<button id="mkSubmit" class="hide">📋 提交标注（<span id="mkCount">0</span>）</button>
+<div id="mkPanel">
+  <div id="mkHead">标注这一处</div>
+  <div id="mkTarget"></div>
+  <textarea id="mkText" placeholder="这里要改什么？比如：加号太小 / 这里应该显示对方名字 / 位置放错了"></textarea>
+  <div class="mk-acts">
+    <button id="mkCancel">取消</button>
+    <button id="mkSave">保存标注</button>
+  </div>
+</div>
+
+<div id="mkHistPanel">
+  <div class="mkh-head" onclick="toggleHistCollapse()">
+    <span>我提交过的标注 <b id="mkHistCount">0</b> <i style="font-style:normal;font-size:11px;color:#A0AEA8">（点这里展开/收起）</i></span>
+    <span class="mkh-close" onclick="event.stopPropagation();toggleHist(false)">关闭</span>
+  </div>
+  <div id="mkHistList"></div>
+</div>
+
+<style>
+#markBtn{position:fixed;right:14px;bottom:28px;z-index:9700;padding:12px 18px;border-radius:24px;background:#C0392B;color:#fff;border:0;font-size:14px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.25);font-family:inherit}
+#markBtn.on{background:#2F5D50}
+#mkSubmit{position:fixed;right:14px;bottom:92px;z-index:9700;padding:11px 16px;border-radius:24px;background:#1E4A3C;color:#fff;border:0;font-size:13px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.25);font-family:inherit}
+body.marking *{cursor:crosshair!important}
+body.marking .mk-hover{outline:2px dashed #C0392B!important;outline-offset:2px;background:rgba(192,57,43,.06)!important}
+.mk-dot{position:fixed;width:20px;height:20px;border-radius:50%;background:#C0392B;color:#fff;font-size:11px;line-height:20px;text-align:center;z-index:8500;pointer-events:none;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+#mkPanel{position:fixed;left:0;right:0;bottom:0;background:#fff;z-index:9600;padding:16px;border-radius:18px 18px 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.18);transform:translateY(110%);transition:transform .22s;pointer-events:none}
+#mkPanel.show{transform:translateY(0);pointer-events:auto}
+#mkHead{font-size:14px;font-weight:700;margin-bottom:6px;color:#C0392B}
+#mkTarget{font-size:12px;color:#7A8A82;margin-bottom:10px;line-height:1.5;background:#F7F9F8;padding:8px;border-radius:8px;max-height:60px;overflow:auto}
+#mkText{width:100%;min-height:76px;padding:11px;border:1px solid #D8E0DB;border-radius:9px;font-size:15px;font-family:inherit;resize:vertical;box-sizing:border-box}
+.mk-acts{display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-top:10px}
+.mk-acts button{padding:12px;border:0;border-radius:9px;font-size:14px;font-family:inherit;font-weight:600}
+#mkCancel{background:#F1F5F3;color:#5A6B63}
+#mkSave{background:#C0392B;color:#fff}
+</style>
+
+<script>
+(function(){
+  var marking = false;
+  var marks = [];
+  var pending = null;
+  var btn = document.getElementById('markBtn');
+  var panel = document.getElementById('mkPanel');
+  var target = document.getElementById('mkTarget');
+  var text = document.getElementById('mkText');
+  var submit = document.getElementById('mkSubmit');
+  var countEl = document.getElementById('mkCount');
+
+  function describe(el){
+    var bits = [];
+    var cur = el;
+    for(var i = 0; i < 3 && cur && cur !== document.body; i++){
+      var name = cur.tagName.toLowerCase();
+      if(cur.id) name += '#' + cur.id;
+      else if(cur.className && typeof cur.className === 'string'){
+        var c = cur.className.trim().split(/\s+/)[0];
+        if(c && c !== 'hide') name += '.' + c;
+      }
+      bits.unshift(name);
+      cur = cur.parentElement;
+    }
+    var txt = (el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 40);
+    var card = el.closest('.card');
+    var cardTitle = card ? ((card.querySelector('h3') || {}).textContent || '').trim().slice(0, 14) : '';
+    return {
+      path: bits.join(' > '),
+      text: txt,
+      card: cardTitle,
+      tab: (document.querySelector('nav button.on') || {}).textContent || ''
+    };
+  }
+
+  function clearDots(){
+    document.querySelectorAll('.mk-dot').forEach(function(d){ d.remove(); });
+  }
+
+  function drawDots(){
+    clearDots();
+    marks.forEach(function(m, i){
+      if(!m.el || !document.body.contains(m.el)) return;
+      var r = m.el.getBoundingClientRect();
+      var d = document.createElement('div');
+      d.className = 'mk-dot';
+      d.textContent = i + 1;
+      d.style.left = (r.left + 8) + 'px';
+      d.style.top = (r.top + window.scrollY + 8) + 'px';
+      document.body.appendChild(d);
+    });
+  }
+
+  btn.onclick = function(){
+    marking = !marking;
+    document.body.classList.toggle('marking', marking);
+    btn.classList.toggle('on', marking);
+    btn.textContent = marking
+      ? '✏️ 标注中' + (marks.length ? ' · 已标 ' + marks.length + ' 处' : '（点要改的地方）')
+      : '✏️ 标注';
+    submit.classList.toggle('hide', !marks.length);
+    if(!marking) drawDots();
+
+    // 进入标注模式时加载已提交的标注
+    if (marking && typeof window.__mkLoadHistory === 'function') {
+      window.__mkLoadHistory();
+    } else {
+      var hp = document.getElementById('mkHistPanel');
+      if (hp) hp.classList.remove('show');
+    }
+  };
+
+  document.addEventListener('mouseover', function(e){
+    if(!marking) return;
+    var el = e.target;
+    if(el === btn || panel.contains(el) || submit.contains(el)) return;
+    document.querySelectorAll('.mk-hover').forEach(function(x){ x.classList.remove('mk-hover'); });
+    el.classList.add('mk-hover');
+  }, true);
+
+  document.addEventListener('click', function(e){
+    if(!marking) return;
+    // 点页签 = 正常切换页面，不当作标注
+    if(e.target.closest('nav button')) return;
+    if(e.target === btn || panel.contains(e.target) || submit.contains(e.target)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var el = e.target;
+    document.querySelectorAll('.mk-hover').forEach(function(x){ x.classList.remove('mk-hover'); });
+    pending = {el: el, info: describe(el)};
+    target.innerHTML = '【' + (pending.info.tab || '页面') + '】' +
+      (pending.info.card ? pending.info.card + ' → ' : '') +
+      '<b>' + (pending.info.text || pending.info.path) + '</b><br>' +
+      '<span style="color:#B0BAB5">' + pending.info.path + '</span>';
+    text.value = '';
+    panel.classList.add('show');
+    setTimeout(function(){ text.focus(); }, 250);
+  }, true);
+
+  var __mc = document.getElementById('mkCancel');
+  if (__mc) __mc.onclick = function(){
+    panel.classList.remove('show');
+    pending = null;
+  };
+
+  var __ms = document.getElementById('mkSave');
+  if (__ms) __ms.onclick = function(){
+    if(!pending) return;
+    var note = text.value.trim();
+    if(!note){ text.focus(); return; }
+    marks.push({
+      el: pending.el,
+      tab: pending.info.tab,
+      card: pending.info.card,
+      text: pending.info.text,
+      path: pending.info.path,
+      note: note
+    });
+    panel.classList.remove('show');
+    pending = null;
+    countEl.textContent = marks.length;
+    btn.textContent = '✏️ 标注中 · 已标 ' + marks.length + ' 处';
+    drawDots();
+    // 关键：保存后要让"提交标注"按钮现身
+    submit.classList.toggle('hide', !marks.length);
+  };
+
+  /* ===== 标注历史 ===== */
+  window.__mkLoadHistory = function(){
+    if (!window.cloudUser || !window.cloudToken) return;
+    var panel = document.getElementById('mkHistPanel');
+    var list = document.getElementById('mkHistList');
+    var cnt = document.getElementById('mkHistCount');
+    if (!panel || !list) return;
+    window.cloudReq('/feedback?user_id=eq.' + encodeURIComponent(window.cloudUser.id) + '&order=created_at.desc&limit=50')
+      .then(function(rows){
+        rows = rows || [];
+        if (!rows.length) { panel.classList.remove('show'); return; }
+        panel.classList.add('show', 'collapsed');
+        if (cnt) cnt.textContent = String(rows.length);
+        list.innerHTML = rows.map(function(r, idx){
+          var where = [r.page, r.card, r.elem_text].filter(Boolean).join(' › ');
+          return '<div class="mkh-item">' +
+            '<span class="mkh-no">' + (idx+1) + '</span>' +
+            '<div class="mkh-body">' +
+              '<div class="mkh-where">' + (where || '').slice(0, 60) + '</div>' +
+              '<div class="mkh-note">' + (r.note || '') + '</div>' +
+            '</div>' +
+            '<span class="mkh-x" onclick="window.__mkDel(\'' + r.id + '\')">删除</span>' +
+          '</div>';
+        }).join('');
+      }).catch(function(e){ console.log('历史加载失败', e); });
+  };
+
+  window.__mkDel = function(id){
+    if (!confirm('删除这条标注？删除后可以重新标注。')) return;
+    window.cloudReq('/feedback?id=eq.' + encodeURIComponent(id), { method: 'DELETE' })
+      .then(function(){ window.__mkLoadHistory(); })
+      .catch(function(e){ alert('删除失败：' + (e.message || e)); });
+  };
+
+  window.toggleHist = function(show){
+    var p = document.getElementById('mkHistPanel');
+    if (!p) return;
+    if (show === false) p.classList.remove('show');
+    else p.classList.toggle('show');
+  };
+
+  window.toggleHistCollapse = function(){
+    var p = document.getElementById('mkHistPanel');
+    if (!p) return;
+    p.classList.toggle('collapsed');
+  };
+
+  submit.onclick = function(){
+    if(!marks.length) return;
+
+    // 直接写入云端 feedback 表
+    var rows = marks.map(function(m){
+      return {
+        id: 'fb_' + Date.now() + '_' + Math.random().toString(36).slice(2,8),
+        created_at: Date.now(),
+        user_name: (window.cloudUser && window.cloudUser.name) || '未登录',
+        user_id: (window.cloudUser && window.cloudUser.id) || '',
+        page: m.tab || '',
+        card: m.card || '',
+        elem_text: (m.text || '').slice(0, 100),
+        note: m.note || '',
+        device: navigator.userAgent.slice(0, 120),
+        status: 'new'
+      };
+    });
+
+    submit.textContent = '提交中…';
+    submit.disabled = true;
+
+    var send = (window.cloudReq && window.cloudToken) ? window.cloudReq('/feedback', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=merge-duplicates' },
+      body: JSON.stringify(rows)
+    }) : Promise.reject(new Error('未登录，无法提交'));
+
+    send.then(function(){
+      marks.length = 0;
+      document.querySelectorAll('.mk-dot').forEach(function(d){ d.remove(); });
+      countEl.textContent = '0';
+      submit.classList.add('hide');
+      submit.textContent = '📋 提交标注';
+      submit.disabled = false;
+      btn.textContent = '✏️ 标注';
+      marking = false;
+      document.body.classList.remove('marking');
+      btn.classList.remove('on');
+      alert('✅ 已提交 ' + rows.length + ' 条标注\n\n老板直接就能看到，不用再发消息了。');
+      if (typeof window.__mkLoadHistory === 'function') setTimeout(window.__mkLoadHistory, 400);
+    }).catch(function(e){
+      submit.textContent = '📋 提交标注';
+      submit.disabled = false;
+      alert('提交失败：' + (e && e.message ? e.message : e) + '\n\n请检查网络后重试。');
+    });
+  };
+
+  window.addEventListener('scroll', function(){ if(marks.length && !marking) drawDots(); }, {passive:true});
+
+  // 切换页签后，把还存在的标注点重新画一遍
+  document.addEventListener('click', function(e){
+    if(e.target.closest('nav button')){ setTimeout(drawDots, 120); }
+  }, false);
+})();
+</script>
+</body>
+</html>

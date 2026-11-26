@@ -2892,7 +2892,7 @@ function showGuide(cfg){
   elGuide.classList.remove('hide');
 }
 
-elGdone.onclick = markInstalled;
+if (elGdone) elGdone.onclick = markInstalled;
 
 function guideWeChat(){
   showGuide({
