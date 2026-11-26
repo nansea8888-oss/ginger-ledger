@@ -365,6 +365,11 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 .obc-sum{font-size:12.5px;color:#C0392B;font-weight:600}
 .obc-ar{font-size:12px;color:#8A9992}
 .ob-fold{font-size:12px;color:#5A6B65;padding:3px 9px;border-radius:7px;background:#EEF4F1;cursor:pointer}
+
+.addr-input-row{display:flex;gap:8px;align-items:center;margin-top:5px}
+.addr-input-row input{flex:1;min-width:0}
+.loc-btn{flex-shrink:0;width:42px;height:42px;border:1px solid #DCE7E2;border-radius:11px;background:#F7FAF8;color:#2F5D50;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent}
+.loc-btn:active{background:#2F5D50;color:#fff}
 </style>
 </head>
 <body>
@@ -449,7 +454,6 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 
     <div class="card">
       <h3>收购地点 <span class="pill" id="geoState">未定位</span></h3>
-      <button class="btn ghost" onclick="locate()">获取当前位置</button>
       <div class="addr-box" id="addrBox" onclick="toggleAddr()">
         <span class="addr-short" id="addrShort">点击定位或手动填写</span>
         <span class="addr-arrow" id="addrArrow">展开 ▾</span>
@@ -457,7 +461,15 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
       <div class="addr-full" id="addrFull" style="display:none"></div>
       <div style="margin-top:10px">
         <label>手动填写（村级 + 门牌）</label>
-        <input id="addr" placeholder="例如：王家村 12号" oninput="manualAddr(this.value)">
+        <div class="addr-input-row">
+          <input id="addr" placeholder="例如：王家村 12号" oninput="manualAddr(this.value)">
+          <button class="loc-btn" onclick="locate()" title="定位">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
 
