@@ -1145,6 +1145,7 @@ function locOwner(id){
       var name = '';
       if (res && res.foreign) { alert('定位在境外（' + res.country + '），请手动填写基地'); return; }
       if (res && res.parts) {
+        if (res.landmark) res.parts.__landmark = res.landmark;
         var p2 = addrParts(res.parts);
         name = (p2.village || '') + (p2.detail ? ' ' + p2.detail : '');
         if (!name) name = p2.county || p2.city || '';
@@ -1728,48 +1729,82 @@ function compressImg(file, cb){
 
 var AMAP_KEY = 'c2167d58b855ecdd32303723f4bc4b32';
 
+var AMAP_KEY = 'c2167d58b855ecdd32303723f4bc4b32';
+
 function reverseGeo(lat, lng, cb){
-  var url = 'https://restapi.amap.com/v3/geocode/regeo?key=' + AMAP_KEY +
-            '&location=' + lng + ',' + lat + '&extensions=base&coordsys=gps';
+  var base = 'https://restapi.amap.com/v3';
+  var regeoUrl = base + '/geocode/regeo?key=' + AMAP_KEY +
+    '&location=' + lng + ',' + lat + '&extensions=base&coordsys=gps';
+  // 找附近最近的住宅区（120000 = 商务住宅）
+  var poiUrl = base + '/place/around?key=' + AMAP_KEY +
+    '&location=' + lng + ',' + lat + '&radius=500&types=120000&offset=3&page=1';
+
   var done = false;
-  var timer = setTimeout(function(){ if (!done) { done = true; cb(null); } }, 8000);
-  fetch(url).then(function(r){ return r.json(); }).then(function(d){
+  var timer = setTimeout(function(){
+    if (!done) { done = true; cb(null); }
+  }, 9000);
+
+  Promise.all([
+    fetch(regeoUrl).then(function(r){ return r.json(); }).catch(function(){ return null; }),
+    fetch(poiUrl).then(function(r){ return r.json(); }).catch(function(){ return null; })
+  ]).then(function(res){
     if (done) return;
     done = true; clearTimeout(timer);
-    if (d && d.status === '1' && d.regeocode) {
-      cb({ parts: d.regeocode.addressComponent, formatted: d.regeocode.formatted_address || '' });
-    } else {
-      cb(null);
+
+    var rg = res[0];
+    var poi = res[1];
+
+    var parts = {};
+    var formatted = '';
+    if (rg && rg.status === '1' && rg.regeocode) {
+      parts = rg.regeocode.addressComponent || {};
+      formatted = rg.regeocode.formatted_address || '';
     }
-  }).catch(function(){
-    if (done) return;
-    done = true; clearTimeout(timer);
-    cb(null);
+
+    // 最近的小区/楼宇名
+    var landmark = '';
+    if (poi && poi.status === '1' && poi.pois && poi.pois.length) {
+      landmark = poi.pois[0].name || '';
+    }
+
+    if (!parts || (!parts.province && !formatted && !landmark)) { cb(null); return; }
+
+    cb({ parts: parts, formatted: formatted, landmark: landmark });
   });
 }
 
 /* 把 Nominatim 的 address 拆成用户要的格式 */
 function addrParts(p){
   p = p || {};
-  // 高德字段：province / city / district / township / neighborhood / streetNumber
   var province = p.province || '';
   var city = p.city || '';
   var district = p.district || '';
   var township = p.township || '';
   var nb = (p.neighborhood && p.neighborhood.name) || '';
+  var bd = (p.building && p.building.name) || '';
   var street = (p.streetNumber && p.streetNumber.street) || '';
   var num = (p.streetNumber && p.streetNumber.number) || '';
 
-  var village = township || nb || '';
+  // 地标优先：小区/楼宇名 > neighborhood > building
+  var landmark = p.__landmark || bd || nb || '';
+
   var detail = '';
-  if (street && num) detail = street + ' ' + num + '号';
-  else if (num) detail = num + '号';
+  if (street && num) detail = street + ' ' + num;
+  else if (num) detail = num;
   else if (street) detail = street;
 
-  if (city === province) city = '';   // 直辖市去重
+  if (city === province) city = '';
   if (district === city) district = '';
 
-  return { village: village, detail: detail, country: '中国', state: province, city: city, county: district };
+  return {
+    village: landmark || township,   // 有小区名就显示小区名
+    township: township,
+    detail: detail,
+    country: '中国',
+    state: province,
+    city: city,
+    county: district
+  };
 }
 
 function renderAddr(){ /* 已移除地址条 */ }
@@ -1822,6 +1857,7 @@ function locate(){
         return;
       }
       if (res && res.parts) {
+        if (res.landmark) res.parts.__landmark = res.landmark;
         geoInfo.parts = res.parts;
         st.textContent = '已定位';
         var pg = addrParts(res.parts);
