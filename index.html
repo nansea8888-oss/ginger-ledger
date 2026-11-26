@@ -370,6 +370,17 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 .addr-input-row input{flex:1;min-width:0}
 .loc-btn{flex-shrink:0;width:42px;height:42px;border:1px solid #DCE7E2;border-radius:11px;background:#F7FAF8;color:#2F5D50;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent}
 .loc-btn:active{background:#2F5D50;color:#fff}
+
+.cg-item{display:flex;align-items:center;padding:13px;border:1.5px solid #E4ECE8;border-radius:11px;margin-bottom:9px;cursor:pointer;background:#fff}
+.cg-item.on{border-color:#2F5D50;background:#F5FAF7}
+.cg-name{font-size:14.5px;font-weight:600;color:#22312C}
+.cg-cur{font-size:10px;padding:1px 7px;border-radius:5px;background:#2F5D50;color:#fff;font-weight:500}
+.cg-sub{font-size:11px;color:#8A9992;margin-top:3px}
+.cg-ar{font-size:12px;color:#8A9992}
+.cm-row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid #F0F4F2;font-size:13.5px}
+.cm-row:last-child{border-bottom:0}
+.cm-name{color:#22312C;font-weight:500}
+.cm-role{color:#8A9992;font-size:12px}
 </style>
 </head>
 <body>
@@ -661,38 +672,16 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
   <!-- 协作 -->
   <section id="tab-coop" class="hide">
     <div class="card">
-      <h3>关联线 <span class="h3s" id="linkCount"></span></h3>
-      <div id="linkBox"></div>
+      <h3>我的账本 <span class="h3s" id="coopCount"></span></h3>
+      <div id="coopGroupList"></div>
+      <button class="btn ghost" style="margin-top:11px" onclick="openCreateGroup()">＋ 新建一个账本</button>
     </div>
 
-    <div class="card">
-      <h3>新建关联 <span class="h3s">可以加多个</span></h3>
-      <div class="mb">
-        <label>对方姓名</label>
-        <input id="linkName" placeholder="比如：老王">
-      </div>
-      <div class="mb">
-        <label>方向</label>
-        <select id="linkDir">
-          <option value="a2b">我看他的账</option>
-          <option value="b2a">他看我的账</option>
-          <option value="both">互相看</option>
-        </select>
-      </div>
-      <div class="mb">
-        <label>范围</label>
-        <select id="linkScope">
-          <option value="all">全部数据</option>
-          <option value="hide">全部数据，但隐藏金额</option>
-        </select>
-      </div>
-      <button class="btn" onclick="addLink()">生成邀请码并关联</button>
-      <p class="hint" style="text-align:center;padding:10px 0">Demo：关联线存在本机，用来演示多来源展示</p>
-    </div>
-
-    <div class="card">
-      <h3>待审批 <span class="pill" id="apCount">0</span></h3>
-      <div id="apBox"></div>
+    <div class="card" id="coopDetail" style="display:none">
+      <h3 id="coopDetailName">账本</h3>
+      <div id="coopMembers"></div>
+      <button class="btn" style="margin-top:12px" onclick="genInvite()">邀请人进这个账本</button>
+      <p class="hint" style="text-align:center;padding:9px 0 0" id="coopInviteHint"></p>
     </div>
   </section>
 </main>
@@ -2600,7 +2589,7 @@ function showTab(name){
   if(name === 'board'){ renderBoard(); }
   if(name === 'sum'){ renderSum(); renderCus(); }
   if(name === 'exp'){ renderExp(); }
-  if(name === 'coop'){ renderLinks(); renderApprovals(); }
+  if(name === 'coop'){ renderCoop(); }
   window.scrollTo(0,0);
 }
 
@@ -3380,6 +3369,122 @@ function pickGroup(gid){
 function grpCond(){
   if (!curGroup) return '';
   return '&group_id=eq.' + encodeURIComponent(curGroup.id);
+}
+
+
+/* ========== 协作页 · 账本管理 ========== */
+function renderCoop(){
+  var list = document.getElementById('coopGroupList');
+  var cnt = document.getElementById('coopCount');
+  if (!list) return;
+  // 还没登录 → 等一下再渲染
+  if (!cloudUser) {
+    list.innerHTML = '<div class="hint" style="text-align:center;padding:18px 0">加载中…</div>';
+    setTimeout(renderCoop, 900);
+    return;
+  }
+  // 已登录但账本还没拉到 → 加载
+  if (!myGroups.length && cloudToken) {
+    list.innerHTML = '<div class="hint" style="text-align:center;padding:18px 0">加载中…</div>';
+    loadMyGroups().then(function(){ setTimeout(renderCoop, 60); }).catch(function(){
+      list.innerHTML = '<div class="hint" style="text-align:center;padding:18px 0">加载失败，请刷新</div>';
+    });
+    return;
+  }
+  if (!myGroups.length) {
+    list.innerHTML = '<div class="hint" style="text-align:center;padding:20px 0">还没有账本</div>';
+    if (cnt) cnt.textContent = '';
+    return;
+  }
+  if (cnt) cnt.textContent = myGroups.length + ' 个';
+  list.innerHTML = myGroups.map(function(g){
+    var isCur = curGroup && curGroup.id === g.id;
+    return '<div class="cg-item' + (isCur ? ' on' : '') + '" onclick="coopSelect(\'' + g.id + '\')">' +
+      '<div style="flex:1;min-width:0">' +
+        '<div class="cg-name">' + escHtml(g.name) + (isCur ? ' <span class="cg-cur">当前</span>' : '') + '</div>' +
+        '<div class="cg-sub">' + (g.owner_id === (cloudUser && cloudUser.id) ? '我建的' : '别人邀请的') + '</div>' +
+      '</div>' +
+      '<span class="cg-ar">▸</span>' +
+    '</div>';
+  }).join('');
+}
+
+function coopSelect(gid){
+  var g = myGroups.filter(function(x){ return x.id === gid; })[0];
+  if (!g) return;
+  var det = document.getElementById('coopDetail');
+  var nm = document.getElementById('coopDetailName');
+  var mem = document.getElementById('coopMembers');
+  if (!det || !nm || !mem) return;
+  det.style.display = 'block';
+  nm.textContent = g.name;
+  mem.innerHTML = '<div class="hint" style="padding:10px 0">加载成员…</div>';
+
+  cloudReq('/group_members?group_id=eq.' + encodeURIComponent(gid) + '&select=user_id,role')
+    .then(function(rows){
+      var ids = (rows || []).map(function(r){ return r.user_id; });
+      if (!ids.length) { mem.innerHTML = '<div class="hint">没有成员</div>'; return null; }
+      return cloudReq('/users?id=in.(' + ids.join(',') + ')&select=id,name,invite_code').then(function(us){
+        var nameMap = {};
+        (us || []).forEach(function(u){ nameMap[u.id] = u; });
+        mem.innerHTML = (rows || []).map(function(r){
+          var u = nameMap[r.user_id] || { name: r.user_id };
+          var isMe = cloudUser && r.user_id === cloudUser.id;
+          return '<div class="cm-row">' +
+            '<span class="cm-name">' + escHtml(u.name) + (isMe ? '（我）' : '') + '</span>' +
+            '<span class="cm-role">' + (r.role === 'owner' ? '群主' : '成员') + '</span>' +
+          '</div>';
+        }).join('');
+      });
+    }).catch(function(e){
+      mem.innerHTML = '<div class="hint">加载失败：' + (e.message || e) + '</div>';
+    });
+}
+
+function genInvite(){
+  var g = myGroups.filter(function(x){ return curGroup && x.id === curGroup.id; })[0];
+  if (!g) return;
+  if (!g.invite_code) {
+    var code = String(Math.floor(100000 + Math.random() * 900000));
+    cloudReq('/groups?id=eq.' + encodeURIComponent(g.id), {
+      method: 'PATCH',
+      body: JSON.stringify({ invite_code: code })
+    }).then(function(){
+      g.invite_code = code;
+      showInviteCode(code);
+    }).catch(function(e){ alert('生成失败：' + (e.message || e)); });
+  } else {
+    showInviteCode(g.invite_code);
+  }
+}
+
+function showInviteCode(code){
+  var hint = document.getElementById('coopInviteHint');
+  if (hint) hint.innerHTML = '把 <b style="font-size:17px;color:#C0392B;letter-spacing:2px">' + code + '</b> 发给对方，他在登录页输入就能进这个账本';
+  alert('邀请码：' + code + '\\n\\n发给对方，他在登录页输入就能进这个账本。');
+}
+
+function openCreateGroup(){
+  var name = prompt('给新账本起个名字（比如：李家生意）');
+  if (!name || !name.trim()) return;
+  var gid = 'g_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
+  var code = String(Math.floor(100000 + Math.random() * 900000));
+  cloudReq('/groups', {
+    method: 'POST',
+    headers: { 'Prefer': 'resolution=merge-duplicates' },
+    body: JSON.stringify({ id: gid, name: name.trim(), owner_id: cloudUser.id, invite_code: code, created_at: Date.now() })
+  }).then(function(){
+    return cloudReq('/group_members', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=merge-duplicates' },
+      body: JSON.stringify({ group_id: gid, user_id: cloudUser.id, role: 'owner', joined_at: Date.now() })
+    });
+  }).then(function(){
+    return loadMyGroups();
+  }).then(function(){
+    renderCoop();
+    alert('账本「' + name.trim() + '」建好了\\n邀请码：' + code);
+  }).catch(function(e){ alert('创建失败：' + (e.message || e)); });
 }
 
 function cloudRestore(){
