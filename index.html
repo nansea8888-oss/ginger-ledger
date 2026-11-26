@@ -381,6 +381,23 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 .cm-row:last-child{border-bottom:0}
 .cm-name{color:#22312C;font-weight:500}
 .cm-role{color:#8A9992;font-size:12px}
+
+.cd-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+.inv-chip{display:flex;align-items:center;gap:7px;padding:7px 11px;border:1.5px solid #DCE7E2;border-radius:10px;background:#F8FBF9;font-family:inherit;cursor:pointer}
+.inv-chip:active{background:#EEF6F2}
+.inv-label{font-size:10.5px;color:#8A9992}
+.inv-chip b{font-size:15px;color:#C0392B;letter-spacing:1.5px;font-weight:700}
+.inv-copy{font-size:10.5px;color:#2F5D50;background:#E4F0EA;padding:2px 7px;border-radius:5px;font-weight:600}
+.cd-tip{font-size:11px;color:#8A9992;line-height:1.6;margin-bottom:11px}
+
+.jr-item{padding:12px 0;border-bottom:1px solid #F0F4F2}
+.jr-item:last-child{border-bottom:0}
+.jr-name{font-size:13.5px;color:#22312C;font-weight:500;line-height:1.5}
+.jr-meta{font-size:11.5px;color:#8A9992;margin-top:4px}
+.jr-acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
+.jr-acts button{padding:9px;border:0;border-radius:9px;font-size:13px;font-family:inherit;font-weight:600;cursor:pointer}
+.jr-no{background:#FBEEEC;color:#C0392B}
+.jr-ok{background:#2F5D50;color:#fff}
 </style>
 </head>
 <body>
@@ -677,11 +694,31 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
       <button class="btn ghost" style="margin-top:11px" onclick="openCreateGroup()">＋ 新建一个账本</button>
     </div>
 
+    <div class="card" id="coopJoin" style="padding:14px">
+      <button class="btn ghost" onclick="askJoinGroup()">🔑 我有邀请码，申请加入别人的账本</button>
+    </div>
+
+    <div class="card" id="coopPending" style="display:none">
+      <h3>待我审批 <span class="pill" id="pendCount">0</span></h3>
+      <div id="pendList"></div>
+    </div>
+
+    <div class="card" id="coopMyReq" style="display:none">
+      <h3>我发出的申请</h3>
+      <div id="myReqList"></div>
+    </div>
+
     <div class="card" id="coopDetail" style="display:none">
-      <h3 id="coopDetailName">账本</h3>
+      <div class="cd-head">
+        <h3 id="coopDetailName" style="margin:0">账本</h3>
+        <button class="inv-chip" id="invChip" onclick="copyInvite()">
+          <span class="inv-label">邀请码</span>
+          <b id="invCode">------</b>
+          <span class="inv-copy">复制</span>
+        </button>
+      </div>
+      <div class="cd-tip">把这个码发给对方，他输码后要等账本里所有人同意才能进</div>
       <div id="coopMembers"></div>
-      <button class="btn" style="margin-top:12px" onclick="genInvite()">邀请人进这个账本</button>
-      <p class="hint" style="text-align:center;padding:9px 0 0" id="coopInviteHint"></p>
     </div>
   </section>
 </main>
@@ -3382,6 +3419,154 @@ function grpCond(){
 
 
 /* ========== 协作页 · 账本管理 ========== */
+
+/* ========== 加入账本 · 全员审批 ========== */
+
+function askJoinGroup(){
+  var code = prompt('输入账本邀请码\n（6 位数字，向账本里的人要）');
+  if (!code || !code.trim()) return;
+  code = code.trim();
+
+  cloudReq('/groups?invite_code=eq.' + encodeURIComponent(code) + '&limit=1').then(function(gs){
+    if (!gs || !gs.length) throw new Error('邀请码不存在');
+    var g = gs[0];
+
+    // 已经在里面了？
+    return cloudReq('/group_members?group_id=eq.' + encodeURIComponent(g.id) + '&user_id=eq.' + encodeURIComponent(cloudUser.id)).then(function(m){
+      if (m && m.length) throw new Error('你已经在「' + g.name + '」里了');
+
+      // 取当前成员作为审批人
+      return cloudReq('/group_members?group_id=eq.' + encodeURIComponent(g.id) + '&select=user_id').then(function(mem){
+        var required = (mem || []).map(function(x){ return x.user_id; });
+        if (!required.length) throw new Error('账本没有成员，无法审批');
+
+        var reqId = 'jr_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+        return cloudReq('/join_requests', {
+          method: 'POST',
+          headers: { 'Prefer': 'resolution=merge-duplicates' },
+          body: JSON.stringify({
+            id: reqId, group_id: g.id, user_id: cloudUser.id, user_name: cloudUser.name,
+            status: 'pending', required: JSON.stringify(required), approved: JSON.stringify([]),
+            created_at: Date.now()
+          })
+        }).then(function(){
+          alert('已提交申请\n\n「' + g.name + '」里有 ' + required.length + ' 个人，都要同意才能加入。\n等他们审批后你就能进来。');
+          loadMyRequests();
+        });
+      });
+    });
+  }).catch(function(e){
+    alert('申请失败：' + (e.message || e));
+  });
+}
+
+/* 我发的申请 */
+function loadMyRequests(){
+  if (!cloudUser) return;
+  cloudReq('/join_requests?user_id=eq.' + encodeURIComponent(cloudUser.id) + '&status=eq.pending&order=created_at.desc')
+    .then(function(rows){
+      var card = document.getElementById('coopMyReq');
+      var list = document.getElementById('myReqList');
+      if (!card || !list) return;
+      if (!rows || !rows.length) { card.style.display = 'none'; return; }
+      card.style.display = 'block';
+      list.innerHTML = rows.map(function(r){
+        var req = JSON.parse(r.required || '[]');
+        var app = JSON.parse(r.approved || '[]');
+        return '<div class="jr-item">' +
+          '<div class="jr-name">账本 ID：' + escHtml(r.group_id) + '</div>' +
+          '<div class="jr-meta">已同意 ' + app.length + ' / ' + req.length + ' 人</div>' +
+        '</div>';
+      }).join('');
+    }).catch(function(){});
+}
+
+/* 待我审批 */
+function loadPendingApprovals(){
+  if (!cloudUser || !myGroups.length) return;
+  var gids = myGroups.map(function(g){ return g.id; });
+  cloudReq('/join_requests?status=eq.pending&group_id=in.(' + gids.join(',') + ')&order=created_at.desc')
+    .then(function(rows){
+      var card = document.getElementById('coopPending');
+      var list = document.getElementById('pendList');
+      var cnt = document.getElementById('pendCount');
+      if (!card || !list) return;
+
+      // 只显示我还没同意的
+      var mine = (rows || []).filter(function(r){
+        var app = JSON.parse(r.approved || '[]');
+        return app.indexOf(cloudUser.id) < 0;
+      });
+      if (!mine.length) { card.style.display = 'none'; return; }
+      card.style.display = 'block';
+      if (cnt) cnt.textContent = mine.length;
+
+      var gmap = {};
+      myGroups.forEach(function(g){ gmap[g.id] = g.name; });
+
+      list.innerHTML = mine.map(function(r){
+        var req = JSON.parse(r.required || '[]');
+        var app = JSON.parse(r.approved || '[]');
+        return '<div class="jr-item">' +
+          '<div class="jr-name">' + escHtml(r.user_name || r.user_id) + ' 申请加入「' + escHtml(gmap[r.group_id] || r.group_id) + '」</div>' +
+          '<div class="jr-meta">已同意 ' + app.length + ' / ' + req.length + ' 人</div>' +
+          '<div class="jr-acts">' +
+            '<button class="jr-no" onclick="rejectJoin(\'' + r.id + '\')">拒绝</button>' +
+            '<button class="jr-ok" onclick="approveJoin(\'' + r.id + '\')">同意</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }).catch(function(){});
+}
+
+function approveJoin(reqId){
+  cloudReq('/join_requests?id=eq.' + encodeURIComponent(reqId) + '&select=*').then(function(rows){
+    if (!rows || !rows.length) throw new Error('申请不存在');
+    var r = rows[0];
+    var req = JSON.parse(r.required || '[]');
+    var app = JSON.parse(r.approved || '[]');
+    if (app.indexOf(cloudUser.id) < 0) app.push(cloudUser.id);
+
+    var allAgreed = req.every(function(uid){ return app.indexOf(uid) >= 0; });
+
+    return cloudReq('/join_requests?id=eq.' + encodeURIComponent(reqId), {
+      method: 'PATCH',
+      body: JSON.stringify({
+        approved: JSON.stringify(app),
+        status: allAgreed ? 'approved' : 'pending'
+      })
+    }).then(function(){
+      if (!allAgreed) {
+        alert('你已同意\n\n还差 ' + (req.length - app.length) + ' 人同意');
+        return;
+      }
+      // 全员同意 → 加进成员
+      return cloudReq('/group_members', {
+        method: 'POST',
+        headers: { 'Prefer': 'resolution=merge-duplicates' },
+        body: JSON.stringify({ group_id: r.group_id, user_id: r.user_id, role: 'member', joined_at: Date.now() })
+      }).then(function(){
+        alert('全员已同意，' + (r.user_name || '对方') + ' 已加入账本');
+      });
+    });
+  }).catch(function(e){
+    alert('操作失败：' + (e.message || e));
+  }).then(function(){
+    loadPendingApprovals();
+    renderCoop();
+  });
+}
+
+function rejectJoin(reqId){
+  if (!confirm('确定拒绝这个申请？')) return;
+  cloudReq('/join_requests?id=eq.' + encodeURIComponent(reqId), {
+    method: 'PATCH',
+    body: JSON.stringify({ status: 'rejected' })
+  }).then(function(){
+    loadPendingApprovals();
+  }).catch(function(e){ alert('失败：' + (e.message || e)); });
+}
+
 function renderCoop(){
   var list = document.getElementById('coopGroupList');
   var cnt = document.getElementById('coopCount');
@@ -3406,6 +3591,7 @@ function renderCoop(){
     return;
   }
   if (cnt) cnt.textContent = myGroups.length + ' 个';
+  setTimeout(function(){ try { loadPendingApprovals(); loadMyRequests(); } catch(e){} }, 200);
   list.innerHTML = myGroups.map(function(g){
     var isCur = curGroup && curGroup.id === g.id;
     return '<div class="cg-item' + (isCur ? ' on' : '') + '" onclick="coopSelect(\'' + g.id + '\')">' +
@@ -3427,6 +3613,9 @@ function coopSelect(gid){
   if (!det || !nm || !mem) return;
   det.style.display = 'block';
   nm.textContent = g.name;
+  var codeEl = document.getElementById('invCode');
+  if (codeEl) codeEl.textContent = g.invite_code || '------';
+  window.__curInviteCode = g.invite_code || '';
   mem.innerHTML = '<div class="hint" style="padding:10px 0">加载成员…</div>';
 
   cloudReq('/group_members?group_id=eq.' + encodeURIComponent(gid) + '&select=user_id,role')
@@ -3448,6 +3637,27 @@ function coopSelect(gid){
     }).catch(function(e){
       mem.innerHTML = '<div class="hint">加载失败：' + (e.message || e) + '</div>';
     });
+}
+
+
+/* 复制邀请码 */
+function copyInvite(){
+  var code = window.__curInviteCode || '';
+  if (!code || code === '------') { alert('这个账本还没有邀请码'); return; }
+  var done = function(){
+    var chip = document.getElementById('invChip');
+    if (chip) {
+      var cp = chip.querySelector('.inv-copy');
+      if (cp) { cp.textContent = '已复制'; setTimeout(function(){ cp.textContent = '复制'; }, 1600); }
+    }
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(code).then(done).catch(function(){
+      prompt('复制这个邀请码：', code);
+    });
+  } else {
+    prompt('复制这个邀请码：', code);
+  }
 }
 
 function genInvite(){

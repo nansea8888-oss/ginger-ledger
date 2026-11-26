@@ -38,6 +38,15 @@ function p(s){ log.push(s); document.getElementById('out').textContent = log.joi
     let r4 = await q('/expenses?select=id,type,amount&group_id=eq.g1');
     p('g1 expenses: ' + r4.status + ' ' + r4.body);
 
+    // 测试新建账本
+    let r7 = await fetch(API + '/groups', {
+      method: 'POST',
+      headers: { 'Accept':'application/json', 'Content-Type':'application/json',
+                 'Authorization':'Bearer ' + token, 'Prefer':'resolution=merge-duplicates' },
+      body: JSON.stringify({ id:'g_test_' + Date.now(), name:'测试新建', owner_id:'uA', invite_code:'999999', created_at: Date.now() })
+    });
+    p('POST groups: ' + r7.status + ' ' + (await r7.text()).slice(0,150));
+
     // 模拟 cloudPull 的完整 URL
     let r5 = await q('/records?select=*&limit=500&order=created_at.desc&group_id=eq.g1');
     p('FULL: ' + r5.status + ' ' + r5.body.slice(0,150));
