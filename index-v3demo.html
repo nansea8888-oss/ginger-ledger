@@ -331,8 +331,9 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 .eb-simple input:focus{outline:none;border-color:#2F5D50}
 
 /* ===== 标注历史 ===== */
-#mkHistPanel{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:480px;max-width:100%;background:#fff;z-index:9500;border-radius:18px 18px 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.18);display:none;padding:14px 16px 16px;max-height:56vh;overflow:auto}
+#mkHistPanel{position:fixed;left:50%;transform:translateX(-50%);bottom:8px;width:min(440px,calc(100% - 24px));background:rgba(255,255,255,.97);z-index:9500;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,.22);display:none;padding:10px 14px;max-height:34vh;overflow:auto;backdrop-filter:blur(6px)}
 #mkHistPanel.show{display:block}
+#mkHistPanel.collapsed{max-height:52px;overflow:hidden}
 .mkh-head{display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:700;color:#2F5D50;margin-bottom:10px}
 .mkh-head b{color:#C0392B}
 .mkh-close{font-size:12px;color:#8A9992;font-weight:400;cursor:pointer;padding:4px 8px;background:#F1F5F3;border-radius:7px}
@@ -1909,7 +1910,7 @@ var expData = {
   labor:    [{ total: '', people: '', rate: '', other: '' }],
   material: [{ total: '', name: '', qty: '', unit: '', freight: '' }]
 };
-var TRAVEL_PRESETS = ['加油', '过路费', '住宿', '宴请', '停车费', '修车', '吃饭', '过磅费'];
+var TRAVEL_PRESETS = ['加油', '过路费', '住宿', '宴请', '停车费', '修车', '吃饭'];
 
 function toggleEB(key){
   var body = document.getElementById('body_' + key);
@@ -1961,7 +1962,7 @@ function renderLabor(){
       '<div class="eb-row eb-note">' +
         '<input class="f-num" type="number" inputmode="decimal" value="' + (it.people||'') + '" placeholder="人数/工时" oninput="expData.labor[' + i + '].people=this.value">' +
         '<input class="f-num" type="number" inputmode="decimal" value="' + (it.rate||'') + '" placeholder="工价" oninput="expData.labor[' + i + '].rate=this.value">' +
-        '<input class="f-num" type="number" inputmode="decimal" value="' + (it.other||'') + '" placeholder="其他" oninput="expData.labor[' + i + '].other=this.value">' +
+        '<input class="f-num" type="text" style="flex:1.4" value="' + escHtml(it.other||'') + '" placeholder="其他（可写文字）" oninput="expData.labor[' + i + '].other=this.value">' +
       '</div>' +
       '<div class="eb-tip">人数/工价/其他只是备注，不参与计算</div>' +
     '</div>';
@@ -2700,9 +2701,9 @@ if('serviceWorker' in navigator){
 </div>
 
 <div id="mkHistPanel">
-  <div class="mkh-head">
-    <span>我提交过的标注 <b id="mkHistCount">0</b></span>
-    <span class="mkh-close" onclick="toggleHist(false)">收起</span>
+  <div class="mkh-head" onclick="toggleHistCollapse()">
+    <span>我提交过的标注 <b id="mkHistCount">0</b> <i style="font-style:normal;font-size:11px;color:#A0AEA8">（点这里展开/收起）</i></span>
+    <span class="mkh-close" onclick="event.stopPropagation();toggleHist(false)">关闭</span>
   </div>
   <div id="mkHistList"></div>
 </div>
@@ -2861,7 +2862,7 @@ body.marking .mk-hover{outline:2px dashed #C0392B!important;outline-offset:2px;b
       .then(function(rows){
         rows = rows || [];
         if (!rows.length) { panel.classList.remove('show'); return; }
-        panel.classList.add('show');
+        panel.classList.add('show', 'collapsed');
         if (cnt) cnt.textContent = String(rows.length);
         list.innerHTML = rows.map(function(r, idx){
           var where = [r.page, r.card, r.elem_text].filter(Boolean).join(' › ');
@@ -2889,6 +2890,12 @@ body.marking .mk-hover{outline:2px dashed #C0392B!important;outline-offset:2px;b
     if (!p) return;
     if (show === false) p.classList.remove('show');
     else p.classList.toggle('show');
+  };
+
+  window.toggleHistCollapse = function(){
+    var p = document.getElementById('mkHistPanel');
+    if (!p) return;
+    p.classList.toggle('collapsed');
   };
 
   submit.onclick = function(){
