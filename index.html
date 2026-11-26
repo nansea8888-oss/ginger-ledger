@@ -1127,6 +1127,7 @@ function locOwner(id){
     if (btn) btn.style.opacity = '1';
     reverseGeo(pos.coords.latitude, pos.coords.longitude, function(res){
       var name = '';
+      if (res && res.foreign) { alert('定位在境外（' + res.country + '），请手动填写基地'); return; }
       if (res && res.parts) {
         var p2 = addrParts(res.parts);
         name = (p2.village || '') + (p2.detail ? ' ' + p2.detail : '');
@@ -1709,13 +1710,19 @@ function compressImg(file, cb){
 }
 
 function reverseGeo(lat, lng, cb){
-  var url = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&lat=' + lat + '&lon=' + lng + '&accept-language=zh-CN&zoom=18';
+  var url = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&lat=' + lat + '&lon=' + lng + '&accept-language=zh-CN&zoom=18&countrycodes=cn';
   var done = false;
   var timer = setTimeout(function(){ if(!done){ done = true; cb(null); } }, 8000);
   fetch(url).then(function(r){ return r.json(); }).then(function(d){
     if(done) return;
     done = true; clearTimeout(timer);
-    cb(d && d.address ? { parts: d.address, display: d.display_name || '' } : null);
+    if (!d || !d.address) { cb(null); return; }
+    var ctry = d.address.country || '';
+    if (ctry && ctry.indexOf('中国') < 0 && ctry.toLowerCase().indexOf('china') < 0) {
+      cb({ foreign: true, country: ctry });
+      return;
+    }
+    cb({ parts: d.address, display: d.display_name || '' });
   }).catch(function(){
     if(done) return;
     done = true; clearTimeout(timer);
@@ -1768,6 +1775,12 @@ function locate(){
     geoInfo.acc = Math.round(pos.coords.accuracy);
     st.textContent = '解析地址中…';
     reverseGeo(geoInfo.lat, geoInfo.lng, function(res){
+      if (res && res.foreign) {
+        geoInfo.parts = null;
+        st.textContent = '定位在境外';
+        alert('定位到的是境外位置（' + res.country + '），请手动填写地址。');
+        return;
+      }
       if (res && res.parts) {
         geoInfo.parts = res.parts;
         st.textContent = '已定位';
