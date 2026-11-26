@@ -30,6 +30,12 @@ input,select{padding:10px 12px;border:1px solid #DCE7E2;border-radius:9px;font-s
 .warn{background:#FFF8E6;border:1px solid #FFE4A3;color:#8A6D1F;font-size:11.5px;padding:10px 12px;border-radius:9px;line-height:1.7;margin-bottom:12px}
 .log{font-size:11.5px;color:#5A6B65;line-height:1.8;max-height:180px;overflow:auto;background:#F7FAF8;padding:11px;border-radius:9px;font-family:ui-monospace,monospace}
 .log div{padding:2px 0}
+
+.swlinks{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.swlink{display:block;padding:11px 6px;border:1.5px solid #DCE7E2;background:#fff;border-radius:10px;text-align:center;text-decoration:none;color:#3D514A;font-size:13.5px;font-weight:600;transition:.15s}
+.swlink:hover{background:#2F5D50;color:#fff;border-color:#2F5D50}
+.swlink small{display:block;font-size:9.5px;font-weight:400;opacity:.6;margin-top:2px}
+
 .ok{color:#1E8E4A;font-weight:700}
 .no{color:#C0392B;font-weight:700}
 </style>
@@ -39,26 +45,21 @@ input,select{padding:10px 12px;border:1px solid #DCE7E2;border-radius:9px;font-s
   <h1 id="pageTitle">群数据隔离验证台</h1>
   <div class="sub" id="pageSub">点身份切换，验证每个人只看到自己账本里的数据</div>
 
-  <div class="card" style="background:#F7FAF8;padding:11px 13px">
-    <div class="lbl" style="margin-bottom:6px">快速直达（也可以直接复制这些链接）</div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;font-size:11.5px">
-      <a href="?u=uA" style="color:#2F5D50;text-decoration:none;padding:4px 9px;background:#fff;border-radius:7px;border:1px solid #DCE7E2">老王A</a>
-      <a href="?u=uB" style="color:#2F5D50;text-decoration:none;padding:4px 9px;background:#fff;border-radius:7px;border:1px solid #DCE7E2">老李B</a>
-      <a href="?u=uC" style="color:#2F5D50;text-decoration:none;padding:4px 9px;background:#fff;border-radius:7px;border:1px solid #DCE7E2">老赵C</a>
-      <a href="?u=uD" style="color:#2F5D50;text-decoration:none;padding:4px 9px;background:#fff;border-radius:7px;border:1px solid #DCE7E2">老孙D</a>
+  <div class="card">
+    <div class="lbl">切换账号（点击跳到那个账号）</div>
+    <div class="swlinks">
+      <a href="?u=uA" class="swlink">老王<small>uA · 1001</small></a>
+      <a href="?u=uB" class="swlink">老李<small>uB · 1002</small></a>
+      <a href="?u=uC" class="swlink">老赵<small>uC · 1003</small></a>
+      <a href="?u=uD" class="swlink">老孙<small>uD · 1004</small></a>
     </div>
-    <div style="font-size:10.5px;color:#8A9992;margin-top:7px;line-height:1.6">
-      建议：四个链接各开一个浏览器标签页，并排放着看最清楚
+    <div style="font-size:10.5px;color:#8A9992;margin-top:9px;line-height:1.6">
+      建议四个各开一个标签页，并排看
     </div>
   </div>
 
   <div class="warn">
     <b>验证方法：</b>切到「老王A」在「王家姜业」录一笔 → 切到「老李B」「老赵C」都能看到 → 切到「老孙D」看不到。
-  </div>
-
-  <div class="card">
-    <div class="lbl">切换身份（模拟登录）</div>
-    <div class="ids" id="idBtns"></div>
   </div>
 
   <div class="card">
@@ -139,11 +140,7 @@ async function api(path, opt){
 
 /* 渲染身份按钮 */
 function renderIds(){
-  document.getElementById('idBtns').innerHTML = USERS.map(u =>
-    `<button class="idbtn ${curUser && curUser.id === u.id ? 'on' : ''}" onclick="switchUser('${u.id}')">
-      ${u.name}<small>${u.id} · ${u.code}</small>
-    </button>`
-  ).join('');
+  // 身份切换已改为链接跳转，此处无需渲染
 }
 
 /* 切换身份 */
