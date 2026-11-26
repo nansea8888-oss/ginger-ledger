@@ -408,6 +408,11 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 </style>
 </head>
 <body>
+<div id="mkFab" style="position:fixed;right:16px;bottom:96px;z-index:99999;display:flex;flex-direction:column;gap:10px;align-items:flex-end">
+  <button id="mkSubmit" style="display:none;padding:12px 18px;border-radius:26px;background:#1E4A3C;color:#fff;border:0;font-size:14px;font-weight:700;box-shadow:0 4px 16px rgba(0,0,0,.3);font-family:inherit;cursor:pointer">📋 提交标注 <span id="mkCount">0</span></button>
+  <button id="markBtn" style="padding:14px 20px;border-radius:26px;background:#C0392B;color:#fff;border:0;font-size:15px;font-weight:700;box-shadow:0 4px 16px rgba(0,0,0,.3);font-family:inherit;cursor:pointer">✏️ 标注</button>
+</div>
+
 
 <div id="loginMask" style="position:fixed;top:0;right:0;bottom:0;left:0;background:linear-gradient(160deg,#2F5D50,#1E4A3C);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px">
   <div style="color:#fff;font-size:22px;font-weight:600;margin-bottom:6px">生姜收购台账</div>
@@ -3676,8 +3681,7 @@ setTimeout(function(){
 
 
 <!-- ===== 标注工具 ===== -->
-<button id="markBtn">✏️ 标注 v4</button>
-<button id="mkSubmit" class="hide">📋 提交标注（<span id="mkCount">0</span>）</button>
+
 <div id="mkPanel">
   <div id="mkHead">标注这一处</div>
   <div id="mkTarget"></div>
@@ -3697,8 +3701,8 @@ setTimeout(function(){
 </div>
 
 <style>
-#markBtn{position:fixed;right:14px;bottom:28px;z-index:9700;padding:12px 18px;border-radius:24px;background:#C0392B;color:#fff;border:0;font-size:14px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.25);font-family:inherit}
-#markBtn.on{background:#2F5D50}
+#markBtn{background:transparent;border:0;font-family:inherit;padding:0 4px;font-size:inherit}
+#markBtn.on{color:#C0392B;background:#FBEEEC;border-radius:6px}
 #mkSubmit{position:fixed;right:14px;bottom:92px;z-index:9700;padding:11px 16px;border-radius:24px;background:#1E4A3C;color:#fff;border:0;font-size:13px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.25);font-family:inherit}
 body.marking *{cursor:crosshair!important}
 body.marking .mk-hover{outline:2px dashed #C0392B!important;outline-offset:2px;background:rgba(192,57,43,.06)!important}
@@ -3721,6 +3725,15 @@ body.marking .mk-hover{outline:2px dashed #C0392B!important;outline-offset:2px;b
   var marks = [];
   var pending = null;
   var btn = document.getElementById('markBtn');
+  if (!btn) {
+    btn = document.createElement('button');
+    btn.id = 'markBtn';
+    btn.textContent = '✏️ 标注';
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'position:fixed;right:16px;bottom:96px;z-index:99999';
+    wrap.appendChild(btn);
+    document.body.appendChild(wrap);
+  }
   var panel = document.getElementById('mkPanel');
   var target = document.getElementById('mkTarget');
   var text = document.getElementById('mkText');
@@ -3776,7 +3789,7 @@ body.marking .mk-hover{outline:2px dashed #C0392B!important;outline-offset:2px;b
     btn.textContent = marking
       ? '✏️ 标注中' + (marks.length ? ' · 已标 ' + marks.length + ' 处' : '（点要改的地方）')
       : '✏️ 标注';
-    submit.classList.toggle('hide', !marks.length);
+    submit.style.display = marks.length ? 'block' : 'none';
     if(!marking) drawDots();
 
     // 进入标注模式时加载已提交的标注
@@ -3838,7 +3851,7 @@ body.marking .mk-hover{outline:2px dashed #C0392B!important;outline-offset:2px;b
     btn.textContent = '✏️ 标注中 · 已标 ' + marks.length + ' 处';
     drawDots();
     // 关键：保存后要让"提交标注"按钮现身
-    submit.classList.toggle('hide', !marks.length);
+    submit.style.display = marks.length ? 'block' : 'none';
   };
 
   /* ===== 标注历史 ===== */
@@ -3920,7 +3933,7 @@ body.marking .mk-hover{outline:2px dashed #C0392B!important;outline-offset:2px;b
       marks.length = 0;
       document.querySelectorAll('.mk-dot').forEach(function(d){ d.remove(); });
       countEl.textContent = '0';
-      submit.classList.add('hide');
+      submit.style.display = 'none';
       submit.textContent = '📋 提交标注';
       submit.disabled = false;
       btn.textContent = '✏️ 标注';
