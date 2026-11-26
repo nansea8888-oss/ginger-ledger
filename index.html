@@ -387,8 +387,39 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 
 <header>
   <span>生姜收购台账</span>
-  <span class="sub"><span id="verTag" style="font-size:10px;opacity:.6;margin-right:8px">v3.0</span><span id="today"></span></span>
+  <span class="sub" style="display:flex;align-items:center;gap:8px">
+    <button id="grpBtn" class="grp-btn" onclick="openGrpPicker()" style="display:none">
+      <span id="grpName">账本</span> <span style="opacity:.6">▾</span>
+    </button>
+    <span id="today"></span>
+  </span>
 </header>
+
+<div id="grpPicker">
+  <div class="gp-box">
+    <div class="gp-title">现在进哪个账本？</div>
+    <div id="grpList"></div>
+    <button class="gp-cancel" onclick="closeGrpPicker()">取消</button>
+  </div>
+</div>
+
+<style>
+.grp-btn{padding:5px 11px;border-radius:9px;background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.3);font-size:12px;font-family:inherit;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px}
+.grp-btn:active{background:rgba(255,255,255,.28)}
+#grpPicker{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9800;display:none;align-items:center;justify-content:center;padding:20px}
+#grpPicker.show{display:flex}
+.gp-box{background:#fff;border-radius:16px;width:100%;max-width:340px;padding:18px}
+.gp-title{font-size:15px;font-weight:700;color:#2F5D50;margin-bottom:13px}
+.gp-item{display:flex;align-items:center;gap:10px;padding:13px;border:1.5px solid #E4ECE8;border-radius:11px;margin-bottom:9px;cursor:pointer;background:#fff}
+.gp-item:active{background:#F5FAF7}
+.gp-item.on{border-color:#2F5D50;background:#F0F8F4}
+.gp-dot{width:18px;height:18px;border-radius:50%;border:2px solid #C8D8D1;flex-shrink:0}
+.gp-item.on .gp-dot{border-color:#2F5D50;background:#2F5D50;box-shadow:inset 0 0 0 3px #fff}
+.gp-info{flex:1;min-width:0}
+.gp-n{font-size:14px;font-weight:600;color:#22312C}
+.gp-m{font-size:11px;color:#8A9992;margin-top:2px}
+.gp-cancel{width:100%;padding:12px;border:0;border-radius:10px;background:#F1F5F3;color:#5A6B63;font-size:14px;font-family:inherit;font-weight:600;margin-top:4px}
+</style>
 
 <nav>
   <button class="on" data-tab="in">录入</button>
@@ -681,7 +712,7 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 <script>
 window.onerror=function(m,s,l,c,e){try{document.title='ERR:'+m+' @'+l;}catch(_){}};
 const KEY = 'ginger_ledger_v1';   // 旧键，仅用于一次性迁移
-const APP_VERSION = '3.0.0';
+const APP_VERSION = '3.1.0';
 let data = [];
 let expenses = [];
 let customers = [];
@@ -836,6 +867,7 @@ function cloudSaveExpense(e){
       id: e.uuid, owner_id: cloudUser.id, creator_id: cloudUser.id,
       date: e.date, type: e.type, amount: e.amount,
       payer: e.payer, note: e.note || '', operator: e.operator || '',
+      group_id: (curGroup ? curGroup.id : null),
       created_at: e.createdAt, updated_at: Date.now(), deleted: false
     };
     return cloudReq('/expenses', {
@@ -3251,12 +3283,90 @@ function doLogin(){
     cloudUser = u;
     try { localStorage.setItem('gl_cloud_user', JSON.stringify(u)); } catch(e) {}
     document.getElementById('loginMask').style.display = 'none';
-    if (typeof cloudPull === 'function') cloudPull();
+    loadMyGroups().then(function(){ cloudPull(); }).catch(function(e){
+      console.log('账本加载失败', e); cloudPull();
+    });
   }).catch(function(e){
     msg.textContent = '失败: ' + errText(e);
   }).then(function(){
     btn.textContent = '登 录'; btn.disabled = false;
   });
+}
+
+
+/* ========== 账本（群） ========== */
+var myGroups = [];
+var curGroup = null;
+
+function loadMyGroups(){
+  if (!cloudUser) return Promise.resolve();
+  return cloudReq('/group_members?user_id=eq.' + encodeURIComponent(cloudUser.id) + '&select=group_id,role')
+    .then(function(rows){
+      var gids = (rows || []).map(function(r){ return r.group_id; });
+      if (!gids.length) { myGroups = []; curGroup = null; renderGrpBtn(); return; }
+      return cloudReq('/groups?id=in.(' + gids.join(',') + ')').then(function(gs){
+        myGroups = gs || [];
+        // 恢复上次选择
+        var lastId = null;
+        try { lastId = localStorage.getItem('gl_cur_group_' + cloudUser.id); } catch(e) {}
+        var found = lastId && myGroups.filter(function(g){ return g.id === lastId; })[0];
+        curGroup = found || myGroups[0];
+        renderGrpBtn();
+      });
+    });
+}
+
+function renderGrpBtn(){
+  var btn = document.getElementById('grpBtn');
+  var nm = document.getElementById('grpName');
+  if (!btn) return;
+  if (myGroups.length <= 1) {
+    btn.style.display = 'none';   // 只有一个账本，不显示选择器
+  } else {
+    btn.style.display = 'flex';
+    if (nm && curGroup) nm.textContent = curGroup.name;
+  }
+}
+
+function openGrpPicker(){
+  var box = document.getElementById('grpPicker');
+  var list = document.getElementById('grpList');
+  if (!box || !list) return;
+  list.innerHTML = myGroups.map(function(g){
+    return '<div class="gp-item' + (curGroup && curGroup.id === g.id ? ' on' : '') + '" onclick="pickGroup(\'' + g.id + '\')">' +
+      '<span class="gp-dot"></span>' +
+      '<div class="gp-info"><div class="gp-n">' + escHtml(g.name) + '</div>' +
+      '<div class="gp-m">' + (g.owner_id === (cloudUser && cloudUser.id) ? '我建的' : '别人邀请的') + '</div></div>' +
+    '</div>';
+  }).join('');
+  box.classList.add('show');
+}
+
+function closeGrpPicker(){
+  var box = document.getElementById('grpPicker');
+  if (box) box.classList.remove('show');
+}
+
+function pickGroup(gid){
+  var g = myGroups.filter(function(x){ return x.id === gid; })[0];
+  if (!g) return;
+  curGroup = g;
+  try { localStorage.setItem('gl_cur_group_' + cloudUser.id, gid); } catch(e) {}
+  closeGrpPicker();
+  renderGrpBtn();
+  // 清空本地数据，重新拉这个账本的
+  data = [];
+  expenses = [];
+  render();
+  if (typeof renderSum === 'function') renderSum();
+  if (typeof renderExp === 'function') renderExp();
+  cloudPull();
+  alert('已切换到「' + g.name + '」');
+}
+
+function grpCond(){
+  if (!curGroup) return '';
+  return '&group_id=eq.' + encodeURIComponent(curGroup.id);
 }
 
 function cloudRestore(){
@@ -3265,7 +3375,9 @@ function cloudRestore(){
     if (s) {
       cloudUser = JSON.parse(s);
       document.getElementById('loginMask').style.display = 'none';
-      cloudInit().then(function(){ if (typeof cloudPull === 'function') cloudPull(); }).catch(function(){});
+      cloudInit().then(function(){
+        return loadMyGroups();
+      }).then(function(){ cloudPull(); }).catch(function(){});
       return true;
     }
   } catch(e) {}
@@ -3274,7 +3386,7 @@ function cloudRestore(){
 
 function cloudPull(){
   if (!cloudUser || !cloudToken) return;
-  cloudReq('/records?select=*&limit=500&order=created_at.desc').then(function(rows){
+  cloudReq('/records?select=*&limit=500&order=created_at.desc' + grpCond()).then(function(rows){
     if (!rows || !Array.isArray(rows)) return;
     var changed = false;
     rows.forEach(function(r){
@@ -3315,7 +3427,8 @@ function cloudSaveRecord(rec){
       amount: rec.amount, fee_total: rec.feeTotal, actual: rec.actual,
       address: rec.address || '', lat: rec.lat, lng: rec.lng, accuracy: rec.accuracy,
       contracts: rec.contracts || [], operator: rec.operator || '',
-      device_id: rec.deviceId || '', created_at: rec.createdAt, updated_at: Date.now(), deleted: false
+      device_id: rec.deviceId || '', group_id: (curGroup ? curGroup.id : null),
+      created_at: rec.createdAt, updated_at: Date.now(), deleted: false
     };
     return cloudReq('/records', {
       method: 'POST',

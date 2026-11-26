@@ -1,15 +1,44 @@
 # 版本记录
 
-## v3.0.0 · 2026-11-26 【正式版 · 当前】
+## v3.1.0 · 2026-11-26 【正式版 · 当前】
+
+Git 标签：`v3.1.0`
+文件：`index.html`
+
+### 本版新增：账本（数据隔离）
+
+- **一个人可以属于多个账本**，每个账本的数据完全独立
+- **顶部账本选择器**：只有一个账本时自动隐藏，不打扰
+- **切换账本**：所有页面（录入/明细/费用/汇总/看板）立刻换成该账本的数据
+- **记住选择**：下次打开还是上次那个账本
+- **数据自动归属**：录入、费用都自动打上当前账本 ID
+- **不串数据**：A—B 的账只有 A、B 能看；A—D 的账只有 A、D 能看
+
+### 数据模型
+```
+账本（groups）        id / name / owner_id / invite_code
+账本成员（group_members）  group_id / user_id / role
+记录（records）       ... + group_id
+费用（expenses）      ... + group_id
+```
+
+### 权限规则（唯一一条）
+```
+我能看到的 = 我所在的所有账本的数据
+没有传递、没有继承、没有"上级能看下级"
+```
+
+---
+
+## v3.0.0 · 2026-11-26
 
 Git 标签：`v3.0.0`
-文件：`index.html`
 
 ### 录入页
 - **多货主**：一个客户可对应多个货主，每个货主独立计量与计价
 - **货主折叠**：折叠条显示「名字 · 件数×斤数 · 实际总价」，点击展开修改
 - **添加货主自动折叠**前面的，节省屏幕空间
-- **收购地点**：单一输入框 + 定位图标（点图标定位，点框正常输入，互不干扰）
+- **收购地点**：单一输入框 + 定位图标（点图标定位，点框正常输入）
 - **货主基地**：每个货主都有独立定位图标
 - **客户合同 / 货主合同**：拍照或相册，最多 5 张
 
@@ -35,14 +64,9 @@ Git 标签：`v3.0.0`
 ```
 
 ### 云端
-- CloudBase PostgreSQL，邀请码登录（老板 8888 / 收购员 1111）
-- Token 过期自动续期，不再报 401
+- CloudBase PostgreSQL，邀请码登录
+- Token 过期自动续期
 - 标注工具：提交到云端 `feedback` 表，可查看历史、可删除重标
-
-### 技术
-- 离线优先：本地 IndexedDB，联网后自动同步
-- 缓存策略：所有 HTML 网络优先，刷新即最新
-- 兼容 2020 年后全部手机（含华为 HarmonyOS、小米、OPPO、vivo、三星、iPhone）
 
 ---
 
@@ -61,19 +85,30 @@ Git 标签：`v3.0.0`
 
 ---
 
-## 如何找回旧版本
+## 如何找回历史版本
 
 ```bash
-# 查看所有版本标签
-git tag -l
-
-# 切回某个版本
-git checkout v3.0.0
-
-# 查看某版本的文件
-git show v3.0.0:index.html > old-version.html
+git tag -l                    # 列出所有版本
+git checkout v3.0.0           # 切到 v3.0.0
+git show v3.0.0:index.html > old.html
 ```
 
-线上地址：
-- 正式版：https://nansea8888-oss.github.io/ginger-ledger/
-- v3 对照版：https://nansea8888-oss.github.io/ginger-ledger/index-v3demo.html
+## 线上入口
+
+| 用途 | 地址 |
+|---|---|
+| **正式版** | https://nansea8888-oss.github.io/ginger-ledger/ |
+| 账本 Demo | https://nansea8888-oss.github.io/ginger-ledger/index-groupdemo.html |
+| v3.0 对照 | https://nansea8888-oss.github.io/ginger-ledger/index-v3demo.html |
+| 群验证台 | https://nansea8888-oss.github.io/ginger-ledger/fourphones.html |
+
+## 测试账号
+
+| 账号 | 登录码 | 所属账本 |
+|---|---|---|
+| 老王 A | 1001 | 王家姜业、A-D合作 |
+| 老李 B | 1002 | 王家姜业、李家私账 |
+| 老赵 C | 1003 | 王家姜业 |
+| 老孙 D | 1004 | 李家私账、A-D合作 |
+| 老板 | 8888 | （待迁移） |
+| 收购员 | 1111 | （待迁移） |
