@@ -343,6 +343,17 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 .mkh-where{font-size:11.5px;color:#8A9992;margin-bottom:3px;word-break:break-all}
 .mkh-note{font-size:13.5px;color:#22312C;line-height:1.5;word-break:break-word}
 .mkh-x{flex-shrink:0;font-size:12px;color:#C0392B;padding:3px 8px;background:#FBEEEC;border-radius:7px;cursor:pointer;align-self:center}
+
+.eb-block{border-bottom:1px solid #EFF4F1;padding:10px 0}
+.eb-block:last-child{border-bottom:0}
+.eb-row{display:flex;align-items:center;gap:7px;margin-bottom:7px}
+.eb-row:last-child{margin-bottom:0}
+.eb-lb{width:52px;font-size:12.5px;color:#5A6B65;flex-shrink:0}
+.eb-row input,.eb-row select{border:1px solid #DCE7E2;border-radius:8px;padding:9px 10px;font-size:14px;background:#fff;font-family:inherit;min-width:0;box-sizing:border-box}
+.eb-row input:focus,.eb-row select:focus{outline:none;border-color:#2F5D50;background:#F8FCFA}
+.eb-note input{flex:1;text-align:center}
+.eb-tip{font-size:11px;color:#A0AEA8;padding-left:59px;margin-top:2px}
+.f-sub{width:auto;flex:0 0 88px;padding:8px 6px!important;font-size:13px!important}
 </style>
 </head>
 <body>
@@ -508,6 +519,19 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
         <div class="eb-body" id="body_material" style="display:none">
           <div id="materialItems"></div>
           <button class="eb-add" onclick="addMaterial()">＋ 添加一种</button>
+        </div>
+      </div>
+
+      <!-- 运费 -->
+      <div class="eb">
+        <div class="eb-head" onclick="toggleEB('freight')">
+          <span class="eb-t">运费</span>
+          <span class="eb-s" id="sum_freight">¥0.00</span>
+          <span class="eb-ar" id="ar_freight">▸</span>
+        </div>
+        <div class="eb-body" id="body_freight" style="display:none">
+          <div id="freightItems"></div>
+          <button class="eb-add" onclick="addFreight()">＋ 添加一笔运费</button>
         </div>
       </div>
 
@@ -844,7 +868,7 @@ setTimeout(function TEST_MODE(){
 }, 2500);
 setTimeout(function autoOpenEB(){
   if (location.search.indexOf('open=1') < 0) return;
-  try { ['travel','labor','material'].forEach(function(k){ toggleEB(k); }); } catch(e){}
+  try { ['travel','labor','material','freight'].forEach(function(k){ toggleEB(k); }); } catch(e){}
 }, 1600);
 setTimeout(function expInit(){
   try { initExpForm(); } catch(e) { console.log('exp init', e); }
@@ -1882,10 +1906,10 @@ function expClearPending(){
 /* ========== v3 分项费用 ========== */
 var expData = {
   travel:   [{ sub: '加油',   amt: '' }, { sub: '过路费', amt: '' }],
-  labor:    [{ people: '', rate: '' }],
-  material: [{ name: '', qty: '', unit: '' }]
+  labor:    [{ total: '', people: '', rate: '', other: '' }],
+  material: [{ total: '', name: '', qty: '', unit: '', freight: '' }]
 };
-var TRAVEL_PRESETS = ['加油', '过路费', '住宿', '宴请', '停车费', '修车'];
+var TRAVEL_PRESETS = ['加油', '过路费', '住宿', '宴请', '停车费', '修车', '吃饭', '过磅费'];
 
 function toggleEB(key){
   var body = document.getElementById('body_' + key);
@@ -1902,7 +1926,11 @@ function renderTravel(){
   box.innerHTML = expData.travel.map(function(it, i){
     var amt = parseFloat(it.amt) || 0;
     return '<div class="eb-item">' +
-      '<input class="f-sub" value="' + escHtml(it.sub) + '" placeholder="费用项" list="dl-travel" oninput="expData.travel[' + i + '].sub=this.value">' +
+      '<select class="f-sub" onchange="expData.travel[' + i + '].sub=this.value;renderTravel()">' +
+        TRAVEL_PRESETS.map(function(x){ return '<option value="' + x + '"' + (it.sub === x ? ' selected' : '') + '>' + x + '</option>'; }).join('') +
+        '<option value="__custom"' + (TRAVEL_PRESETS.indexOf(it.sub) < 0 ? ' selected' : '') + '>其他…</option>' +
+      '</select>' +
+      (TRAVEL_PRESETS.indexOf(it.sub) < 0 ? '<input class="f-sub" style="width:64px" value="' + escHtml(it.sub === '__custom' ? '' : it.sub) + '" placeholder="名称" oninput="expData.travel[' + i + '].sub=this.value">' : '') +
       '<input class="f-amt" type="number" inputmode="decimal" value="' + it.amt + '" placeholder="0.00" oninput="expData.travel[' + i + '].amt=this.value;updSums()">' +
       '<span class="f-x" onclick="delTravel(' + i + ')">×</span>' +
     '</div>';
@@ -1924,25 +1952,29 @@ function renderLabor(){
   var box = document.getElementById('laborItems');
   if (!box) return;
   box.innerHTML = expData.labor.map(function(it, i){
-    var p = parseFloat(it.people) || 0, r = parseFloat(it.rate) || 0;
-    var res = p * r;
-    return '<div class="eb-item">' +
-      '<input class="f-num" type="number" inputmode="decimal" value="' + it.people + '" placeholder="人数" oninput="expData.labor[' + i + '].people=this.value;renderLabor();updSums()">' +
-      '<span class="f-eq">×</span>' +
-      '<input class="f-amt" type="number" inputmode="decimal" value="' + it.rate + '" placeholder="单价" oninput="expData.labor[' + i + '].rate=this.value;renderLabor();updSums()">' +
-      '<span class="f-res">' + (res ? '¥' + res.toFixed(2) : '¥0.00') + '</span>' +
-      '<span class="f-x" onclick="delLabor(' + i + ')">×</span>' +
+    return '<div class="eb-block">' +
+      '<div class="eb-row">' +
+        '<span class="eb-lb">总金额</span>' +
+        '<input class="f-amt" type="number" inputmode="decimal" value="' + (it.total||'') + '" placeholder="0.00" oninput="expData.labor[' + i + '].total=this.value;updSums()">' +
+        (expData.labor.length > 1 ? '<span class="f-x" onclick="delLabor(' + i + ')">×</span>' : '') +
+      '</div>' +
+      '<div class="eb-row eb-note">' +
+        '<input class="f-num" type="number" inputmode="decimal" value="' + (it.people||'') + '" placeholder="人数/工时" oninput="expData.labor[' + i + '].people=this.value">' +
+        '<input class="f-num" type="number" inputmode="decimal" value="' + (it.rate||'') + '" placeholder="工价" oninput="expData.labor[' + i + '].rate=this.value">' +
+        '<input class="f-num" type="number" inputmode="decimal" value="' + (it.other||'') + '" placeholder="其他" oninput="expData.labor[' + i + '].other=this.value">' +
+      '</div>' +
+      '<div class="eb-tip">人数/工价/其他只是备注，不参与计算</div>' +
     '</div>';
   }).join('');
 }
 
 function addLabor(){
-  expData.labor.push({ people: '', rate: '' });
+  expData.labor.push({ total: '', people: '', rate: '', other: '' });
   renderLabor();
 }
 
 function delLabor(i){
-  if (expData.labor.length <= 1) { expData.labor[0] = { people: '', rate: '' }; }
+  if (expData.labor.length <= 1) { expData.labor[0] = { total: '', people: '', rate: '', other: '' }; }
   else { expData.labor.splice(i, 1); }
   renderLabor(); updSums();
 }
@@ -1951,59 +1983,124 @@ function renderMaterial(){
   var box = document.getElementById('materialItems');
   if (!box) return;
   box.innerHTML = expData.material.map(function(it, i){
-    var q = parseFloat(it.qty) || 0, u = parseFloat(it.unit) || 0;
-    var res = q * u;
-    return '<div class="eb-item">' +
-      '<div style="flex:1;min-width:0">' +
-        '<input class="f-name" style="width:100%" value="' + escHtml(it.name) + '" placeholder="名称（如编织袋）" oninput="expData.material[' + i + '].name=this.value">' +
+    return '<div class="eb-block">' +
+      '<div class="eb-row">' +
+        '<span class="eb-lb">总金额</span>' +
+        '<input class="f-amt" type="number" inputmode="decimal" value="' + (it.total||'') + '" placeholder="0.00" oninput="expData.material[' + i + '].total=this.value;updSums()">' +
+        (expData.material.length > 1 ? '<span class="f-x" onclick="delMaterial(' + i + ')">×</span>' : '') +
       '</div>' +
-      '<input class="f-num" type="number" inputmode="decimal" value="' + it.qty + '" placeholder="数量" oninput="expData.material[' + i + '].qty=this.value;renderMaterial();updSums()">' +
-      '<span class="f-eq">×</span>' +
-      '<input class="f-num" style="width:70px" type="number" inputmode="decimal" value="' + it.unit + '" placeholder="单价" oninput="expData.material[' + i + '].unit=this.value;renderMaterial();updSums()">' +
-      '<span class="f-x" onclick="delMaterial(' + i + ')">×</span>' +
-    '</div>' +
-    '<div style="text-align:right;font-size:12px;color:#2F5D50;font-weight:700;padding:0 0 7px">= ¥' + res.toFixed(2) + '</div>';
+      '<div class="eb-row">' +
+        '<input class="f-name" type="text" value="' + escHtml(it.name||'') + '" placeholder="名称（如编织袋）" oninput="expData.material[' + i + '].name=this.value">' +
+      '</div>' +
+      '<div class="eb-row eb-note">' +
+        '<input class="f-num" type="number" inputmode="decimal" value="' + (it.qty||'') + '" placeholder="数量" oninput="expData.material[' + i + '].qty=this.value">' +
+        '<input class="f-num" type="number" inputmode="decimal" value="' + (it.unit||'') + '" placeholder="单价" oninput="expData.material[' + i + '].unit=this.value">' +
+        '<input class="f-num" type="number" inputmode="decimal" value="' + (it.freight||'') + '" placeholder="运费" oninput="expData.material[' + i + '].freight=this.value">' +
+      '</div>' +
+      '<div class="eb-tip">名称/数量/单价/运费只是备注，不参与计算</div>' +
+    '</div>';
   }).join('');
 }
 
 function addMaterial(){
-  expData.material.push({ name: '', qty: '', unit: '' });
+  expData.material.push({ total: '', name: '', qty: '', unit: '', freight: '' });
   renderMaterial();
 }
 
 function delMaterial(i){
-  if (expData.material.length <= 1) { expData.material[0] = { name: '', qty: '', unit: '' }; }
+  if (expData.material.length <= 1) { expData.material[0] = { total: '', name: '', qty: '', unit: '', freight: '' }; }
   else { expData.material.splice(i, 1); }
   renderMaterial(); updSums();
+}
+
+
+/* ===== 运费 ===== */
+expData.freight = expData.freight || [{ amount: '', customer: '', owner: '' }];
+
+function renderFreight(){
+  var box = document.getElementById('freightItems');
+  if (!box) return;
+  box.innerHTML = expData.freight.map(function(it, i){
+    return '<div class="eb-block">' +
+      '<div class="eb-row">' +
+        '<span class="eb-lb">金额</span>' +
+        '<input class="f-amt" type="number" inputmode="decimal" value="' + (it.amount||'') + '" placeholder="0.00" oninput="expData.freight[' + i + '].amount=this.value;updSums()">' +
+        (expData.freight.length > 1 ? '<span class="f-x" onclick="delFreight(' + i + ')">×</span>' : '') +
+      '</div>' +
+      '<div class="eb-row">' +
+        '<span class="eb-lb">给谁拉</span>' +
+        '<input style="flex:1" value="' + escHtml(it.customer||'') + '" placeholder="客户名，选或直接打" list="dl-freight-cus" oninput="expData.freight[' + i + '].customer=this.value">' +
+      '</div>' +
+      '<div class="eb-row">' +
+        '<span class="eb-lb">货主</span>' +
+        '<input style="flex:1" value="' + escHtml(it.owner||'') + '" placeholder="货主名，选或直接打" list="dl-freight-own" oninput="expData.freight[' + i + '].owner=this.value">' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  // datalist：从已有记录里提取
+  var cusSet = {}, ownSet = {};
+  try {
+    (data || []).slice(0, 300).forEach(function(r){
+      if (r.customer) cusSet[r.customer] = 1;
+      if (r.owner) ownSet[r.owner] = 1;
+    });
+  } catch(e) {}
+  var cusDl = document.getElementById('dl-freight-cus-holder');
+  if (!cusDl) {
+    cusDl = document.createElement('span');
+    cusDl.id = 'dl-freight-cus-holder';
+    cusDl.innerHTML = '<datalist id="dl-freight-cus"></datalist><datalist id="dl-freight-own"></datalist>';
+    document.body.appendChild(cusDl);
+  }
+  document.getElementById('dl-freight-cus').innerHTML = Object.keys(cusSet).map(function(k){ return '<option value="' + escHtml(k) + '">'; }).join('');
+  document.getElementById('dl-freight-own').innerHTML = Object.keys(ownSet).map(function(k){ return '<option value="' + escHtml(k) + '">'; }).join('');
+}
+
+function addFreight(){
+  expData.freight.push({ amount: '', customer: '', owner: '' });
+  renderFreight();
+}
+
+function delFreight(i){
+  if (expData.freight.length <= 1) { expData.freight[0] = { amount: '', customer: '', owner: '' }; }
+  else { expData.freight.splice(i, 1); }
+  renderFreight(); updSums();
+}
+
+function sumFreight(){
+  return expData.freight.reduce(function(s, it){ return s + (parseFloat(it.amount) || 0); }, 0);
 }
 
 function sumTravel(){
   return expData.travel.reduce(function(s, it){ return s + (parseFloat(it.amt) || 0); }, 0);
 }
 function sumLabor(){
-  return expData.labor.reduce(function(s, it){ return s + (parseFloat(it.people) || 0) * (parseFloat(it.rate) || 0); }, 0);
+  return expData.labor.reduce(function(s, it){ return s + (parseFloat(it.total) || 0); }, 0);
 }
 function sumMaterial(){
-  return expData.material.reduce(function(s, it){ return s + (parseFloat(it.qty) || 0) * (parseFloat(it.unit) || 0); }, 0);
+  return expData.material.reduce(function(s, it){ return s + (parseFloat(it.total) || 0); }, 0);
 }
 
 function updSums(){
-  var st = sumTravel(), sl = sumLabor(), sm = sumMaterial();
+  var st = sumTravel(), sl = sumLabor(), sm = sumMaterial(), sf = (typeof sumFreight === 'function' ? sumFreight() : 0);
   var load = parseFloat((document.getElementById('expLoad') || {}).value) || 0;
   var other = parseFloat((document.getElementById('expOther') || {}).value) || 0;
 
   var e1 = document.getElementById('sum_travel'); if (e1) e1.textContent = '¥' + st.toFixed(2);
   var e2 = document.getElementById('sum_labor');  if (e2) e2.textContent = '¥' + sl.toFixed(2);
   var e3 = document.getElementById('sum_material'); if (e3) e3.textContent = '¥' + sm.toFixed(2);
+  var e4 = document.getElementById('sum_freight'); if (e4) e4.textContent = '¥' + sf.toFixed(2);
 
   var cnt = 0;
   expData.travel.forEach(function(x){ if ((parseFloat(x.amt)||0) > 0) cnt++; });
-  expData.labor.forEach(function(x){ if ((parseFloat(x.people)||0) * (parseFloat(x.rate)||0) > 0) cnt++; });
-  expData.material.forEach(function(x){ if ((parseFloat(x.qty)||0) * (parseFloat(x.unit)||0) > 0) cnt++; });
+  expData.labor.forEach(function(x){ if ((parseFloat(x.total)||0) > 0) cnt++; });
+  expData.material.forEach(function(x){ if ((parseFloat(x.total)||0) > 0) cnt++; });
+  if (sf > 0) cnt++;
   if (load > 0) cnt++;
   if (other > 0) cnt++;
 
-  var total = st + sl + sm + load + other;
+  var total = st + sl + sm + sf + load + other;
   var bar = document.getElementById('expSumBar');
   var bc = document.getElementById('expSumCnt');
   var ba = document.getElementById('expSumAmt');
@@ -2014,7 +2111,7 @@ function updSums(){
 }
 
 function initExpForm(){
-  renderTravel(); renderLabor(); renderMaterial(); updSums();
+  renderTravel(); renderLabor(); renderMaterial(); renderFreight(); updSums();
 }
 
 function saveExpBatch(){
@@ -2034,6 +2131,14 @@ function saveExpBatch(){
   expData.material.forEach(function(it){
     var q = parseFloat(it.qty) || 0, u = parseFloat(it.unit) || 0;
     if (q > 0 && u > 0) rows.push({ type: '物料费', subtype: (it.name || '').trim(), amount: q * u, qty: q, unit_price: u });
+  });
+  // 运费
+  expData.freight.forEach(function(it){
+    var a = parseFloat(it.amount) || 0;
+    if (a > 0) rows.push({
+      type: '运费', subtype: ('给' + (it.customer || '?') + '拉·货主' + (it.owner || '?')),
+      amount: a, qty: null, unit_price: null
+    });
   });
   var load = parseFloat((document.getElementById('expLoad') || {}).value) || 0;
   if (load > 0) rows.push({ type: '装卸费', subtype: '', amount: load, qty: null, unit_price: null });
@@ -2064,8 +2169,9 @@ function saveExpBatch(){
   });
 
   expData.travel = [{ sub: '加油', amt: '' }, { sub: '过路费', amt: '' }];
-  expData.labor = [{ people: '', rate: '' }];
-  expData.material = [{ name: '', qty: '', unit: '' }];
+  expData.labor = [{ total: '', people: '', rate: '', other: '' }];
+  expData.material = [{ total: '', name: '', qty: '', unit: '', freight: '' }];
+  expData.freight = [{ amount: '', customer: '', owner: '' }];
   var le = document.getElementById('expLoad'); if (le) le.value = '';
   var oe = document.getElementById('expOther'); if (oe) oe.value = '';
   var on = document.getElementById('expOtherNote'); if (on) on.value = '';
