@@ -1,4 +1,4 @@
-const CACHE = 'ginger-ledger-v37';
+const CACHE = 'ginger-ledger-v38';
 const ASSETS = ['./index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-180.png'];
 
 self.addEventListener('install', function (e) {
@@ -24,16 +24,17 @@ self.addEventListener('fetch', function (e) {
   var url = new URL(e.request.url);
 
   // 页面导航：网络优先，永远拿最新版；断网时才用缓存
-  if (e.request.mode === 'navigate' || url.pathname.endsWith('/index.html') || url.pathname.endsWith('/')) {
+  var isHtml = url.pathname.endsWith('.html') || url.pathname.endsWith('/');
+  if (e.request.mode === 'navigate' || isHtml) {
     e.respondWith(
       fetch(e.request, { cache: 'no-store' }).then(function (res) {
         if (res && res.status === 200) {
           var copy = res.clone();
-          caches.open(CACHE).then(function (c) { c.put('./index.html', copy); });
+          caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
         }
         return res;
       }).catch(function () {
-        return caches.match('./index.html');
+        return caches.match(e.request).then(function(m){ return m || caches.match('./index.html'); });
       })
     );
     return;
