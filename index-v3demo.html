@@ -3035,7 +3035,8 @@ body.marking .mk-hover{outline:2px dashed #C0392B!important;outline-offset:2px;b
     countEl.textContent = marks.length;
     btn.textContent = '✏️ 标注中 · 已标 ' + marks.length + ' 处';
     drawDots();
-    // 保存后立刻可以继续点下一处
+    // 关键：保存后要让"提交标注"按钮现身
+    submit.classList.toggle('hide', !marks.length);
   };
 
   /* ===== 标注历史 ===== */
