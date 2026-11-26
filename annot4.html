@@ -3682,10 +3682,10 @@ setTimeout(function(){
 
 <!-- ===== 标注工具 ===== -->
 
-<div id="mkPanel">
+<div id="mkPanel" style="display:none;position:fixed;left:0;right:0;bottom:0;background:#fff;z-index:99998;padding:16px;border-radius:18px 18px 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.18);box-sizing:border-box">
   <div id="mkHead">标注这一处</div>
-  <div id="mkTarget"></div>
-  <textarea id="mkText" placeholder="这里要改什么？比如：加号太小 / 这里应该显示对方名字 / 位置放错了"></textarea>
+  <div id="mkTarget" style="font-size:12px;color:#7A8A82;margin-bottom:10px;line-height:1.5;background:#F7F9F8;padding:8px;border-radius:8px;max-height:60px;overflow:auto"></div>
+  <textarea id="mkText" placeholder="这里要改什么？" style="width:100%;min-height:76px;padding:11px;border:1px solid #D8E0DB;border-radius:9px;font-size:15px;font-family:inherit;resize:vertical;box-sizing:border-box"></textarea>
   <div class="mk-acts">
     <button id="mkCancel">取消</button>
     <button id="mkSave">保存标注</button>
@@ -3824,12 +3824,12 @@ body.marking .mk-hover{outline:2px dashed #C0392B!important;outline-offset:2px;b
       '<b>' + (pending.info.text || pending.info.path) + '</b><br>' +
       '<span style="color:#B0BAB5">' + pending.info.path + '</span>';
     text.value = '';
-    panel.classList.add('show');
+    panel.style.display = 'block';
     setTimeout(function(){ text.focus(); }, 250);
   }, true);
 
   document.getElementById('mkCancel').onclick = function(){
-    panel.classList.remove('show');
+    panel.style.display = 'none';
     pending = null;
   };
 
@@ -3845,7 +3845,7 @@ body.marking .mk-hover{outline:2px dashed #C0392B!important;outline-offset:2px;b
       path: pending.info.path,
       note: note
     });
-    panel.classList.remove('show');
+    panel.style.display = 'none';
     pending = null;
     countEl.textContent = marks.length;
     btn.textContent = '✏️ 标注中 · 已标 ' + marks.length + ' 处';
