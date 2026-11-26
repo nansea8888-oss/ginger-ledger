@@ -7,6 +7,19 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#EEF2F0;color:#22312C;padding:16px}
+body.embed{padding:8px;background:#fff}
+body.embed .wrap{max-width:none}
+body.embed h1{font-size:14px;margin-bottom:2px}
+body.embed .sub{font-size:10px;margin-bottom:8px}
+body.embed .card{padding:9px;margin-bottom:7px;border-radius:9px}
+body.embed .lbl{font-size:10px;margin-bottom:4px}
+body.embed .warn{display:none}
+body.embed #embedSwitch{display:none}
+body.embed .row{font-size:11px;padding:6px 0}
+body.embed .gbtn{font-size:11px;padding:6px 10px}
+body.embed input,body.embed .btn{font-size:12px;padding:8px}
+body.embed .log{display:none}
+body.embed .card:has(#log){display:none}
 .wrap{max-width:720px;margin:0 auto}
 h1{font-size:17px;margin-bottom:4px;color:#2F5D50}
 .sub{font-size:11.5px;color:#8A9992;margin-bottom:14px}
@@ -45,7 +58,7 @@ input,select{padding:10px 12px;border:1px solid #DCE7E2;border-radius:9px;font-s
   <h1 id="pageTitle">群数据隔离验证台</h1>
   <div class="sub" id="pageSub">点身份切换，验证每个人只看到自己账本里的数据</div>
 
-  <div class="card">
+  <div class="card" id="embedSwitch">
     <div class="lbl">切换账号（点击跳到那个账号）</div>
     <div class="swlinks">
       <a href="?u=uA" class="swlink">老王<small>uA · 1001</small></a>
@@ -232,6 +245,7 @@ async function addRecord(){
   await renderData();
 }
 
+if (location.search.indexOf('embed=1') >= 0) document.body.classList.add('embed');
 renderIds();
 initSdk().then(async () => {
   log('页面就绪，点上面选身份');
