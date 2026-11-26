@@ -3828,9 +3828,14 @@ function cloudSaveRecord(rec){
 setTimeout(function(){
   var m = location.search.match(/[?&]code=([^&]+)/);
   if (m) {
+    // 带 code 参数 = 强制切到这个账号，清掉缓存身份
+    try { localStorage.removeItem('gl_cloud_user'); } catch(e) {}
+    cloudUser = null;
+    curGroup = null;
+    myGroups = [];
     var c = document.getElementById('lgCode');
     if (c) c.value = decodeURIComponent(m[1]);
-    setTimeout(function(){ try { doLogin(); } catch(e) {} }, 300);
+    setTimeout(function(){ try { doLogin(); } catch(e) { console.log(e); } }, 400);
   } else if (!cloudRestore()) {
     // 没登录态就停在登录页
   }
