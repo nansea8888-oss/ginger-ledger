@@ -3358,7 +3358,7 @@ function openGrpPicker(){
     return '<div class="gp-item' + (curGroup && curGroup.id === g.id ? ' on' : '') + '" onclick="pickGroup(\'' + g.id + '\')">' +
       '<span class="gp-dot"></span>' +
       '<div class="gp-info"><div class="gp-n">' + escHtml(g.name) + '</div>' +
-      '<div class="gp-m">' + (g.owner_id === (cloudUser && cloudUser.id) ? '我建的' : '别人邀请的') + '</div></div>' +
+      '</div>' +
     '</div>';
   }).join('');
   box.classList.add('show');
