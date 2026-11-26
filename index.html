@@ -371,24 +371,13 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 .loc-btn{flex-shrink:0;width:42px;height:42px;border:1px solid #DCE7E2;border-radius:11px;background:#F7FAF8;color:#2F5D50;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent}
 .loc-btn:active{background:#2F5D50;color:#fff}
 
-.cg-item{display:flex;align-items:center;padding:13px;border:1.5px solid #E4ECE8;border-radius:11px;margin-bottom:9px;cursor:pointer;background:#fff}
 .cg-item.on{border-color:#2F5D50;background:#F5FAF7}
-.cg-name{font-size:14.5px;font-weight:600;color:#22312C}
-.cg-cur{font-size:10px;padding:1px 7px;border-radius:5px;background:#2F5D50;color:#fff;font-weight:500}
-.cg-sub{font-size:11px;color:#8A9992;margin-top:3px}
-.cg-ar{font-size:12px;color:#8A9992}
 .cm-row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid #F0F4F2;font-size:13.5px}
 .cm-row:last-child{border-bottom:0}
 .cm-name{color:#22312C;font-weight:500}
 .cm-role{color:#8A9992;font-size:12px}
 
-.cd-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
-.inv-chip{display:flex;align-items:center;gap:7px;padding:7px 11px;border:1.5px solid #DCE7E2;border-radius:10px;background:#F8FBF9;font-family:inherit;cursor:pointer}
 .inv-chip:active{background:#EEF6F2}
-.inv-label{font-size:10.5px;color:#8A9992}
-.inv-chip b{font-size:15px;color:#C0392B;letter-spacing:1.5px;font-weight:700}
-.inv-copy{font-size:10.5px;color:#2F5D50;background:#E4F0EA;padding:2px 7px;border-radius:5px;font-weight:600}
-.cd-tip{font-size:11px;color:#8A9992;line-height:1.6;margin-bottom:11px}
 
 .jr-item{padding:12px 0;border-bottom:1px solid #F0F4F2}
 .jr-item:last-child{border-bottom:0}
@@ -398,6 +387,25 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 .jr-acts button{padding:9px;border:0;border-radius:9px;font-size:13px;font-family:inherit;font-weight:600;cursor:pointer}
 .jr-no{background:#FBEEEC;color:#C0392B}
 .jr-ok{background:#2F5D50;color:#fff}
+
+.cg-wrap{margin-bottom:9px}
+.cg-item{display:flex;align-items:center;padding:13px;border:1.5px solid #E4ECE8;border-radius:11px;cursor:pointer;background:#fff;transition:.15s}
+.cg-item.on{border-color:#2F5D50;background:#F5FAF7}
+.cg-item.open{border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom:0}
+.cg-sub{font-size:11px;color:#8A9992;margin-top:3px}
+.cg-ar{font-size:12px;color:#8A9992}
+.cg-body{border:1.5px solid #E4ECE8;border-top:0;border-radius:0 0 11px 11px;padding:12px 13px;background:#FBFDFC}
+.cg-name{font-size:14.5px;font-weight:600;color:#22312C}
+.cg-cur{font-size:10px;padding:1px 7px;border-radius:5px;background:#2F5D50;color:#fff;font-weight:500}
+.cg-using{font-size:10.5px;color:#1E8E4A;font-weight:600}
+.cg-use{padding:6px 11px;border:0;border-radius:8px;background:#2F5D50;color:#fff;font-size:11.5px;font-family:inherit;font-weight:600;cursor:pointer}
+.cd-head{display:flex;align-items:center;justify-content:space-between;gap:9px;margin-bottom:7px}
+.inv-chip{display:flex;align-items:center;gap:7px;padding:6px 10px;border:1.5px solid #DCE7E2;border-radius:9px;background:#fff;font-family:inherit;cursor:pointer}
+.inv-chip:active{background:#EEF6F2}
+.inv-label{font-size:10.5px;color:#8A9992}
+.inv-chip b{font-size:15px;color:#C0392B;letter-spacing:1.5px;font-weight:700}
+.inv-copy{font-size:10.5px;color:#2F5D50;background:#E4F0EA;padding:2px 7px;border-radius:5px;font-weight:600}
+.cd-tip{font-size:11px;color:#8A9992;line-height:1.6;margin-bottom:9px}
 </style>
 </head>
 <body>
@@ -707,33 +715,6 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
       <h3>我发出的申请</h3>
       <div id="myReqList"></div>
     </div>
-
-    <div class="card" id="coopDetail" style="display:none">
-      <div class="cd-head">
-        <h3 id="coopDetailName" style="margin:0">账本</h3>
-        <button class="inv-chip" id="invChip" onclick="copyInvite()">
-          <span class="inv-label">邀请码</span>
-          <b id="invCode">------</b>
-          <span class="inv-copy">复制</span>
-        </button>
-      </div>
-      <div class="cd-tip">把这个码发给对方，他输码后要等账本里所有人同意才能进</div>
-      <div id="coopMembers"></div>
-    </div>
-  </section>
-</main>
-
-<div id="guide" class="guide">
-  <span class="ga" id="ga">↗</span>
-  <div class="gbox">
-    <div class="gicon">📱</div>
-    <h2 id="gt">把台账装到手机桌面</h2>
-    <div class="gsub" id="gsub"></div>
-    <ol class="gsteps" id="gs"></ol>
-    <button class="gbtn" id="gmain">立即安装</button>
-    <button class="gbtn2" id="gdone">我已经装好了，进入台账</button>
-  </div>
-</div>
 
 <script>
 window.onerror=function(m,s,l,c,e){try{document.title='ERR:'+m+' @'+l;}catch(_){}};
@@ -3571,13 +3552,12 @@ function renderCoop(){
   var list = document.getElementById('coopGroupList');
   var cnt = document.getElementById('coopCount');
   if (!list) return;
-  // 还没登录 → 等一下再渲染
+
   if (!cloudUser) {
     list.innerHTML = '<div class="hint" style="text-align:center;padding:18px 0">加载中…</div>';
     setTimeout(renderCoop, 900);
     return;
   }
-  // 已登录但账本还没拉到 → 加载
   if (!myGroups.length && cloudToken) {
     list.innerHTML = '<div class="hint" style="text-align:center;padding:18px 0">加载中…</div>';
     loadMyGroups().then(function(){ setTimeout(renderCoop, 60); }).catch(function(){
@@ -3591,74 +3571,107 @@ function renderCoop(){
     return;
   }
   if (cnt) cnt.textContent = myGroups.length + ' 个';
-  setTimeout(function(){ try { loadPendingApprovals(); loadMyRequests(); } catch(e){} }, 200);
+
   list.innerHTML = myGroups.map(function(g){
     var isCur = curGroup && curGroup.id === g.id;
-    return '<div class="cg-item' + (isCur ? ' on' : '') + '" onclick="coopSelect(\'' + g.id + '\')">' +
-      '<div style="flex:1;min-width:0">' +
-        '<div class="cg-name">' + escHtml(g.name) + (isCur ? ' <span class="cg-cur">当前</span>' : '') + '</div>' +
-        '<div class="cg-sub">' + (g.owner_id === (cloudUser && cloudUser.id) ? '我建的' : '别人邀请的') + '</div>' +
+    var isOpen = window.__openGroupId === g.id;
+    var code = g.invite_code || '------';
+    return '<div class="cg-wrap">' +
+      '<div class="cg-item' + (isCur ? ' on' : '') + (isOpen ? ' open' : '') + '" onclick="toggleGroupDetail(\'' + g.id + '\')">' +
+        '<div style="flex:1;min-width:0">' +
+          '<div class="cg-name">' + escHtml(g.name) + (isCur ? ' <span class="cg-cur">当前</span>' : '') + '</div>' +
+          '<div class="cg-sub">' + (g.owner_id === (cloudUser && cloudUser.id) ? '我建的' : '别人邀请的') + '</div>' +
+        '</div>' +
+        '<span class="cg-ar">' + (isOpen ? '▾' : '▸') + '</span>' +
       '</div>' +
-      '<span class="cg-ar">▸</span>' +
+      (isOpen ? (
+        '<div class="cg-body">' +
+          '<div class="cd-head">' +
+            '<button class="inv-chip" onclick="event.stopPropagation();copyInvite(\'' + code + '\')">' +
+              '<span class="inv-label">邀请码</span>' +
+              '<b>' + code + '</b>' +
+              '<span class="inv-copy">复制</span>' +
+            '</button>' +
+            (curGroup && curGroup.id === g.id ? '<span class="cg-using">正在使用</span>' : '<button class="cg-use" onclick="event.stopPropagation();switchTo(\'' + g.id + '\')">切到这个账本</button>') +
+          '</div>' +
+          '<div class="cd-tip">把这个码发给对方，他输码后要等账本里所有人同意才能进</div>' +
+          '<div id="mem_' + g.id + '"><div class="hint" style="padding:8px 0">加载成员…</div></div>' +
+        '</div>'
+      ) : '') +
     '</div>';
   }).join('');
+
+  // 加载展开项里的成员
+  if (window.__openGroupId) loadGroupMembers(window.__openGroupId);
 }
 
-function coopSelect(gid){
-  var g = myGroups.filter(function(x){ return x.id === gid; })[0];
-  if (!g) return;
-  var det = document.getElementById('coopDetail');
-  var nm = document.getElementById('coopDetailName');
-  var mem = document.getElementById('coopMembers');
-  if (!det || !nm || !mem) return;
-  det.style.display = 'block';
-  nm.textContent = g.name;
-  var codeEl = document.getElementById('invCode');
-  if (codeEl) codeEl.textContent = g.invite_code || '------';
-  window.__curInviteCode = g.invite_code || '';
-  mem.innerHTML = '<div class="hint" style="padding:10px 0">加载成员…</div>';
+function toggleGroupDetail(gid){
+  window.__openGroupId = (window.__openGroupId === gid) ? null : gid;
+  renderCoop();
+}
 
+function loadGroupMembers(gid){
+  var box = document.getElementById('mem_' + gid);
+  if (!box) return;
   cloudReq('/group_members?group_id=eq.' + encodeURIComponent(gid) + '&select=user_id,role')
     .then(function(rows){
       var ids = (rows || []).map(function(r){ return r.user_id; });
-      if (!ids.length) { mem.innerHTML = '<div class="hint">没有成员</div>'; return null; }
-      return cloudReq('/users?id=in.(' + ids.join(',') + ')&select=id,name,invite_code').then(function(us){
-        var nameMap = {};
-        (us || []).forEach(function(u){ nameMap[u.id] = u; });
-        mem.innerHTML = (rows || []).map(function(r){
-          var u = nameMap[r.user_id] || { name: r.user_id };
+      if (!ids.length) { box.innerHTML = '<div class="hint">没有成员</div>'; return null; }
+      return cloudReq('/users?id=in.(' + ids.join(',') + ')&select=id,name').then(function(us){
+        var nm = {};
+        (us || []).forEach(function(u){ nm[u.id] = u.name; });
+        box.innerHTML = (rows || []).map(function(r){
           var isMe = cloudUser && r.user_id === cloudUser.id;
-          return '<div class="cm-row">' +
-            '<span class="cm-name">' + escHtml(u.name) + (isMe ? '（我）' : '') + '</span>' +
-            '<span class="cm-role">' + (r.role === 'owner' ? '群主' : '成员') + '</span>' +
-          '</div>';
+          return '<div class="cm-row"><span class="cm-name">' + escHtml(nm[r.user_id] || r.user_id) + (isMe ? '（我）' : '') + '</span>' +
+            '<span class="cm-role">' + (r.role === 'owner' ? '群主' : '成员') + '</span></div>';
         }).join('');
       });
     }).catch(function(e){
-      mem.innerHTML = '<div class="hint">加载失败：' + (e.message || e) + '</div>';
+      box.innerHTML = '<div class="hint">加载失败</div>';
     });
 }
 
-
-/* 复制邀请码 */
-function copyInvite(){
-  var code = window.__curInviteCode || '';
-  if (!code || code === '------') { alert('这个账本还没有邀请码'); return; }
-  var done = function(){
-    var chip = document.getElementById('invChip');
-    if (chip) {
-      var cp = chip.querySelector('.inv-copy');
-      if (cp) { cp.textContent = '已复制'; setTimeout(function(){ cp.textContent = '复制'; }, 1600); }
+function switchTo(gid){
+  var g = myGroups.filter(function(x){ return x.id === gid; })[0];
+  if (!g) return;
+  curGroup = g;
+  try { localStorage.setItem('gl_cur_group_' + cloudUser.id, gid); } catch(e) {}
+  data = []; expenses = [];
+  try {
+    if (typeof DB !== 'undefined') {
+      if (DB.clear) DB.clear().catch(function(){});
+      if (DB.expClear) DB.expClear().catch(function(){});
     }
-  };
+  } catch(e) {}
+  renderGrpBtn();
+  try { if (typeof render === 'function') render(); } catch(e) {}
+  try { if (typeof renderExp === 'function') renderExp(); } catch(e) {}
+  try { if (typeof renderSum === 'function') renderSum(); } catch(e) {}
+  cloudPull();
+  renderCoop();
+}
+
+/* 复制邀请码（新版带参数） */
+function copyInvite(code){
+  if (!code || code === '------') { alert('这个账本还没有邀请码'); return; }
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(code).then(done).catch(function(){
-      prompt('复制这个邀请码：', code);
-    });
+    navigator.clipboard.writeText(code).then(function(){
+      var chips = document.querySelectorAll('.inv-copy');
+      for (var i = 0; i < chips.length; i++) {
+        chips[i].textContent = '已复制';
+        setTimeout((function(el){ return function(){ el.textContent = '复制'; }; })(chips[i]), 1500);
+      }
+    }).catch(function(){ prompt('复制这个邀请码：', code); });
   } else {
     prompt('复制这个邀请码：', code);
   }
 }
+
+
+
+
+/* 复制邀请码 */
+
 
 function genInvite(){
   var g = myGroups.filter(function(x){ return curGroup && x.id === curGroup.id; })[0];
