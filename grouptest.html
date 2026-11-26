@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>群模型验证台</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#EEF2F0;color:#22312C;padding:16px}
+.wrap{max-width:720px;margin:0 auto}
+h1{font-size:17px;margin-bottom:4px;color:#2F5D50}
+.sub{font-size:11.5px;color:#8A9992;margin-bottom:14px}
+.card{background:#fff;border-radius:13px;padding:15px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.lbl{font-size:11.5px;color:#8A9992;margin-bottom:7px;font-weight:500}
+.ids{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.idbtn{padding:12px 6px;border:1.5px solid #DCE7E2;background:#fff;border-radius:10px;font-size:13px;font-family:inherit;cursor:pointer;color:#3D514A;font-weight:600}
+.idbtn.on{background:#2F5D50;color:#fff;border-color:#2F5D50}
+.idbtn small{display:block;font-size:10px;font-weight:400;opacity:.7;margin-top:2px}
+.grp{display:flex;gap:7px;flex-wrap:wrap;margin-top:3px}
+.gbtn{padding:9px 14px;border:1.5px solid #DCE7E2;background:#fff;border-radius:9px;font-size:12.5px;font-family:inherit;cursor:pointer;color:#3D514A}
+.gbtn.on{background:#FFC94D;border-color:#FFC94D;font-weight:700;color:#2F5D50}
+.row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #F0F4F2;font-size:13px}
+.row:last-child{border-bottom:0}
+.row .t{color:#5A6B65}
+.row .v{font-weight:600;color:#22312C}
+.empty{text-align:center;color:#A8B5AF;font-size:12.5px;padding:18px 0}
+input,select{padding:10px 12px;border:1px solid #DCE7E2;border-radius:9px;font-size:14px;font-family:inherit;width:100%}
+.btn{padding:12px;border:0;border-radius:10px;background:#2F5D50;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;width:100%;margin-top:9px}
+.tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:10.5px;background:#EEF4F1;color:#5A6B65;margin-left:6px}
+.warn{background:#FFF8E6;border:1px solid #FFE4A3;color:#8A6D1F;font-size:11.5px;padding:10px 12px;border-radius:9px;line-height:1.7;margin-bottom:12px}
+.log{font-size:11.5px;color:#5A6B65;line-height:1.8;max-height:180px;overflow:auto;background:#F7FAF8;padding:11px;border-radius:9px;font-family:ui-monospace,monospace}
+.log div{padding:2px 0}
+.ok{color:#1E8E4A;font-weight:700}
+.no{color:#C0392B;font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>群数据隔离验证台</h1>
+  <div class="sub">点身份切换，验证每个人只看到自己账本里的数据</div>
+
+  <div class="warn">
+    <b>验证方法：</b>切到「老王A」在「王家姜业」录一笔 → 切到「老李B」「老赵C」都能看到 → 切到「老孙D」看不到。
+  </div>
+
+  <div class="card">
+    <div class="lbl">切换身份（模拟登录）</div>
+    <div class="ids" id="idBtns"></div>
+  </div>
+
+  <div class="card">
+    <div class="lbl">我所在的账本（自动只显示自己的）</div>
+    <div class="grp" id="grpBtns"><div class="empty">请先选身份</div></div>
+  </div>
+
+  <div class="card">
+    <div class="lbl">当前账本的数据</div>
+    <div id="dataBox"><div class="empty">暂无数据</div></div>
+  </div>
+
+  <div class="card">
+    <div class="lbl">在这个账本里录一笔（验证写入隔离）</div>
+    <input id="amt" type="number" placeholder="金额，比如 1000">
+    <input id="cus" placeholder="客户名，比如 张老板" style="margin-top:8px">
+    <button class="btn" onclick="addRecord()">保存到当前账本</button>
+  </div>
+
+  <div class="card">
+    <div class="lbl">验证日志</div>
+    <div class="log" id="log"></div>
+  </div>
+</div>
+
+<script src="cloudbase.bundle.js"></script>
+<script>
+const API = 'https://head-crab-d1g485if3fb037f2a.api.tcloudbasegateway.com/v1/rdb/rest';
+const USERS = [
+  { id: 'uA', name: '老王', code: '1001' },
+  { id: 'uB', name: '老李', code: '1002' },
+  { id: 'uC', name: '老赵', code: '1003' },
+  { id: 'uD', name: '老孙', code: '1004' }
+];
+let token = null, curUser = null, curGroup = null, myGroups = [];
+
+function log(s, cls){
+  const el = document.getElementById('log');
+  const d = document.createElement('div');
+  d.className = cls || '';
+  d.innerHTML = new Date().toLocaleTimeString() + '  ' + s;
+  el.insertBefore(d, el.firstChild);
+}
+
+async function initSdk(){
+  if (token) return;
+  const cb = window.cloudbase && (window.cloudbase.default || window.cloudbase);
+  const app = cb.init({ env: 'head-crab-d1g485if3fb037f2a' });
+  const auth = app.auth({ persistence: 'local' });
+  await auth.signInAnonymously();
+  const t = await auth.getAccessToken();
+  token = typeof t === 'string' ? t : (t && t.accessToken);
+  log('SDK 就绪', 'ok');
+}
+
+async function api(path, opt){
+  opt = opt || {};
+  const doFetch = () => fetch(API + path, {
+    method: opt.method || 'GET',
+    headers: Object.assign({
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + token
+    }, opt.headers || {}),
+    body: opt.body
+  }).then(async r => {
+    const txt = await r.text();
+    if (!r.ok) { const e = new Error(r.status + ' ' + txt.slice(0,120)); e.status = r.status; throw e; }
+    return txt ? JSON.parse(txt) : null;
+  });
+
+  try { return await doFetch(); }
+  catch(e){
+    if (e.status === 401) { token = null; await initSdk(); return await doFetch(); }
+    throw e;
+  }
+}
+
+/* 渲染身份按钮 */
+function renderIds(){
+  document.getElementById('idBtns').innerHTML = USERS.map(u =>
+    `<button class="idbtn ${curUser && curUser.id === u.id ? 'on' : ''}" onclick="switchUser('${u.id}')">
+      ${u.name}<small>${u.id} · ${u.code}</small>
+    </button>`
+  ).join('');
+}
+
+/* 切换身份 */
+async function switchUser(uid){
+  await initSdk();
+  curUser = USERS.find(u => u.id === uid);
+  curGroup = null;
+  renderIds();
+  log('切到身份：' + curUser.name + '（' + uid + '）');
+
+  // 只查自己所在的账本
+  const rows = await api('/group_members?user_id=eq.' + uid + '&select=group_id,role');
+  const gids = (rows || []).map(r => r.group_id);
+  log('查询「我所在的账本」→ 返回 ' + gids.length + ' 个：' + (gids.join(', ') || '无'));
+
+  if (!gids.length) { myGroups = []; renderGroups(); renderData(); return; }
+
+  const groups = await api('/groups?id=in.(' + gids.join(',') + ')');
+  myGroups = groups || [];
+  log('账本详情：' + myGroups.map(g => g.name).join('、'), 'ok');
+
+  curGroup = myGroups[0];
+  renderGroups();
+  renderData();
+}
+
+function renderGroups(){
+  const box = document.getElementById('grpBtns');
+  if (!myGroups.length) { box.innerHTML = '<div class="empty">这个身份没有任何账本</div>'; return; }
+  box.innerHTML = myGroups.map(g =>
+    `<button class="gbtn ${curGroup && curGroup.id === g.id ? 'on' : ''}" onclick="switchGroup('${g.id}')">${g.name}</button>`
+  ).join('');
+}
+
+async function switchGroup(gid){
+  curGroup = myGroups.find(g => g.id === gid);
+  renderGroups();
+  await renderData();
+  log('切到账本：' + curGroup.name);
+}
+
+async function renderData(){
+  const box = document.getElementById('dataBox');
+  if (!curGroup) { box.innerHTML = '<div class="empty">没有选中账本</div>'; return; }
+  const rows = await api('/records?group_id=eq.' + curGroup.id + '&order=created_at.desc&limit=50');
+  if (!rows || !rows.length) {
+    box.innerHTML = '<div class="empty">「' + curGroup.name + '」还没有记录</div>';
+    return;
+  }
+  const total = rows.reduce((s, r) => s + (Number(r.actual) || 0), 0);
+  box.innerHTML = rows.map(r =>
+    `<div class="row">
+      <span class="t">${r.customer || '未填客户'} · ${r.date || ''}</span>
+      <span class="v">¥${(Number(r.actual) || 0).toFixed(2)}</span>
+    </div>`
+  ).join('') +
+  `<div class="row" style="border-top:2px solid #E4ECE8;margin-top:6px;padding-top:12px">
+    <span class="t" style="font-weight:700">合计 ${rows.length} 笔</span>
+    <span class="v" style="color:#C0392B;font-size:15px">¥${total.toFixed(2)}</span>
+  </div>`;
+}
+
+async function addRecord(){
+  if (!curUser || !curGroup) { alert('请先选身份和账本'); return; }
+  const amt = parseFloat(document.getElementById('amt').value);
+  const cus = (document.getElementById('cus').value || '').trim() || '临时客户';
+  if (!amt || amt <= 0) { alert('请填金额'); return; }
+
+  const id = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+  await api('/records', {
+    method: 'POST',
+    headers: { 'Prefer': 'resolution=merge-duplicates' },
+    body: JSON.stringify({
+      id: id, group_id: curGroup.id,
+      owner_id: curUser.id, creator_id: curUser.id,
+      customer: cus, date: new Date().toISOString().slice(0,10),
+      actual: amt, operator: curUser.name,
+      created_at: Date.now(), updated_at: Date.now(), deleted: false
+    })
+  });
+  document.getElementById('amt').value = '';
+  document.getElementById('cus').value = '';
+  log('写入成功：' + curUser.name + ' 在「' + curGroup.name + '」录了 ¥' + amt, 'ok');
+  await renderData();
+}
+
+renderIds();
+initSdk().then(async () => {
+  log('页面就绪，点上面选身份');
+  const m = location.search.match(/[?&]u=(u[A-D])/);
+  if (m) { await switchUser(m[1]); }
+});
+</script>
+</body>
+</html>
