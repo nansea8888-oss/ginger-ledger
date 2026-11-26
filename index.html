@@ -3037,7 +3037,10 @@ function doLogin(){
     cloudUser = u;
     try { localStorage.setItem('gl_cloud_user', JSON.stringify(u)); } catch(e) {}
     document.getElementById('loginMask').style.display = 'none';
-    loadMyGroups().then(function(){ cloudPull(); }).catch(function(e){
+    loadMyGroups().then(function(){
+      cloudPull();
+      if (!myGroups.length) { setTimeout(function(){ autoJoinPrompt(); }, 900); }
+    }).catch(function(e){
       console.log('账本加载失败', e); cloudPull();
     });
   }).catch(function(e){
@@ -3279,6 +3282,67 @@ function rejectJoin(reqId){
     loadPendingApprovals();
   }).catch(function(e){ alert('失败：' + (e.message || e)); });
 }
+
+/* 新用户自动引导加入账本 */
+function autoJoinPrompt(){
+  if (document.getElementById('autoJoinBox')) return;
+  if (myGroups.length) return;
+
+  var box = document.createElement('div');
+  box.id = 'autoJoinBox';
+  box.innerHTML = '<div style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px">' +
+    '<div style="background:#fff;border-radius:16px;width:100%;max-width:340px;padding:22px">' +
+      '<div style="font-size:17px;font-weight:700;color:#2F5D50;margin-bottom:8px">欢迎使用生姜台账</div>' +
+      '<div style="font-size:13px;color:#5A6B65;line-height:1.7;margin-bottom:16px">你是第一次用，请输入老板给你的<br><b style="color:#C0392B">账本邀请码</b>（6 位数字）</div>' +
+      '<input id="ajCode" type="tel" inputmode="numeric" maxlength="6" placeholder="6 位数字" style="width:100%;padding:14px;border:1.5px solid #DCE7E2;border-radius:11px;font-size:20px;text-align:center;letter-spacing:4px;font-family:inherit;box-sizing:border-box;margin-bottom:12px">' +
+      '<button id="ajOk" style="width:100%;padding:14px;border:0;border-radius:11px;background:#2F5D50;color:#fff;font-size:15px;font-weight:700;font-family:inherit;margin-bottom:9px">提交申请</button>' +
+      '<button id="ajLater" style="width:100%;padding:11px;border:0;border-radius:11px;background:#F1F5F3;color:#5A6B63;font-size:13.5px;font-family:inherit">我先自己用</button>' +
+    '</div>' +
+  '</div>';
+  document.body.appendChild(box);
+
+  var inp = document.getElementById('ajCode');
+  setTimeout(function(){ inp.focus(); }, 200);
+
+  document.getElementById('ajOk').onclick = function(){
+    var code = (inp.value || '').trim();
+    if (!code) { inp.focus(); return; }
+    box.remove();
+    joinByCode(code);
+  };
+  document.getElementById('ajLater').onclick = function(){ box.remove(); };
+}
+
+/* 用邀请码申请加入 */
+function joinByCode(code){
+  cloudReq('/groups?invite_code=eq.' + encodeURIComponent(code) + '&limit=1').then(function(gs){
+    if (!gs || !gs.length) throw new Error('这个邀请码不存在，请核对一下');
+    var g = gs[0];
+    return cloudReq('/group_members?group_id=eq.' + encodeURIComponent(g.id) + '&user_id=eq.' + encodeURIComponent(cloudUser.id)).then(function(m){
+      if (m && m.length) throw new Error('你已经在「' + g.name + '」里了');
+      return cloudReq('/group_members?group_id=eq.' + encodeURIComponent(g.id) + '&select=user_id').then(function(mem){
+        var required = (mem || []).map(function(x){ return x.user_id; });
+        if (!required.length) throw new Error('账本没有成员');
+        var reqId = 'jr_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+        return cloudReq('/join_requests', {
+          method: 'POST',
+          headers: { 'Prefer': 'resolution=merge-duplicates' },
+          body: JSON.stringify({
+            id: reqId, group_id: g.id, user_id: cloudUser.id, user_name: cloudUser.name,
+            status: 'pending', required: JSON.stringify(required), approved: JSON.stringify([]),
+            created_at: Date.now()
+          })
+        }).then(function(){
+          alert('已提交申请\n\n「' + g.name + '」里有 ' + required.length + ' 个人要同意\n等他们审批后你就能进来');
+        });
+      });
+    });
+  }).catch(function(e){
+    alert(e.message || '申请失败');
+    setTimeout(autoJoinPrompt, 600);
+  });
+}
+
 
 function renderCoop(){
   var list = document.getElementById('coopGroupList');
