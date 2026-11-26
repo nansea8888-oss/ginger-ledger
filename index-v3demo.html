@@ -2523,7 +2523,7 @@ document.querySelectorAll('nav button').forEach(function(b){
           {uuid:uuid(),date:d1,type:'差旅费',amount:420,payer:'张三',note:'加油300 过路费120',operator:operator||'',deviceId:deviceId,createdAt:t0,updatedAt:t0,deleted:false},
           {uuid:uuid(),date:d1,type:'物料费',amount:320,payer:'李四',note:'编织袋 4 捆',operator:operator||'',deviceId:deviceId,createdAt:t0-1000,updatedAt:t0-1000,deleted:false},
           {uuid:uuid(),date:d2,type:'人工费',amount:600,payer:'老板',note:'临时工 3 人 × 200',operator:operator||'',deviceId:deviceId,createdAt:t0-2000,updatedAt:t0-2000,deleted:false},
-          {uuid:uuid(),date:d2,type:'装卸费',amount:180,payer:'王五',note:'过磅费',operator:operator||'',deviceId:deviceId,createdAt:t0-3000,updatedAt:t0-3000,deleted:false},
+          {uuid:uuid(),date:d2,type:'装卸费',amount:180,payer:'王五',note:'卸车费',operator:operator||'',deviceId:deviceId,createdAt:t0-3000,updatedAt:t0-3000,deleted:false},
           {uuid:uuid(),date:d2,type:'其它',amount:120,payer:'张三',note:'',operator:operator||'',deviceId:deviceId,createdAt:t0-4000,updatedAt:t0-4000,deleted:false}
         ];
         DB.expPutMany(expenses).catch(function(){});
