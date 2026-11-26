@@ -1726,22 +1726,23 @@ function compressImg(file, cb){
   img.src = url;
 }
 
+var AMAP_KEY = 'c2167d58b855ecdd32303723f4bc4b32';
+
 function reverseGeo(lat, lng, cb){
-  var url = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&lat=' + lat + '&lon=' + lng + '&accept-language=zh-CN&zoom=18&countrycodes=cn';
+  var url = 'https://restapi.amap.com/v3/geocode/regeo?key=' + AMAP_KEY +
+            '&location=' + lng + ',' + lat + '&extensions=base&coordsys=gps';
   var done = false;
-  var timer = setTimeout(function(){ if(!done){ done = true; cb(null); } }, 8000);
+  var timer = setTimeout(function(){ if (!done) { done = true; cb(null); } }, 8000);
   fetch(url).then(function(r){ return r.json(); }).then(function(d){
-    if(done) return;
+    if (done) return;
     done = true; clearTimeout(timer);
-    if (!d || !d.address) { cb(null); return; }
-    var ctry = d.address.country || '';
-    if (ctry && ctry.indexOf('中国') < 0 && ctry.toLowerCase().indexOf('china') < 0) {
-      cb({ foreign: true, country: ctry });
-      return;
+    if (d && d.status === '1' && d.regeocode) {
+      cb({ parts: d.regeocode.addressComponent, formatted: d.regeocode.formatted_address || '' });
+    } else {
+      cb(null);
     }
-    cb({ parts: d.address, display: d.display_name || '' });
   }).catch(function(){
-    if(done) return;
+    if (done) return;
     done = true; clearTimeout(timer);
     cb(null);
   });
@@ -1750,16 +1751,25 @@ function reverseGeo(lat, lng, cb){
 /* 把 Nominatim 的 address 拆成用户要的格式 */
 function addrParts(p){
   p = p || {};
-  var village = p.village || p.suburb || p.town || p.hamlet || p.neighbourhood || '';
-  var house = p.house_number || '';
-  var road = p.road || p.pedestrian || '';
-  var detail = (road && house) ? (road + ' ' + house + '号') : (house ? house + '号' : road);
-  var country = p.country || '中国';
-  var state = p.state || p.province || '';
-  var city = p.city || p.town || '';
-  var county = p.county || p.city_district || p.district || '';
-  if (city && county && city === county) county = '';
-  return { village: village, detail: detail, country: country, state: state, city: city, county: county };
+  // 高德字段：province / city / district / township / neighborhood / streetNumber
+  var province = p.province || '';
+  var city = p.city || '';
+  var district = p.district || '';
+  var township = p.township || '';
+  var nb = (p.neighborhood && p.neighborhood.name) || '';
+  var street = (p.streetNumber && p.streetNumber.street) || '';
+  var num = (p.streetNumber && p.streetNumber.number) || '';
+
+  var village = township || nb || '';
+  var detail = '';
+  if (street && num) detail = street + ' ' + num + '号';
+  else if (num) detail = num + '号';
+  else if (street) detail = street;
+
+  if (city === province) city = '';   // 直辖市去重
+  if (district === city) district = '';
+
+  return { village: village, detail: detail, country: '中国', state: province, city: city, county: district };
 }
 
 function renderAddr(){ /* 已移除地址条 */ }
