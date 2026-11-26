@@ -408,7 +408,6 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 </style>
 </head>
 <body>
-
 <div id="loginMask" style="position:fixed;top:0;right:0;bottom:0;left:0;background:linear-gradient(160deg,#2F5D50,#1E4A3C);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px">
   <div style="color:#fff;font-size:22px;font-weight:600;margin-bottom:6px">生姜收购台账</div>
   <div style="color:#A8C4BA;font-size:12.5px;margin-bottom:26px">输入 4 位数字进入</div>
@@ -517,22 +516,7 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 
       <button class="btn" onclick="saveRec()">保 存</button>
     </div>
-
-    <div class="card">
-      <h3>收购地点 <span class="pill" id="geoState">未定位</span></h3>
-      <div class="addr-input-row" style="margin-top:2px">
-        <input id="addr" placeholder="村级 + 门牌，例如：王家村 12号">
-        <button class="loc-btn" onclick="locate()" title="定位">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-            <circle cx="12" cy="10" r="3"/>
-          </svg>
-        </button>
-      </div>
-      <div id="addrFull" style="display:none"></div>
-    </div>
-
-    <div class="card">
+<div class="card">
       <h3>录入人</h3>
       <input id="opName" placeholder="填你的名字，例如：老王" onchange="saveOperator()">
     </div>
@@ -718,7 +702,7 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 <script>
 window.onerror=function(m,s,l,c,e){try{document.title='ERR:'+m+' @'+l;}catch(_){}};
 const KEY = 'ginger_ledger_v1';   // 旧键，仅用于一次性迁移
-const APP_VERSION = '3.2.0';
+const APP_VERSION = '3.3.0';
 let data = [];
 let expenses = [];
 let customers = [];
@@ -1303,7 +1287,7 @@ function saveRec(){
       owner: (o.name || '').trim(), tel: o.tel, base: o.base,
       contracts: shotStore.cus.slice(),
       ownerContracts: o.contracts.slice(),
-      address: (document.getElementById('addr') || {}).value || '',
+      address: '',
       addrFull: (document.getElementById('addrFull') || {}).textContent || '',
       lat: geoInfo.lat, lng: geoInfo.lng, accuracy: geoInfo.acc,
       jian: num(o.jian), per: num(o.per), soil: num(o.soil)/100,
@@ -1329,16 +1313,12 @@ function saveRec(){
   ['lot','plate'].forEach(function(id){
     var el = document.getElementById(id); if(el) el.value = '';
   });
-  var addrEl = document.getElementById('addr');
-  if(addrEl) addrEl.value = '';
-  var addrFull = document.getElementById('addrFull');
-  if(addrFull) { addrFull.textContent = ''; addrFull.style.display='none'; }
+
+
   shotStore = {cus:[], own:[]};
   renderShots('cusShots', []);
   geoInfo = {lat:null, lng:null, acc:null, parts:null};
-  var gs = document.getElementById('geoState');
-  if(gs) gs.textContent = '未定位';
-  renderAddr();
+
 
   owners = [newOwner()];
   renderOwners();
@@ -1804,7 +1784,7 @@ function addrParts(p){
   };
 }
 
-function renderAddr(){ /* 已移除地址条 */ }
+
 
 function toggleAddr(){
   var f = document.getElementById('addrFull');
@@ -1824,56 +1804,7 @@ function manualAddr(v){
   /* 已合并到输入框本身，无需额外处理 */
 }
 
-function locate(){
-  var st = document.getElementById('geoState');
-  if(!navigator.geolocation){ alert('此浏览器不支持定位'); return; }
-  st.textContent = '定位中…';
-  navigator.geolocation.getCurrentPosition(function(pos){
-    geoInfo.lat = +pos.coords.latitude.toFixed(6);
-    geoInfo.lng = +pos.coords.longitude.toFixed(6);
-    geoInfo.acc = Math.round(pos.coords.accuracy);
 
-    // 校验是否在中国境内（经度 73-136，纬度 3-54）
-    if (geoInfo.lng < 73 || geoInfo.lng > 136 || geoInfo.lat < 3 || geoInfo.lat > 54) {
-      st.textContent = '定位在境外';
-      alert('当前定位点在中国境外\n' +
-        '经度 ' + geoInfo.lng + ' / 纬度 ' + geoInfo.lat + '\n\n' +
-        '可能的原因：\n' +
-        '① 电脑没有 GPS，靠网络 IP 定位，开了 VPN 就会定到国外\n' +
-        '② 手机开了 VPN 且定位权限受限\n\n' +
-        '建议：用手机（有 GPS）定位，或手动填写地址。');
-      return;
-    }
-
-    st.textContent = '解析地址中…';
-    reverseGeo(geoInfo.lat, geoInfo.lng, function(res){
-      if (res && res.foreign) {
-        geoInfo.parts = null;
-        st.textContent = '定位在境外';
-        alert('定位到的是境外位置（' + res.country + '），请手动填写地址。');
-        return;
-      }
-      if (res && res.parts) {
-        if (res.landmark) res.parts.__landmark = res.landmark;
-        geoInfo.parts = res.parts;
-        st.textContent = '已定位';
-        var pg = addrParts(res.parts);
-        var shortName = ((pg.village || '') + ' ' + (pg.detail || '')).trim();
-        var addrEl = document.getElementById('addr');
-        if (addrEl && shortName) addrEl.value = shortName;
-        var fullEl = document.getElementById('addrFull');
-        if (fullEl) fullEl.textContent = [pg.country, pg.state, pg.city, pg.county, pg.village, pg.detail].filter(Boolean).join(' · ');
-      } else {
-        geoInfo.parts = null;
-        st.textContent = '已定位（地址解析失败，请手填）';
-      }
-    });
-  }, function(err){
-    st.textContent = '定位失败';
-    var m = (err && err.code === 1) ? '请允许定位权限' : '定位失败，请手动填写';
-    alert(m);
-  }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
-}
 
 function matchCustomerTel(){
   const v = (document.getElementById('customer').value || '').trim();
@@ -2865,14 +2796,15 @@ var elGmain = document.getElementById('gmain');
 var elGdone = document.getElementById('gdone');
 
 function hideGuide(){
-  elGuide.classList.add('hide');
-  elGa.style.display = 'none';
+  if (elGuide) elGuide.classList.add('hide');
+  if (elGa) elGa.style.display = 'none';
 }
 function markInstalled(){
   localStorage.setItem('gl_installed', '1');
   hideGuide();
 }
 function showGuide(cfg){
+  if (!elGuide) return;
   elGt.textContent = cfg.title || '';
   elGsub.textContent = cfg.sub || '';
   elGs.innerHTML = (cfg.steps || []).map(function(s){ return '<li>' + s + '</li>'; }).join('');
@@ -3672,6 +3604,9 @@ setTimeout(function(){
   }
 }, 1500);
 </script>
+
+
+
 
 </body>
 </html>
