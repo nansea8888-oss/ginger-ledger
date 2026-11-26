@@ -405,6 +405,8 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 .cd-tip{font-size:11px;color:#8A9992;line-height:1.6;margin-bottom:9px}
 
 .cm-del{font-size:11px;color:#C0392B;padding:3px 9px;border-radius:6px;background:#FBEEEC;cursor:pointer}
+
+body.logged-in #loginMask{display:none !important}
 </style>
 </head>
 <body>
@@ -3037,6 +3039,7 @@ function doLogin(){
     cloudUser = u;
     try { localStorage.setItem('gl_cloud_user', JSON.stringify(u)); } catch(e) {}
     document.getElementById('loginMask').style.display = 'none';
+    document.body.classList.add('logged-in');
     loadMyGroups().then(function(){
       cloudPull();
       if (!myGroups.length) { setTimeout(function(){ autoJoinPrompt(); }, 900); }
@@ -3539,6 +3542,7 @@ function cloudRestore(){
     if (s) {
       cloudUser = JSON.parse(s);
       document.getElementById('loginMask').style.display = 'none';
+    document.body.classList.add('logged-in');
       cloudInit().then(function(){
         return loadMyGroups();
       }).then(function(){ cloudPull(); }).catch(function(){});
