@@ -3716,6 +3716,7 @@ body.marking .mk-hover{outline:2px dashed #C0392B!important;outline-offset:2px;b
 
 <script>
 (function(){
+  try {
   var marking = false;
   var marks = [];
   var pending = null;
@@ -3941,6 +3942,7 @@ body.marking .mk-hover{outline:2px dashed #C0392B!important;outline-offset:2px;b
   document.addEventListener('click', function(e){
     if(e.target.closest('nav button')){ setTimeout(drawDots, 120); }
   }, false);
+  } catch(__e) { console.error('标注模块出错', __e); }
 })();
 </script>
 </body>
