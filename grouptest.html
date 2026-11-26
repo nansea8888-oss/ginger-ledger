@@ -36,8 +36,21 @@ input,select{padding:10px 12px;border:1px solid #DCE7E2;border-radius:9px;font-s
 </head>
 <body>
 <div class="wrap">
-  <h1>群数据隔离验证台</h1>
-  <div class="sub">点身份切换，验证每个人只看到自己账本里的数据</div>
+  <h1 id="pageTitle">群数据隔离验证台</h1>
+  <div class="sub" id="pageSub">点身份切换，验证每个人只看到自己账本里的数据</div>
+
+  <div class="card" style="background:#F7FAF8;padding:11px 13px">
+    <div class="lbl" style="margin-bottom:6px">快速直达（也可以直接复制这些链接）</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;font-size:11.5px">
+      <a href="?u=uA" style="color:#2F5D50;text-decoration:none;padding:4px 9px;background:#fff;border-radius:7px;border:1px solid #DCE7E2">老王A</a>
+      <a href="?u=uB" style="color:#2F5D50;text-decoration:none;padding:4px 9px;background:#fff;border-radius:7px;border:1px solid #DCE7E2">老李B</a>
+      <a href="?u=uC" style="color:#2F5D50;text-decoration:none;padding:4px 9px;background:#fff;border-radius:7px;border:1px solid #DCE7E2">老赵C</a>
+      <a href="?u=uD" style="color:#2F5D50;text-decoration:none;padding:4px 9px;background:#fff;border-radius:7px;border:1px solid #DCE7E2">老孙D</a>
+    </div>
+    <div style="font-size:10.5px;color:#8A9992;margin-top:7px;line-height:1.6">
+      建议：四个链接各开一个浏览器标签页，并排放着看最清楚
+    </div>
+  </div>
 
   <div class="warn">
     <b>验证方法：</b>切到「老王A」在「王家姜业」录一笔 → 切到「老李B」「老赵C」都能看到 → 切到「老孙D」看不到。
@@ -139,6 +152,11 @@ async function switchUser(uid){
   curUser = USERS.find(u => u.id === uid);
   curGroup = null;
   renderIds();
+  try { localStorage.setItem('gtest_last_user', uid); } catch(e) {}
+  var ttl = document.getElementById('pageTitle');
+  var sub = document.getElementById('pageSub');
+  if (ttl) ttl.textContent = '当前身份：' + curUser.name;
+  if (sub) sub.textContent = '账号 ' + uid + ' · 邀请码 ' + curUser.code;
   log('切到身份：' + curUser.name + '（' + uid + '）');
 
   // 只查自己所在的账本
@@ -220,8 +238,11 @@ async function addRecord(){
 renderIds();
 initSdk().then(async () => {
   log('页面就绪，点上面选身份');
-  const m = location.search.match(/[?&]u=(u[A-D])/);
-  if (m) { await switchUser(m[1]); }
+  let m = location.search.match(/[?&]u=(u[A-D])/);
+  if (!m) {
+    try { var last = localStorage.getItem('gtest_last_user'); if (last) m = [null, last]; } catch(e) {}
+  }
+  if (m) { await switchUser(m[1]); } else { await switchUser('uA'); }
 });
 </script>
 </body>
