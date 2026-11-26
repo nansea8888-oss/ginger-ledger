@@ -3580,7 +3580,7 @@ function renderCoop(){
       '<div class="cg-item' + (isCur ? ' on' : '') + (isOpen ? ' open' : '') + '" onclick="toggleGroupDetail(\'' + g.id + '\')">' +
         '<div style="flex:1;min-width:0">' +
           '<div class="cg-name">' + escHtml(g.name) + (isCur ? ' <span class="cg-cur">当前</span>' : '') + '</div>' +
-          '<div class="cg-sub">' + (g.owner_id === (cloudUser && cloudUser.id) ? '我建的' : '别人邀请的') + '</div>' +
+
         '</div>' +
         '<span class="cg-ar">' + (isOpen ? '▾' : '▸') + '</span>' +
       '</div>' +
@@ -3594,7 +3594,7 @@ function renderCoop(){
             '</button>' +
             (curGroup && curGroup.id === g.id ? '<span class="cg-using">正在使用</span>' : '<button class="cg-use" onclick="event.stopPropagation();switchTo(\'' + g.id + '\')">切到这个账本</button>') +
           '</div>' +
-          '<div class="cd-tip">把这个码发给对方，他输码后要等账本里所有人同意才能进</div>' +
+
           '<div id="mem_' + g.id + '"><div class="hint" style="padding:8px 0">加载成员…</div></div>' +
         '</div>'
       ) : '') +
@@ -3623,7 +3623,7 @@ function loadGroupMembers(gid){
         box.innerHTML = (rows || []).map(function(r){
           var isMe = cloudUser && r.user_id === cloudUser.id;
           return '<div class="cm-row"><span class="cm-name">' + escHtml(nm[r.user_id] || r.user_id) + (isMe ? '（我）' : '') + '</span>' +
-            '<span class="cm-role">' + (r.role === 'owner' ? '群主' : '成员') + '</span></div>';
+            '<span class="cm-role">成员</span></div>';
         }).join('');
       });
     }).catch(function(e){
