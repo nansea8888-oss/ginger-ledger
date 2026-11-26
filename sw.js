@@ -1,4 +1,4 @@
-const CACHE = 'ginger-ledger-v38';
+const CACHE = 'ginger-ledger-v39';
 const ASSETS = ['./index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-180.png'];
 
 self.addEventListener('install', function (e) {
