@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>四台手机 · 群数据隔离</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#E8EDEA;padding:14px}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px}
+.top h1{font-size:16px;color:#2F5D50}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.acts button{padding:9px 16px;border:0;border-radius:9px;font-size:12.5px;font-family:inherit;font-weight:600;cursor:pointer}
+.btn-a{background:#2F5D50;color:#fff}
+.btn-c{background:#fff;color:#3D514A;border:1px solid #DCE7E2}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:1100px){.grid{grid-template-columns:repeat(2,1fr)}}
+.phone{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.08);display:flex;flex-direction:column;height:calc(100vh - 130px);min-height:560px}
+.bar{padding:9px 12px;font-size:12px;font-weight:700;color:#fff;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.pa{background:#2F5D50}.pb{background:#3A7A66}.pc{background:#4A8F78}.pd{background:#5AA38A}
+.bar small{font-weight:400;opacity:.75;font-size:10px}
+iframe{flex:1;width:100%;border:0;background:#fff}
+.tip{font-size:11.5px;color:#8A9992;margin-top:10px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="top">
+  <h1>四台手机 · 同一个数据库</h1>
+  <div class="acts">
+    <button class="btn-a" onclick="reloadAll()">刷新全部</button>
+    <button class="btn-c" onclick="location.reload()">重开</button>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="phone">
+    <div class="bar pa">老王 A<small>王家姜业 / A-D合作</small></div>
+    <iframe id="fa" src="grouptest.html?u=uA&embed=1"></iframe>
+  </div>
+  <div class="phone">
+    <div class="bar pb">老李 B<small>王家姜业 / 李家私账</small></div>
+    <iframe id="fb" src="grouptest.html?u=uB&embed=1"></iframe>
+  </div>
+  <div class="phone">
+    <div class="bar pc">老赵 C<small>王家姜业</small></div>
+    <iframe id="fc" src="grouptest.html?u=uC&embed=1"></iframe>
+  </div>
+  <div class="phone">
+    <div class="bar pd">老孙 D<small>李家私账 / A-D合作</small></div>
+    <iframe id="fd" src="grouptest.html?u=uD&embed=1"></iframe>
+  </div>
+</div>
+
+<div class="tip">
+  <b>玩法：</b>在「老王」那台选「王家姜业」录一笔 → 点右上「刷新全部」→ 看另外三台有没有变化。
+</div>
+
+<script>
+function reloadAll(){
+  ['fa','fb','fc','fd'].forEach(function(id){
+    var f = document.getElementById(id);
+    if (f) { try { f.contentWindow.location.reload(); } catch(e) { f.src = f.src; } }
+  });
+}
+</script>
+</body>
+</html>
