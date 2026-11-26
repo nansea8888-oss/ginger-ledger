@@ -1054,7 +1054,14 @@ function renderOwners(){
         '<div><label>货主</label><input value="' + escHtml(o.name) + '" placeholder="选或直接打" oninput="setOwner(\'' + o.id + '\',\'name\',this.value)"></div>' +
         '<div><label>电话</label><input type="tel" inputmode="tel" value="' + escHtml(o.tel) + '" placeholder="手机号" oninput="setOwner(\'' + o.id + '\',\'tel\',this.value)"></div>' +
       '</div>' +
-      '<div><label>基地</label><input value="' + escHtml(o.base) + '" placeholder="王家村基地" oninput="setOwner(\'' + o.id + '\',\'base\',this.value)"></div>' +
+      '<div><label>基地</label>' +
+        '<div class="addr-input-row">' +
+          '<input value="' + escHtml(o.base) + '" placeholder="王家村基地" oninput="setOwner(\'' + o.id + '\',\'base\',this.value)">' +
+          '<button class="loc-btn" onclick="locOwner(\'' + o.id + '\')" title="定位">' +
+            '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
+          '</button>' +
+        '</div>' +
+      '</div>' +
       '<div style="margin-top:10px"><label>货主合同（最多 5 张）</label>' +
         '<div class="shots" id="shots_' + o.id + '"></div>' +
       '</div>' +
@@ -1082,6 +1089,32 @@ function renderOwners(){
   document.getElementById('ownerCount').textContent = owners.length + ' 个货主';
   owners.forEach(function(o){ if (!o.collapsed) renderOwnerShots(o); });
   calcAll();
+}
+
+
+function locOwner(id){
+  var o = owners.filter(function(x){ return x.id === id; })[0];
+  if (!o) return;
+  if (!navigator.geolocation) { alert('此浏览器不支持定位'); return; }
+  var btn = document.querySelector('.ob[data-oid="' + id + '"] .loc-btn');
+  if (btn) btn.style.opacity = '.5';
+  navigator.geolocation.getCurrentPosition(function(pos){
+    if (btn) btn.style.opacity = '1';
+    reverseGeo(pos.coords.latitude, pos.coords.longitude, function(res){
+      var name = '';
+      if (res && res.parts) {
+        var p2 = addrParts(res.parts);
+        name = (p2.village || '') + (p2.detail ? ' ' + p2.detail : '');
+        if (!name) name = p2.county || p2.city || '';
+      }
+      if (!name) { alert('地址解析失败，请手动填写'); return; }
+      o.base = name.trim();
+      renderOwners();
+    });
+  }, function(){
+    if (btn) btn.style.opacity = '1';
+    alert('定位失败，请检查权限');
+  }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
 }
 
 function collapseOwner(id){
