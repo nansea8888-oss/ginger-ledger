@@ -940,7 +940,7 @@ setTimeout(function calcSelftest(){
   expData.travel = [{ sub: '加油', amt: '200' }, { sub: '过路费', amt: '100' }];
   expData.labor = [{ total: '800', people: '4', rate: '200', other: '工头多30' }];
   expData.material = [{ total: '150', name: '编织袋', qty: '100', unit: '1.5', freight: '' }];
-  expData.freight = [{ amount: '200', customer: '张老板', owners: ['李四', '王五'] }];
+  expData.freight = [{ amount: '', customer: '', owners: [''] }];
   var el = document.getElementById('expLoad'); if (el) el.value = '200';
   var eo = document.getElementById('expOther'); if (eo) eo.value = '50';
   var eon = document.getElementById('expOtherNote'); if (eon) eon.value = '买绳子';
@@ -1329,10 +1329,10 @@ function render(){
   // 客户 / 货主联想
   const cusSet = {}, ownSet = {};
   data.forEach(function(r){ cusSet[r.customer]=1; ownSet[r.owner]=1; });
-  document.getElementById('dl-cus').innerHTML =
-    Object.keys(cusSet).map(function(k){ return '<option value="'+k+'">'; }).join('');
-  document.getElementById('dl-own').innerHTML =
-    Object.keys(ownSet).map(function(k){ return '<option value="'+k+'">'; }).join('');
+  var dlCus = document.getElementById('dl-cus');
+  if (dlCus) dlCus.innerHTML = Object.keys(cusSet).map(function(k){ return '<option value="'+k+'">'; }).join('');
+  var dlOwn = document.getElementById('dl-own');
+  if (dlOwn) dlOwn.innerHTML = Object.keys(ownSet).map(function(k){ return '<option value="'+k+'">'; }).join('');
 
   // 筛选条
   var fb = document.getElementById('filterBar');
@@ -1345,6 +1345,7 @@ function render(){
 
   // 明细（按客户分组）
   const box = document.getElementById('listBox');
+  if(!box) return;
   if(!src.length){
     box.innerHTML = '<div class="empty">' + (customerFilter ? '这个客户本月没有记录' : '还没有记录<br>去「录入」填第一笔吧') + '</div>';
   }else{
@@ -2661,7 +2662,7 @@ document.querySelectorAll('nav button').forEach(function(b){
     updateStoreInfo();
 
     /* Demo 首次打开塞两条样例，方便体验 */
-    if(!data.length && !localStorage.getItem('gl_demo_seeded')){
+    if(!data.length && !cloudUser && !localStorage.getItem('gl_demo_seeded')){
       var d0 = new Date().toISOString().slice(0,10);
       var t0 = Date.now();
       var s1 = {uuid:uuid(), date:d0, customer:'山东姜业公司', customerTel:'13500001111',
@@ -3236,36 +3237,37 @@ function cloudInit(){
 
 function cloudReq(path, opt){
   opt = opt || {};
-  function doFetch(){
-    var h = Object.assign({
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + cloudToken
-    }, opt.headers || {});
-    return fetch(CLOUD_API + path, {
-      method: opt.method || 'GET',
-      headers: h,
-      body: opt.body
-    }).then(function(r){
+  var url = CLOUD_API + path;
+
+  function run(){
+    var h = {};
+    h['Accept'] = 'application/json';
+    h['Content-Type'] = 'application/json';
+    h['Authorization'] = 'Bearer ' + cloudToken;
+    if (opt.headers) { for (var k in opt.headers) { if (opt.headers.hasOwnProperty(k)) h[k] = opt.headers[k]; } }
+
+    var init = { method: opt.method || 'GET', headers: h };
+    if (opt.body != null) init.body = opt.body;
+
+    return fetch(url, init).then(function(r){
       return r.text().then(function(txt){
-        if (!r.ok) {
-          var err = new Error(r.status + ' ' + txt.slice(0, 140));
-          err.status = r.status;
-          err.body = txt;
-          throw err;
+        if (r.status >= 200 && r.status < 300) {
+          return txt ? JSON.parse(txt) : null;
         }
-        return txt ? JSON.parse(txt) : null;
+        var err = new Error('HTTP ' + r.status + ' ' + txt.slice(0, 120));
+        err.status = r.status;
+        err.body = txt;
+        throw err;
       });
     });
   }
 
-  return doFetch().catch(function(e){
-    // token 过期 → 重新匿名登录一次，再重试
-    var isAuthErr = (e.status === 401) ||
-                    (e.body && (e.body.indexOf('ACCESS_TOKEN_EXPIRED') >= 0 || e.body.indexOf('credentials') >= 0));
-    if (!isAuthErr) throw e;
+  return run().catch(function(e){
+    var authFail = (e.status === 401) ||
+      (e.body && (e.body.indexOf('ACCESS_TOKEN_EXPIRED') >= 0 || e.body.indexOf('MISSING_CREDENTIALS') >= 0));
+    if (!authFail) throw e;
     cloudToken = null;
-    return cloudInit().then(doFetch);
+    return cloudInit().then(run);
   });
 }
 
@@ -3359,6 +3361,12 @@ function pickGroup(gid){
   // 清空本地数据，重新拉这个账本的
   data = [];
   expenses = [];
+  try {
+    if (typeof DB !== 'undefined') {
+      if (DB.clear) DB.clear().catch(function(){});
+      if (DB.expClear) DB.expClear().catch(function(){});
+    }
+  } catch(e) {}
   render();
   if (typeof renderSum === 'function') renderSum();
   if (typeof renderExp === 'function') renderExp();
@@ -3367,7 +3375,8 @@ function pickGroup(gid){
 }
 
 function grpCond(){
-  if (!curGroup) return '';
+  // 没有账本时返回一个不可能匹配的条件，绝不返回空字符串
+  if (!curGroup) return '&group_id=eq.__NO_GROUP__';
   return '&group_id=eq.' + encodeURIComponent(curGroup.id);
 }
 
@@ -3504,8 +3513,31 @@ function cloudRestore(){
 
 function cloudPull(){
   if (!cloudUser || !cloudToken) return;
+  if (!curGroup) {
+    // 账本还没确定，先不拉，等确定后再拉
+    data = []; expenses = [];
+    if (typeof render === 'function') render();
+    if (typeof renderExp === 'function') renderExp();
+    return;
+  }
+
+  // 关键：先清空本地缓存，避免上个账本的数据残留
+  data = [];
+  expenses = [];
+  try {
+    if (typeof DB !== 'undefined') {
+      if (DB.clear) DB.clear().catch(function(){});
+      if (DB.expClear) DB.expClear().catch(function(){});
+    }
+  } catch(e) {}
+  // 立刻清屏，避免旧数据残留（包 try，防止渲染错误中断拉取）
+  try { if (typeof render === 'function') render(); } catch(e) { console.log('render', e); }
+  try { if (typeof renderExp === 'function') renderExp(); } catch(e) {}
+  try { if (typeof renderSum === 'function') renderSum(); } catch(e) {}
+
   cloudReq('/records?select=*&limit=500&order=created_at.desc' + grpCond()).then(function(rows){
     if (!rows || !Array.isArray(rows)) return;
+    data = [];   // 云端返回后重建，避免任何残留
     var changed = false;
     rows.forEach(function(r){
       var rec = {
@@ -3530,7 +3562,34 @@ function cloudPull(){
       if (typeof renderSum === 'function') renderSum();
       if (typeof renderCus === 'function') renderCus();
     }
-  }).catch(function(e){ console.log('拉取失败', errText(e)); });
+  }).catch(function(e){ console.log('记录拉取失败', errText(e)); });
+
+  // 同时拉费用
+  cloudReq('/expenses?select=*&limit=500&order=created_at.desc' + grpCond()).then(function(rows){
+    if (!rows || !Array.isArray(rows)) return;
+    expenses = [];
+    var changed = false;
+    rows.forEach(function(e){
+      var ex = {
+        uuid: e.id, date: e.date, type: e.type, subtype: e.subtype || '',
+        amount: Number(e.amount) || 0,
+        qty: e.qty != null ? Number(e.qty) : null,
+        unitPrice: e.unit_price != null ? Number(e.unit_price) : null,
+        payer: e.payer, note: e.note || '',
+        operator: e.operator || '',
+        createdAt: Number(e.created_at), updatedAt: Number(e.updated_at),
+        deleted: !!e.deleted
+      };
+      var idx = expenses.findIndex(function(x){ return x.uuid === ex.uuid; });
+      if (idx < 0) { expenses.push(ex); changed = true; }
+      else if ((ex.updatedAt||0) > (expenses[idx].updatedAt||0)) { expenses[idx] = ex; changed = true; }
+    });
+    if (changed) {
+      expenses.sort(function(a,b){ return (b.createdAt||0) - (a.createdAt||0); });
+      if (typeof renderExp === 'function') renderExp();
+      if (typeof renderSum === 'function') renderSum();
+    }
+  }).catch(function(e){ console.log('费用拉取失败', errText(e)); });
 }
 
 function cloudSaveRecord(rec){

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>query test</title></head>
+<body>
+<div id="out" style="font:13px monospace;white-space:pre-wrap;padding:12px">loading...</div>
+<script src="cloudbase.bundle.js"></script>
+<script>
+const API = 'https://head-crab-d1g485if3fb037f2a.api.tcloudbasegateway.com/v1/rdb/rest';
+const log = [];
+function p(s){ log.push(s); document.getElementById('out').textContent = log.join('\n'); }
+
+(async function(){
+  try {
+    const cb = window.cloudbase && (window.cloudbase.default || window.cloudbase);
+    const app = cb.init({ env: 'head-crab-d1g485if3fb037f2a' });
+    const auth = app.auth({ persistence: 'local' });
+    await auth.signInAnonymously();
+    const t = await auth.getAccessToken();
+    const token = typeof t === 'string' ? t : (t && t.accessToken);
+    p('token: ' + (token ? token.slice(0,20)+'...' : 'NULL'));
+
+    async function q(path){
+      const r = await fetch(API + path, {
+        headers: { 'Accept':'application/json', 'Authorization':'Bearer ' + token }
+      });
+      const txt = await r.text();
+      return { status: r.status, body: txt.slice(0, 200) };
+    }
+
+    let r1 = await q('/records?select=id,customer,actual,group_id&group_id=eq.g1');
+    p('g1 records: ' + r1.status + ' ' + r1.body);
+
+    let r2 = await q('/group_members?user_id=eq.uA&select=group_id');
+    p('uA groups: ' + r2.status + ' ' + r2.body);
+
+    let r3 = await q('/groups?id=in.(g1,g3)');
+    p('groups: ' + r3.status + ' ' + r3.body);
+
+    let r4 = await q('/expenses?select=id,type,amount&group_id=eq.g1');
+    p('g1 expenses: ' + r4.status + ' ' + r4.body);
+
+    // 模拟 cloudPull 的完整 URL
+    let r5 = await q('/records?select=*&limit=500&order=created_at.desc&group_id=eq.g1');
+    p('FULL: ' + r5.status + ' ' + r5.body.slice(0,150));
+
+    // 用 POST 方式带 body:undefined
+    try {
+      const r6 = await fetch(API + '/records?select=*&limit=500&order=created_at.desc&group_id=eq.g1', {
+        method: 'GET',
+        headers: { 'Accept':'application/json', 'Content-Type':'application/json', 'Authorization':'Bearer ' + token },
+        body: undefined
+      });
+      const b6 = await r6.text();
+      p('GET+body: ' + r6.status + ' ' + b6.slice(0,120));
+    } catch(e) { p('GET+body ERROR: ' + e.message); }
+
+  } catch(e) {
+    p('ERROR: ' + (e.message || e));
+  }
+})();
+</script>
+</body></html>
