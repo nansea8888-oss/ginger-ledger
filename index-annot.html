@@ -3674,6 +3674,7 @@ setTimeout(function(){
 </script>
 
 
+
 <!-- ===== 标注工具 ===== -->
 <button id="markBtn">✏️ 标注</button>
 <button id="mkSubmit" class="hide">📋 提交标注（<span id="mkCount">0</span>）</button>
@@ -3813,14 +3814,12 @@ body.marking .mk-hover{outline:2px dashed #C0392B!important;outline-offset:2px;b
     setTimeout(function(){ text.focus(); }, 250);
   }, true);
 
-  var __mc = document.getElementById('mkCancel');
-  if (__mc) __mc.onclick = function(){
+  document.getElementById('mkCancel').onclick = function(){
     panel.classList.remove('show');
     pending = null;
   };
 
-  var __ms = document.getElementById('mkSave');
-  if (__ms) __ms.onclick = function(){
+  document.getElementById('mkSave').onclick = function(){
     if(!pending) return;
     var note = text.value.trim();
     if(!note){ text.focus(); return; }
