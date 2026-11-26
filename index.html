@@ -410,6 +410,16 @@ body.logged-in #loginMask{display:none !important}
 </style>
 </head>
 <body>
+
+<div id="installBar" style="display:none;position:fixed;left:0;right:0;top:0;z-index:99998;background:#2F5D50;color:#fff;padding:12px 16px;font-family:inherit;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 2px 12px rgba(0,0,0,.2)">
+  <div style="flex:1;min-width:0">
+    <div style="font-size:13.5px;font-weight:700">装到桌面，下次点图标直接进</div>
+    <div id="ibSub" style="font-size:11px;opacity:.8;margin-top:2px">不用每次找链接</div>
+  </div>
+  <button id="ibBtn" style="padding:9px 16px;border:0;border-radius:9px;background:#FFC94D;color:#2F5D50;font-size:13.5px;font-weight:700;font-family:inherit;white-space:nowrap">安装</button>
+  <button id="ibClose" style="padding:9px 6px;border:0;background:transparent;color:rgba(255,255,255,.7);font-size:18px;font-family:inherit;line-height:1">×</button>
+</div>
+
 <div id="loginMask" style="position:fixed;top:0;right:0;bottom:0;left:0;background:linear-gradient(160deg,#2F5D50,#1E4A3C);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px">
   <div style="color:#fff;font-size:22px;font-weight:600;margin-bottom:6px">生姜收购台账</div>
   <div style="color:#A8C4BA;font-size:12.5px;margin-bottom:26px">输入 4 位数字进入</div>
@@ -993,6 +1003,75 @@ setTimeout(function forceRenderShots(){
     }
   } catch(e) { console.log('shots render', e); }
 }, 1500);
+
+/* ===== 安装到桌面 ===== */
+var deferredPrompt = null;
+var isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault();
+  deferredPrompt = e;
+  if (isWeChat || isStandalone || !isMobile) return;
+  showInstallBar('install');
+});
+
+function showInstallBar(mode){
+  var bar = document.getElementById('installBar');
+  var sub = document.getElementById('ibSub');
+  var btn = document.getElementById('ibBtn');
+  if (!bar) return;
+  bar.style.display = 'flex';
+  if (mode === 'wechat') {
+    sub.textContent = '点右上角 ··· → 在浏览器打开';
+    btn.textContent = '知道了';
+    btn.onclick = function(){ bar.style.display = 'none'; };
+  } else {
+    sub.textContent = '装完桌面有图标，点开就是全屏';
+    btn.textContent = '立即安装';
+    btn.onclick = doInstall;
+  }
+}
+
+function doInstall(){
+  if (!deferredPrompt) {
+    document.getElementById('ibSub').textContent = '请用浏览器菜单 → 添加到主屏幕';
+    return;
+  }
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(function(r){
+    if (r.outcome === 'accepted') {
+      document.getElementById('installBar').style.display = 'none';
+    }
+    deferredPrompt = null;
+  });
+}
+
+/* 关闭按钮 */
+var ibc = document.getElementById('ibClose');
+if (ibc) ibc.onclick = function(){
+  try { localStorage.setItem('gl_no_install_bar', '1'); } catch(e) {}
+  document.getElementById('installBar').style.display = 'none';
+};
+
+/* 微信里：延迟提示换浏览器（关闭过的就不再弹） */
+setTimeout(function(){
+  if (!isWeChat || isStandalone) return;
+  try { if (localStorage.getItem('gl_no_install_bar')) return; } catch(e) {}
+  showInstallBar('wechat');
+}, 3000);
+
+/* 安卓浏览器：没有 beforeinstallprompt 时也给个提示 */
+setTimeout(function(){
+  if (isWeChat || isStandalone || !isMobile) return;
+  if (deferredPrompt) return;
+  try { if (localStorage.getItem('gl_no_install_bar')) return; } catch(e) {}
+  if (/Android/i.test(navigator.userAgent) && !isStandalone) {
+    showInstallBar('install');
+  }
+}, 3500);
+
 setTimeout(function(){ normalizeData(); finish(); }, 3000);
 
   migrate().catch(function(){}).then(function(){
