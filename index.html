@@ -406,6 +406,8 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 .inv-chip b{font-size:15px;color:#C0392B;letter-spacing:1.5px;font-weight:700}
 .inv-copy{font-size:10.5px;color:#2F5D50;background:#E4F0EA;padding:2px 7px;border-radius:5px;font-weight:600}
 .cd-tip{font-size:11px;color:#8A9992;line-height:1.6;margin-bottom:9px}
+
+.cm-del{font-size:11px;color:#C0392B;padding:3px 9px;border-radius:6px;background:#FBEEEC;cursor:pointer}
 </style>
 </head>
 <body>
@@ -3622,13 +3624,31 @@ function loadGroupMembers(gid){
         (us || []).forEach(function(u){ nm[u.id] = u.name; });
         box.innerHTML = (rows || []).map(function(r){
           var isMe = cloudUser && r.user_id === cloudUser.id;
-          return '<div class="cm-row"><span class="cm-name">' + escHtml(nm[r.user_id] || r.user_id) + (isMe ? '（我）' : '') + '</span>' +
-            '<span class="cm-role">成员</span></div>';
+          return '<div class="cm-row">' +
+            '<span class="cm-name">' + escHtml(nm[r.user_id] || r.user_id) + (isMe ? '（我）' : '') + '</span>' +
+            '<span style="display:flex;gap:9px;align-items:center">' +
+              '<span class="cm-role">成员</span>' +
+              (isMe ? '' : '<span class="cm-del" onclick="removeMember(\'' + gid + '\',\'' + r.user_id + '\')">移除</span>') +
+            '</span>' +
+          '</div>';
         }).join('');
       });
     }).catch(function(e){
       box.innerHTML = '<div class="hint">加载失败</div>';
     });
+}
+
+
+function removeMember(gid, uid){
+  if (!confirm('确定把这个人移出账本？\n移除后他就看不到这个账本的数据了。')) return;
+  cloudReq('/group_members?group_id=eq.' + encodeURIComponent(gid) + '&user_id=eq.' + encodeURIComponent(uid), {
+    method: 'DELETE'
+  }).then(function(){
+    alert('已移除');
+    loadGroupMembers(gid);
+  }).catch(function(e){
+    alert('移除失败：' + (e.message || e));
+  });
 }
 
 function switchTo(gid){
