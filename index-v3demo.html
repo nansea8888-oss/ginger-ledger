@@ -331,9 +331,9 @@ input:focus,select:focus{outline:none;border-color:#2F5D50;background:#F8FBF9}
 .eb-simple input:focus{outline:none;border-color:#2F5D50}
 
 /* ===== 标注历史 ===== */
-#mkHistPanel{position:fixed;left:50%;transform:translateX(-50%);bottom:8px;width:min(440px,calc(100% - 24px));background:rgba(255,255,255,.97);z-index:9500;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,.22);display:none;padding:10px 14px;max-height:34vh;overflow:auto;backdrop-filter:blur(6px)}
+#mkHistPanel{position:fixed;left:50%;transform:translateX(-50%);top:70px;width:min(440px,calc(100% - 24px));background:rgba(255,255,255,.97);z-index:9500;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,.22);display:none;padding:10px 14px;max-height:34vh;overflow:auto;backdrop-filter:blur(6px)}
 #mkHistPanel.show{display:block}
-#mkHistPanel.collapsed{max-height:52px;overflow:hidden}
+#mkHistPanel.collapsed{max-height:46px;overflow:hidden;padding:8px 14px}
 .mkh-head{display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:700;color:#2F5D50;margin-bottom:10px}
 .mkh-head b{color:#C0392B}
 .mkh-close{font-size:12px;color:#8A9992;font-weight:400;cursor:pointer;padding:4px 8px;background:#F1F5F3;border-radius:7px}
@@ -2896,9 +2896,9 @@ if('serviceWorker' in navigator){
 </div>
 
 <style>
-#markBtn{position:fixed;right:14px;bottom:28px;z-index:9000;padding:12px 18px;border-radius:24px;background:#C0392B;color:#fff;border:0;font-size:14px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.25);font-family:inherit}
+#markBtn{position:fixed;right:14px;bottom:28px;z-index:9700;padding:12px 18px;border-radius:24px;background:#C0392B;color:#fff;border:0;font-size:14px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.25);font-family:inherit}
 #markBtn.on{background:#2F5D50}
-#mkSubmit{position:fixed;right:14px;bottom:92px;z-index:9000;padding:11px 16px;border-radius:24px;background:#1E4A3C;color:#fff;border:0;font-size:13px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.25);font-family:inherit}
+#mkSubmit{position:fixed;right:14px;bottom:92px;z-index:9700;padding:11px 16px;border-radius:24px;background:#1E4A3C;color:#fff;border:0;font-size:13px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.25);font-family:inherit}
 body.marking *{cursor:crosshair!important}
 body.marking .mk-hover{outline:2px dashed #C0392B!important;outline-offset:2px;background:rgba(192,57,43,.06)!important}
 .mk-dot{position:fixed;width:20px;height:20px;border-radius:50%;background:#C0392B;color:#fff;font-size:11px;line-height:20px;text-align:center;z-index:8500;pointer-events:none;box-shadow:0 2px 6px rgba(0,0,0,.3)}
