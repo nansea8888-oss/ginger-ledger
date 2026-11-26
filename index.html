@@ -1134,6 +1134,13 @@ function locOwner(id){
   if (btn) btn.style.opacity = '.5';
   navigator.geolocation.getCurrentPosition(function(pos){
     if (btn) btn.style.opacity = '1';
+    var la = +pos.coords.latitude.toFixed(6), ln = +pos.coords.longitude.toFixed(6);
+    if (ln < 73 || ln > 136 || la < 3 || la > 54) {
+      alert('当前定位点在中国境外（经度 ' + ln + ' / 纬度 ' + la + '）\n\n' +
+        '电脑没有 GPS，靠网络 IP 定位，开 VPN 会定到国外。\n' +
+        '请用手机定位，或手动填写基地名。');
+      return;
+    }
     reverseGeo(pos.coords.latitude, pos.coords.longitude, function(res){
       var name = '';
       if (res && res.foreign) { alert('定位在境外（' + res.country + '），请手动填写基地'); return; }
@@ -1783,6 +1790,19 @@ function locate(){
     geoInfo.lat = +pos.coords.latitude.toFixed(6);
     geoInfo.lng = +pos.coords.longitude.toFixed(6);
     geoInfo.acc = Math.round(pos.coords.accuracy);
+
+    // 校验是否在中国境内（经度 73-136，纬度 3-54）
+    if (geoInfo.lng < 73 || geoInfo.lng > 136 || geoInfo.lat < 3 || geoInfo.lat > 54) {
+      st.textContent = '定位在境外';
+      alert('当前定位点在中国境外\n' +
+        '经度 ' + geoInfo.lng + ' / 纬度 ' + geoInfo.lat + '\n\n' +
+        '可能的原因：\n' +
+        '① 电脑没有 GPS，靠网络 IP 定位，开了 VPN 就会定到国外\n' +
+        '② 手机开了 VPN 且定位权限受限\n\n' +
+        '建议：用手机（有 GPS）定位，或手动填写地址。');
+      return;
+    }
+
     st.textContent = '解析地址中…';
     reverseGeo(geoInfo.lat, geoInfo.lng, function(res){
       if (res && res.foreign) {
