@@ -867,10 +867,74 @@ setTimeout(function TEST_MODE(){
     document.title = 'TEST[' + log.join(' | ') + ']';
   } catch(e) { document.title = 'TESTERR:' + e.message; }
 }, 2500);
+
+/* ===== CALC SELFTEST ===== */
+setTimeout(function calcSelftest(){
+  if (location.search.indexOf('selftest=1') < 0) return;
+  var out = [];
+  function eq(name, got, want, tol){
+    tol = tol || 0.005;
+    var ok = Math.abs(got - want) <= tol;
+    out.push((ok ? 'PASS ' : 'FAIL ') + name + ' got=' + got.toFixed(2) + ' want=' + want.toFixed(2));
+  }
+
+  // 1) 单个货主计算
+  var o1 = { jian: '100', per: '50', soil: '10', price: '2', fee: '0.1' };
+  var c1 = calcOne(o1);
+  eq('货主1 总斤数', c1.total, 5000);
+  eq('货主1 扣土量', c1.soilQty, 500);
+  eq('货主1 净重', c1.net, 4500);
+  eq('货主1 总价', c1.amount, 9000);
+  eq('货主1 代办总价', c1.feeTotal, 450);
+  eq('货主1 实际总价', c1.actual, 9450);
+
+  // 2) 第二个货主
+  var o2 = { jian: '50', per: '40', soil: '5', price: '2.5', fee: '0.1' };
+  var c2 = calcOne(o2);
+  eq('货主2 总斤数', c2.total, 2000);
+  eq('货主2 扣土量', c2.soilQty, 100);
+  eq('货主2 净重', c2.net, 1900);
+  eq('货主2 总价', c2.amount, 4750);
+  eq('货主2 实际总价', c2.actual, 4940);
+
+  // 3) 多货主合计
+  eq('两货主 实际合计', c1.actual + c2.actual, 14390);
+
+  // 4) 费用各项
+  expData.travel = [{ sub: '加油', amt: '200' }, { sub: '过路费', amt: '100' }];
+  expData.labor = [{ total: '800', people: '4', rate: '200', other: '工头多30' }];
+  expData.material = [{ total: '150', name: '编织袋', qty: '100', unit: '1.5', freight: '' }];
+  expData.freight = [{ amount: '200', customer: '张老板', owners: ['李四', '王五'] }];
+  var el = document.getElementById('expLoad'); if (el) el.value = '200';
+  var eo = document.getElementById('expOther'); if (eo) eo.value = '50';
+  var eon = document.getElementById('expOtherNote'); if (eon) eon.value = '买绳子';
+
+  eq('差旅小计', sumTravel(), 300);
+  eq('人工小计', sumLabor(), 800);
+  eq('物料小计', sumMaterial(), 150);
+  eq('运费小计', sumFreight(), 200);
+
+  var feeTotal = sumTravel() + sumLabor() + sumMaterial() + sumFreight() + 200 + 50;
+  eq('费用合计', feeTotal, 1700);
+
+  // 5) 总支出 = 收购实际总价 + 费用
+  eq('总支出', 14390 + feeTotal, 16090);
+
+  document.title = 'CALC[' + out.join(' ; ') + ']';
+}, 2600);
+
 setTimeout(function autoOpenEB(){
   if (location.search.indexOf('open=1') < 0) return;
   try { ['travel','labor','material','freight'].forEach(function(k){ toggleEB(k); }); } catch(e){}
 }, 1600);
+setTimeout(function bindNoteModal(){
+  var ok = document.getElementById('nmOk');
+  var cc = document.getElementById('nmCancel');
+  var mm = document.getElementById('noteModal');
+  if (ok) ok.onclick = saveNote;
+  if (cc) cc.onclick = closeNote;
+  if (mm) mm.onclick = function(e){ if (e.target === mm) closeNote(); };
+}, 1200);
 setTimeout(function expInit(){
   try { initExpForm(); } catch(e) { console.log('exp init', e); }
   var ids = ['expLoad','expOther'];
@@ -1962,9 +2026,9 @@ function renderLabor(){
       '<div class="eb-row eb-note">' +
         '<input class="f-num" type="number" inputmode="decimal" value="' + (it.people||'') + '" placeholder="人数/工时" oninput="expData.labor[' + i + '].people=this.value">' +
         '<input class="f-num" type="number" inputmode="decimal" value="' + (it.rate||'') + '" placeholder="工价" oninput="expData.labor[' + i + '].rate=this.value">' +
-        '<input class="f-num" type="text" style="flex:1.4" value="' + escHtml(it.other||'') + '" placeholder="其他（可写文字）" oninput="expData.labor[' + i + '].other=this.value">' +
+        '<span class="note-btn" onclick="editNote(\'labor\',' + i + ')">' + (it.other ? '备注 ✓' : '备注') + '</span>' +
       '</div>' +
-      '<div class="eb-tip">人数/工价/其他只是备注，不参与计算</div>' +
+      
     '</div>';
   }).join('');
 }
@@ -1996,9 +2060,9 @@ function renderMaterial(){
       '<div class="eb-row eb-note">' +
         '<input class="f-num" type="number" inputmode="decimal" value="' + (it.qty||'') + '" placeholder="数量" oninput="expData.material[' + i + '].qty=this.value">' +
         '<input class="f-num" type="number" inputmode="decimal" value="' + (it.unit||'') + '" placeholder="单价" oninput="expData.material[' + i + '].unit=this.value">' +
-        '<input class="f-num" type="number" inputmode="decimal" value="' + (it.freight||'') + '" placeholder="运费" oninput="expData.material[' + i + '].freight=this.value">' +
+        '<span class="note-btn" onclick="editNote(\'material\',' + i + ')">' + ((it.freight || it.memo) ? '备注 ✓' : '备注') + '</span>' +
       '</div>' +
-      '<div class="eb-tip">名称/数量/单价/运费只是备注，不参与计算</div>' +
+      
     '</div>';
   }).join('');
 }
@@ -2015,8 +2079,35 @@ function delMaterial(i){
 }
 
 
+
+/* ===== 备注弹窗 ===== */
+var _noteTarget = null;
+function editNote(kind, idx){
+  _noteTarget = { kind: kind, idx: idx };
+  var cur = (kind === 'labor') ? (expData.labor[idx].other || '') : (expData.material[idx].freight || expData.material[idx].memo || '');
+  var ta = document.getElementById('nmText');
+  if (ta) ta.value = cur;
+  var m = document.getElementById('noteModal');
+  if (m) m.classList.add('show');
+  setTimeout(function(){ if (ta) ta.focus(); }, 100);
+}
+function closeNote(){
+  var m = document.getElementById('noteModal');
+  if (m) m.classList.remove('show');
+  _noteTarget = null;
+}
+function saveNote(){
+  if (!_noteTarget) return closeNote();
+  var v = (document.getElementById('nmText') || {}).value || '';
+  var k = _noteTarget.kind, i = _noteTarget.idx;
+  if (k === 'labor') expData.labor[i].other = v.trim();
+  else expData.material[i].freight = v.trim();
+  closeNote();
+  if (k === 'labor') renderLabor(); else renderMaterial();
+}
+
 /* ===== 运费 ===== */
-expData.freight = expData.freight || [{ amount: '', customer: '', owner: '' }];
+expData.freight = expData.freight || [{ amount: '', customer: '', owners: [''] }];
 
 function renderFreight(){
   var box = document.getElementById('freightItems');
@@ -2032,9 +2123,17 @@ function renderFreight(){
         '<span class="eb-lb">给谁拉</span>' +
         '<input style="flex:1" value="' + escHtml(it.customer||'') + '" placeholder="客户名，选或直接打" list="dl-freight-cus" oninput="expData.freight[' + i + '].customer=this.value">' +
       '</div>' +
-      '<div class="eb-row">' +
-        '<span class="eb-lb">货主</span>' +
-        '<input style="flex:1" value="' + escHtml(it.owner||'') + '" placeholder="货主名，选或直接打" list="dl-freight-own" oninput="expData.freight[' + i + '].owner=this.value">' +
+      '<div class="eb-row" style="align-items:flex-start">' +
+        '<span class="eb-lb" style="padding-top:9px">货主</span>' +
+        '<div style="flex:1">' +
+          (it.owners || ['']).map(function(o, oi){
+            return '<div style="display:flex;gap:6px;margin-bottom:6px">' +
+              '<input style="flex:1" value="' + escHtml(o||'') + '" placeholder="货主名，选或直接打" list="dl-freight-own" oninput="expData.freight[' + i + '].owners[' + oi + ']=this.value">' +
+              ((it.owners || []).length > 1 ? '<span class="f-x" onclick="delFreightOwner(' + i + ',' + oi + ')">×</span>' : '') +
+            '</div>';
+          }).join('') +
+          '<button class="eb-add" style="margin-top:2px" onclick="addFreightOwner(' + i + ')">＋ 添加货主</button>' +
+        '</div>' +
       '</div>' +
     '</div>';
   }).join('');
@@ -2058,13 +2157,26 @@ function renderFreight(){
   document.getElementById('dl-freight-own').innerHTML = Object.keys(ownSet).map(function(k){ return '<option value="' + escHtml(k) + '">'; }).join('');
 }
 
+
+function addFreightOwner(i){
+  if (!expData.freight[i].owners) expData.freight[i].owners = [''];
+  expData.freight[i].owners.push('');
+  renderFreight();
+}
+function delFreightOwner(i, oi){
+  var arr = expData.freight[i].owners || [];
+  if (arr.length <= 1) { arr[0] = ''; }
+  else { arr.splice(oi, 1); }
+  renderFreight();
+}
+
 function addFreight(){
-  expData.freight.push({ amount: '', customer: '', owner: '' });
+  expData.freight.push({ amount: '', customer: '', owners: [''] });
   renderFreight();
 }
 
 function delFreight(i){
-  if (expData.freight.length <= 1) { expData.freight[0] = { amount: '', customer: '', owner: '' }; }
+  if (expData.freight.length <= 1) { expData.freight[0] = { amount: '', customer: '', owners: [''] }; }
   else { expData.freight.splice(i, 1); }
   renderFreight(); updSums();
 }
@@ -2137,7 +2249,7 @@ function saveExpBatch(){
   expData.freight.forEach(function(it){
     var a = parseFloat(it.amount) || 0;
     if (a > 0) rows.push({
-      type: '运费', subtype: ('给' + (it.customer || '?') + '拉·货主' + (it.owner || '?')),
+      type: '运费', subtype: ('给' + (it.customer || '?') + '拉·货主' + ((it.owners || []).filter(function(x){ return x && x.trim(); }).join('、') || '?')),
       amount: a, qty: null, unit_price: null
     });
   });
@@ -2172,7 +2284,7 @@ function saveExpBatch(){
   expData.travel = [{ sub: '加油', amt: '' }, { sub: '过路费', amt: '' }];
   expData.labor = [{ total: '', people: '', rate: '', other: '' }];
   expData.material = [{ total: '', name: '', qty: '', unit: '', freight: '' }];
-  expData.freight = [{ amount: '', customer: '', owner: '' }];
+  expData.freight = [{ amount: '', customer: '', owners: [''] }];
   var le = document.getElementById('expLoad'); if (le) le.value = '';
   var oe = document.getElementById('expOther'); if (oe) oe.value = '';
   var on = document.getElementById('expOtherNote'); if (on) on.value = '';
@@ -2686,6 +2798,31 @@ if('serviceWorker' in navigator){
   });
 }
 </script>
+
+
+<div id="noteModal">
+  <div class="nm-box">
+    <div class="nm-title">备注</div>
+    <textarea id="nmText" placeholder="比如：工头多30 / 编织袋涨到1.6了"></textarea>
+    <div class="nm-acts">
+      <button id="nmCancel">取消</button>
+      <button id="nmOk">确定</button>
+    </div>
+  </div>
+</div>
+<style>
+#noteModal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9800;display:none;align-items:center;justify-content:center;padding:20px}
+#noteModal.show{display:flex}
+.nm-box{background:#fff;border-radius:16px;width:100%;max-width:360px;padding:18px}
+.nm-title{font-size:15px;font-weight:700;color:#2F5D50;margin-bottom:11px}
+#nmText{width:100%;min-height:110px;padding:12px;border:1px solid #D8E0DB;border-radius:10px;font-size:15px;font-family:inherit;resize:vertical;box-sizing:border-box;line-height:1.6}
+.nm-acts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:11px}
+.nm-acts button{padding:12px;border:0;border-radius:10px;font-size:14px;font-weight:600;font-family:inherit}
+#nmCancel{background:#F1F5F3;color:#5A6B63}
+#nmOk{background:#2F5D50;color:#fff}
+.note-btn{padding:8px 12px;border:1px solid #DCE7E2;border-radius:8px;background:#fff;color:#5A6B65;font-size:12.5px;flex-shrink:0;font-family:inherit;white-space:nowrap}
+.note-btn:active{background:#F2F7F4}
+</style>
 
 <!-- ===== 标注工具 ===== -->
 <button id="markBtn">✏️ 标注</button>
